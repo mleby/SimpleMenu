@@ -18,14 +18,15 @@ type
     acRun: TAction;
     AsyncProcess1: TAsyncProcess;
     MainGrid: TDBGrid;
-    Edit1: TEdit;
+    MainGridShortCut: TDBGrid;
+    MainGridIcon: TDBGrid;
     MenuDS: TDataSource;
     MenuDB: TSQLite3Connection;
     MenuItemDS: TDataSource;
-    pnlBottom: TPanel;
     Process1: TProcess;
     SQLMenu: TSQLQuery;
     SQLMenuItems: TSQLQuery;
+    SQLMenuItemsShortcut: TSQLQuery;
     SQLTransaction: TSQLTransaction;
     procedure acDebugExecute(Sender: TObject);
     procedure acRunExecute(Sender: TObject);
@@ -34,13 +35,12 @@ type
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure MainGridKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
-    Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
   private
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
-    procedure setWidthForm;
+    procedure setFormSize;
     procedure NavigateUp;
     { private declarations }
   public
@@ -71,9 +71,9 @@ begin
 
   // sure create DB
   MenuDB.Close;
-  DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := ':memory:';
+  //DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
   MenuDB.ExecuteDirect(
     'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
@@ -104,7 +104,6 @@ begin
 
   MainGrid.DataSource.DataSet.Active := False;
   MainGrid.DataSource.DataSet.Active := True;
-  setWidthForm;
 end;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
@@ -115,16 +114,15 @@ end;
 Procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
 var
   bmpImage: TPicture;
-  intX, intY: integer;
   lIconName: string;
 begin
   if Column.FieldName = 'icon' then
-    with MainGrid.Canvas do
+    with MainGridIcon.Canvas do
     begin
       fillRect(rect);
       bmpImage := TPicture.Create;
       try
-        lIconName := MainGrid.DataSource.DataSet.FieldByName('icon').AsString;
+        lIconName := MainGridIcon.DataSource.DataSet.FieldByName('icon').AsString;
 
         // expansion of icons (from IceWM docs)
         if FileExists(lIconName) then
@@ -159,7 +157,7 @@ begin
 
 
         StretchDraw(Rect, bmpImage.Bitmap);
-        Column.Width := MainGrid.DefaultRowHeight;
+        //Column.Width := MainGridIcon.DefaultRowHeight;
       finally
         bmpimage.Free;
       end;
@@ -178,35 +176,39 @@ begin
   if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload])) then
   begin
     acRun.Execute
-
   End
-  else if ((Key = VK_LEFT) or (Key = VK_BACK))and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
+  else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
   begin
     NavigateUp
   End
-  else if Key = VK_ESCAPE then
+  else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
     MainForm.Close
-  else
-    inherited;
 end;
 
 Procedure TMainForm.MainGridKeyPress(Sender: TObject; Var Key: char);
-Var
-  lPosition: LongInt;
 Begin
-  lPosition := SQLMenu.RecNo;
-  {TODO -oLebeda -cNone: předělat na dopředné prohledávání}
-  // select na klávesu
-  // pokud je count = 0 -> nic
-  // pokud je count = 1 -> navigovat a přejít
-  // pokud je count > 1 -> navigovat na nejbližší další nebo na první pokud další už není
-  if not SQLMenuItems.Locate('shortcut', Key, []) then
-    ;
-end;
+  SQLMenuItemsShortcut.Close;
+  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
+  SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
+  SQLMenuItemsShortcut.Open;
 
-Procedure TMainForm.MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
-Begin
+  if (SQLMenuItemsShortcut.RecordCount = 1) and SQLMenuItems.Locate('id', SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
+     acRun.Execute
+  else if (SQLMenuItemsShortcut.RecordCount > 1) then
+  begin
+    if not SQLMenuItems.EOF then
+      SQLMenuItems.next
+    else
+      SQLMenuItems.first;
 
+    while not SQLMenuItems.EOF do
+    begin
+      if SQLMenuItems.FieldByName('shortcut').AsString = key then
+        exit;
+      SQLMenuItems.Next;
+    end;
+    SQLMenuItems.Locate('shortcut', key, []);
+  end
 end;
 
 Procedure TMainForm.acDebugExecute(Sender: TObject);
@@ -225,7 +227,6 @@ Procedure TMainForm.acRunExecute(Sender: TObject);
 Var
   lItemType: TMenuItemType;
   lSubMenuId, lMenuItemId, lLoad, lReload, lTime, lInterval: LongInt;
-  lSubMenuCmd: String;
 begin
   lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
 
@@ -289,9 +290,9 @@ begin
   lId := SQLMenu.FieldByName('id').AsInteger;
   SQLMenuItems.ParamByName('id').AsInteger := lId;
   SQLMenuItems.Open;
-  MainGrid.DataSource.DataSet.Last;
-  MainGrid.DataSource.DataSet.first;
-  setWidthForm;
+  //MainGrid.DataSource.DataSet.Last;
+  //MainGrid.DataSource.DataSet.first;
+  setFormSize;
 end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);
@@ -345,16 +346,28 @@ Begin
   End;
 End;
 
-Procedure TMainForm.setWidthForm;
+Procedure TMainForm.setFormSize;
 var
-  lWidth: integer;
-  i: integer;
+  lWidth, lHeight: integer;
 begin
-  lWidth := 16 + MainGrid.DefaultRowHeight; // scroolbar wight + first column
-  for i := 1 to MainGrid.Columns.Count - 1 do // from second column
-    lWidth := lWidth + MainGrid.Columns[i].Width;
+  //lWidth := MainGridIcon.Width + MainGridShortCut.Width; // scroolbar wight + first column
+  //for i := 0 to MainGrid.Columns.Count - 1 do // from second column
+    //lWidth := lWidth + MainGrid.Columns[i].Width;
 
-  MainForm.Width := lWidth;
+  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount;
+
+  //MainForm.Width := lWidth;
+
+  if MainForm.Constraints.MaxHeight >= lHeight then
+  begin
+    MainGridShortCut.ScrollBars := ssNone;
+    MainForm.Constraints.MinHeight := lHeight;
+  end
+  else
+    MainGridShortCut.ScrollBars := ssAutoVertical;
+
+  MainForm.Height := lHeight;
+  MainForm.Caption := SQLMenu.FieldByName('name').AsString;
 end;
 
 Procedure TMainForm.NavigateUp;
@@ -383,11 +396,8 @@ begin
 end;
 
 Function TMainForm.setActiveMenu(Const aIdMenu: longint): Boolean;
-Var
-  lMenuId: LongInt;
 Begin
   Result := SQLMenu.Locate('id', aIdMenu, []);
-  lMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
 End;
 
 Procedure TMainForm.AddMenuItem(Var lMenuItemParser: TMenuItemParser);

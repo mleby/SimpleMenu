@@ -1,0 +1,65 @@
+object DebugForm: TDebugForm
+  Left = 685
+  Height = 563
+  Top = 154
+  Width = 799
+  Caption = 'DebugForm'
+  ClientHeight = 563
+  ClientWidth = 799
+  OnCreate = FormCreate
+  LCLVersion = '1.6.0.4'
+  object PairSplitter1: TPairSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 563
+    Top = 0
+    Width = 799
+    Align = alClient
+    Position = 336
+    SplitterType = pstVertical
+    object PairSplitterSide1: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 336
+      Top = 0
+      Width = 799
+      ChildSizing.Layout = cclTopToBottomThenLeftToRight
+      ClientWidth = 799
+      ClientHeight = 336
+      object MenuGrid1: TDBGrid
+        Left = 0
+        Height = 336
+        Top = 0
+        Width = 799
+        Align = alClient
+        Color = clWindow
+        Columns = <>
+        DataSource = MainForm.MenuItemDS
+        Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
+        TabOrder = 0
+      end
+    end
+    object PairSplitterSide2: TPairSplitterSide
+      Cursor = crArrow
+      Left = 0
+      Height = 222
+      Top = 341
+      Width = 799
+      ClientWidth = 799
+      ClientHeight = 222
+      object MenuGrid: TDBGrid
+        Left = 0
+        Height = 222
+        Top = 0
+        Width = 799
+        Align = alClient
+        AutoEdit = False
+        Color = clWindow
+        Columns = <>
+        DataSource = MainForm.MenuDS
+        Options = [dgTitles, dgIndicator, dgColumnResize, dgColumnMove, dgColLines, dgRowLines, dgTabs, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit]
+        TabOrder = 0
+      end
+    end
+  end
+end

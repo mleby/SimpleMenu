@@ -1,0 +1,285 @@
+object MainForm: TMainForm
+  Left = 625
+  Height = 640
+  Top = 171
+  Width = 462
+  Caption = 'Menu'
+  ClientHeight = 640
+  ClientWidth = 462
+  Color = 16053492
+  OnActivate = FormActivate
+  OnCreate = FormCreate
+  LCLVersion = '1.6.0.4'
+  object MainGrid: TDBGrid
+    Left = 0
+    Height = 608
+    Top = 0
+    Width = 462
+    Align = alClient
+    BorderStyle = bsNone
+    Columns = <    
+      item
+        Title.Caption = 'icon'
+        Width = 42
+        FieldName = 'icon'
+      end    
+      item
+        Title.Caption = 'name'
+        Width = 52
+        FieldName = 'name'
+      end    
+      item
+        Alignment = taCenter
+        Title.Caption = 'shortcut'
+        Width = 68
+        FieldName = 'shortcut'
+      end    
+      item
+        Alignment = taCenter
+        Title.Caption = 'subMenuChar'
+        Width = 103
+        FieldName = 'subMenuChar'
+      end>
+    DataSource = MenuItemDS
+    DefaultRowHeight = 20
+    FixedCols = 0
+    Flat = True
+    Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    ParentColor = True
+    Scrollbars = ssAutoVertical
+    TabOrder = 0
+    OnDrawColumnCell = MainGridDrawColumnCell
+    OnKeyDown = MainGridKeyDown
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Height = 32
+    Top = 608
+    Width = 462
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 32
+    ClientWidth = 462
+    TabOrder = 1
+    object Edit1: TEdit
+      Left = 2
+      Height = 25
+      Top = 4
+      Width = 454
+      Anchors = [akTop, akLeft, akRight]
+      TabOrder = 0
+      Text = 'Edit1'
+    end
+  end
+  object MenuDS: TDataSource
+    AutoEdit = False
+    DataSet = SQLMenu
+    left = 32
+    top = 16
+  end
+  object MenuDB: TSQLite3Connection
+    Connected = False
+    LoginPrompt = False
+    DatabaseName = '/tmp/debugMenu.db'
+    KeepConnection = True
+    Transaction = SQLTransaction
+    Options = []
+    left = 320
+    top = 13
+  end
+  object SQLMenu: TSQLQuery
+    FieldDefs = <    
+      item
+        Name = 'id'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'upMenuId'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'name'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'cmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'path'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'load'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'reloadInterval'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end>
+    AfterInsert = SQLMenuAfterInsert
+    AfterScroll = SQLMenuAfterScroll
+    Database = MenuDB
+    Transaction = SQLTransaction
+    SQL.Strings = (
+      'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval from menu'
+    )
+    Options = []
+    Params = <>
+    left = 320
+    top = 72
+  end
+  object SQLMenuItems: TSQLQuery
+    FieldDefs = <    
+      item
+        Name = 'id'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'menuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'itemType'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'name'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'search'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'icon'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'shortcut'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'cmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuPath'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuCmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuReloadInterval'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuChar'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end>
+    AfterOpen = SQLMenuItemsAfterOpen
+    Database = MenuDB
+    Transaction = SQLTransaction
+    SQL.Strings = (
+      'select id, menuId, itemType, name, search, icon, shortcut,'
+      'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar'
+      'from menuItem'
+      'where menuId = :id'
+    )
+    Options = []
+    Params = <    
+      item
+        DataType = ftAutoInc
+        Name = 'Id'
+        ParamType = ptInput
+        Size = 4
+      end>
+    DataSource = MenuDS
+    left = 320
+    top = 128
+  end
+  object SQLTransaction: TSQLTransaction
+    Active = False
+    Database = MenuDB
+    Options = []
+    left = 200
+    top = 13
+  end
+  object acList: TActionList
+    left = 104
+    top = 16
+    object acDebug: TAction
+      Caption = 'acDebug'
+      OnExecute = acDebugExecute
+      ShortCut = 49220
+    end
+    object acRun: TAction
+      Caption = 'acRun'
+      OnExecute = acRunExecute
+      ShortCut = 13
+    end
+  end
+  object MenuItemDS: TDataSource
+    AutoEdit = False
+    DataSet = SQLMenuItems
+    left = 32
+    top = 80
+  end
+  object AsyncProcess1: TAsyncProcess
+    Active = False
+    Options = []
+    Priority = ppNormal
+    StartupOptions = []
+    ShowWindow = swoNone
+    WindowColumns = 0
+    WindowHeight = 0
+    WindowLeft = 0
+    WindowRows = 0
+    WindowTop = 0
+    WindowWidth = 0
+    FillAttribute = 0
+    left = 320
+    top = 192
+  end
+end

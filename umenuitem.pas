@@ -29,6 +29,7 @@ type
 
     function GetSearch: string;
     function GetSubMenuChar: string;
+    Procedure setNameAndShotrCutKey(Const aName: String);
 
     function SplitMenuLine(const aLine: string): TStringList;
 
@@ -78,7 +79,7 @@ end;
 
 { TMenuItemParser }
 
-procedure TMenuItemParser.prepareProg(const aLine: string);
+Procedure TMenuItemParser.prepareProg(Const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -87,8 +88,9 @@ begin
   try
     FItemType := MITprog;
 
-    FName := lSl[1];
+    setNameAndShotrCutKey(lSl[1]);
     FIcon := lSl[2];
+
     for i := 3 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
 
@@ -98,7 +100,7 @@ begin
   end;
 end;
 
-procedure TMenuItemParser.prepareProgreload(const aLine: string);
+Procedure TMenuItemParser.prepareProgreload(Const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -107,7 +109,7 @@ begin
   try
     FItemType := MITmenuprogreload;
 
-    FName := lSl[1];
+    setNameAndShotrCutKey(lSl[1]);
     FIcon := lSl[2];
     FSubMenuReloadInterval := StrToInt(lSl[3]);
 
@@ -120,7 +122,7 @@ begin
   end;
 end;
 
-procedure TMenuItemParser.prepareSeparator(const aLine: string);
+Procedure TMenuItemParser.prepareSeparator(Const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -137,7 +139,7 @@ begin
   end;
 end;
 
-procedure TMenuItemParser.includeItems(const aLine: string);
+Procedure TMenuItemParser.includeItems(Const aLine: string);
 var
   lSl: TStringList;
   lFileName, lFileNameCfg: string;
@@ -159,14 +161,14 @@ begin
   end;
 end;
 
-function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
+Function TMenuItemParser.SplitMenuLine(Const aLine: string): TStringList;
 begin
   Result := TStringList.Create;
   Result.Delimiter := ' ';
   Result.DelimitedText := aLine;
 end;
 
-procedure TMenuItemParser.startNewMenu(const aLine: string);
+Procedure TMenuItemParser.startNewMenu(Const aLine: string);
 var
   lSl: TStringList;
 begin
@@ -174,7 +176,7 @@ begin
   try
     FItemType := MITmenu;
 
-    FName := lSl[1];
+    setNameAndShotrCutKey(lSl[1]);
     FIcon := lSl[2];
     FSubMenuId := MainForm.AddMenu(FName, FMenuId);
   finally
@@ -183,7 +185,7 @@ begin
 
 end;
 
-procedure TMenuItemParser.endMenu(const aLine: string);
+Procedure TMenuItemParser.endMenu(Const aLine: string);
 var
   lUpMenuId: integer;
   lMenuId: longint;
@@ -194,12 +196,12 @@ begin
   MainForm.setActiveMenu(lUpMenuId);
 end;
 
-function TMenuItemParser.GetSearch: string;
+Function TMenuItemParser.GetSearch: string;
 begin
   Result := FName;
 end;
 
-function TMenuItemParser.GetSubMenuChar: string;
+Function TMenuItemParser.GetSubMenuChar: string;
 begin
   if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload] then
     Result := '>'
@@ -207,7 +209,26 @@ begin
     Result := '';
 end;
 
-constructor TMenuItemParser.Create(const aLine: string);
+Procedure TMenuItemParser.setNameAndShotrCutKey(const aName: String);
+Var
+  i: Integer;
+  lName: String;
+Begin
+  for i := 1 to Length(aName) do
+  begin
+    if (aName[i] = '_') and (FShortCut = '') and (aName[i + 1] <> '_') then
+      FShortCut := LowerCase(aName[i + 1])
+    else
+      lName := lName + aName[i];
+  End;
+
+  if FShortCut = '' then
+    FShortCut := LowerCase(aName[1]);
+
+  FName := lName;
+End;
+
+Constructor TMenuItemParser.Create(Const aLine: string);
 begin
   FInputLine := aLine;
   FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
@@ -233,7 +254,7 @@ begin
   end;
 end;
 
-destructor TMenuItemParser.Destroy;
+Destructor TMenuItemParser.Destroy;
 begin
   inherited Destroy;
 end;

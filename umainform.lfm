@@ -29,13 +29,13 @@ object MainForm: TMainForm
       end    
       item
         Alignment = taCenter
-        Title.Caption = 'shortcut'
+        Title.Caption = 'S'
         Width = 68
         FieldName = 'shortcut'
       end    
       item
         Alignment = taCenter
-        Title.Caption = 'subMenuChar'
+        Title.Caption = 'M'
         Width = 103
         FieldName = 'subMenuChar'
       end>
@@ -43,13 +43,14 @@ object MainForm: TMainForm
     DefaultRowHeight = 20
     FixedCols = 0
     Flat = True
-    Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    Options = [dgTitles, dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
     ParentColor = True
     Scrollbars = ssAutoBoth
     TabOrder = 0
     OnCellClick = MainGridCellClick
     OnDrawColumnCell = MainGridDrawColumnCell
     OnKeyDown = MainGridKeyDown
+    OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end
   object pnlBottom: TPanel
@@ -146,7 +147,6 @@ object MainForm: TMainForm
   end
   object SQLMenuItems: TSQLQuery
     PacketRecords = -1
-    IndexName = 'DEFAULT_ORDER'
     FieldDefs = <    
       item
         Name = 'id'

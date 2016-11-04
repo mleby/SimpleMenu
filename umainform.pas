@@ -33,6 +33,7 @@ type
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure MainGridKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
@@ -187,6 +188,20 @@ begin
     MainForm.Close
   else
     inherited;
+end;
+
+Procedure TMainForm.MainGridKeyPress(Sender: TObject; Var Key: char);
+Var
+  lPosition: LongInt;
+Begin
+  lPosition := SQLMenu.RecNo;
+  {TODO -oLebeda -cNone: předělat na dopředné prohledávání}
+  // select na klávesu
+  // pokud je count = 0 -> nic
+  // pokud je count = 1 -> navigovat a přejít
+  // pokud je count > 1 -> navigovat na nejbližší další nebo na první pokud další už není
+  if not SQLMenuItems.Locate('shortcut', Key, []) then
+    ;
 end;
 
 Procedure TMainForm.MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);

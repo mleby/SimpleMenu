@@ -213,7 +213,7 @@ end;
 
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);
 Begin
-  SQLMenu.FieldByName('Load').AsInteger := DateTimeToUnix(time);
+  SQLMenu.FieldByName('Load').AsInteger := DateTimeToTimeStamp(time).Time;
 end;
 
 Procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);

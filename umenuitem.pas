@@ -1,130 +1,241 @@
-Unit uMenuItem;
+unit uMenuItem;
 
 {$mode objfpc}{$H+}
 
-Interface
+interface
 
-Uses
+uses
   Classes, SysUtils;
 
-Type
+type
 
   { TMenuItemParser }
-  TMenuItemType = (prog, menu, runonce, menufile, menuprog, menuprogreload);
+  TMenuItemType = (MITprog, MITmenu, MITrunonce, MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
 
   TMenuItemParser = class(TObject)
   private
-    FCmd: String;
-    FIcon: String;
-    FInputLine: String;
+    FCmd: string;
+    FIcon: string;
+    FInputLine: string;
     FItemType: TMenuItemType;
-    FMenuId: Integer;
-    FName: String;
-    FShortCut: String;
-    FSubMenuCmd: String;
-    FSubMenuId: Integer;
-    FSubMenuPath: String;
-    FSubMenuReloadInterval: Integer;
+    FMenuId: integer;
+    FName: string;
+    FShortCut: string;
+    FSubMenuCmd: string;
+    FSubMenuId: integer;
+    FSubMenuPath: string;
+    FSubMenuReloadInterval: integer;
 
 
-    Function GetSearch: String;
-    Function GetSubMenuChar: String;
-    procedure prepareProg(const aLine: String);
+    function GetSearch: string;
+    function GetSubMenuChar: string;
+
+    function SplitMenuLine(const aLine: string): TStringList;
+
+    procedure startNewMenu(const aLine: string);
+    procedure endMenu(const aLine: string);
+
+    procedure prepareProg(const aLine: string);
+    procedure prepareProgreload(const aLine: string);
+    procedure prepareSeparator(const aLine: string);
+    procedure includeItems(const aLine: string);
   public
 
-    constructor Create(const aLine: String; const aMenuId: Integer);
+    constructor Create(const aLine: string);
     destructor Destroy; override;
 
-    Property name: String read FName;
-    Property icon: String read FIcon;
-    Property cmd: String read FCmd;
-    Property menuId: Integer Read FMenuId;
-    Property itemType: TMenuItemType read FItemType;
-    Property search: String read GetSearch;
-    Property shortcut: String read FShortCut;
-    Property subMenuId: Integer Read FSubMenuId;
-    Property subMenuPath: String read FSubMenuPath;
-    Property subMenuCmd: String read FSubMenuCmd;
-    Property subMenuReloadInterval: Integer Read FSubMenuReloadInterval;
-    Property subMenuChar: String Read GetSubMenuChar;
+    property Name: string read FName;
+    property icon: string read FIcon;
+    property cmd: string read FCmd;
+    property menuId: integer read FMenuId;
+    property itemType: TMenuItemType read FItemType;
+    property search: string read GetSearch;
+    property shortcut: string read FShortCut;
+    property subMenuId: integer read FSubMenuId;
+    property subMenuPath: string read FSubMenuPath;
+    property subMenuCmd: string read FSubMenuCmd;
+    property subMenuReloadInterval: integer read FSubMenuReloadInterval;
+    property subMenuChar: string read GetSubMenuChar;
   end;
 
-  function mtToStr(const aMenuType: TMenuItemType): String;
-  function strToMt(const aMenuTypeStr: String): TMenuItemType;
+function MitToStr(const aMenuType: TMenuItemType): string;
+function strToMit(const aMenuTypeStr: string): TMenuItemType;
 
 
-Implementation
+implementation
 
-Uses Dialogs, strutils;
+uses Dialogs, uMainForm, strutils;
 
-Function mtToStr(Const aMenuType: TMenuItemType): String;
-Begin
+function MitToStr(const aMenuType: TMenuItemType): string;
+begin
   WriteStr(Result, aMenuType);
 end;
 
-Function strToMt(Const aMenuTypeStr: String): TMenuItemType;
-Begin
+function strToMit(const aMenuTypeStr: string): TMenuItemType;
+begin
   ReadStr(aMenuTypeStr, Result);
 end;
 
 { TMenuItemParser }
 
-Procedure TMenuItemParser.prepareProg(Const aLine: String);
-Var
+procedure TMenuItemParser.prepareProg(const aLine: string);
+var
   lSl: TStringList;
-  i: Integer;
-Begin
-  lSl := TStringList.Create;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
   try
-    lSl.Delimiter := ' ';
-    lsl.DelimitedText := aLine;
-
-    FItemType := prog;
+    FItemType := MITprog;
 
     FName := lSl[1];
     FIcon := lSl[2];
     for i := 3 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
+
     fCmd := Trim(FCmd);
-
-    {TODO -oLebeda -cNone: shortcut from name and correct name}
-
-
-    //ShowMessage('name: ' + name);
-    //ShowMessage('icon: ' + icon);
-    //ShowMessage('cmd: ' + cmd);
-  Finally
+  finally
     FreeAndNil(lSl);
-  End;
-End;
-
-Function TMenuItemParser.GetSearch: String;
-Begin
-  Result := FName;
-  {TODO -oLebeda -cNone: implementovat normalizaci}
+  end;
 end;
 
-Function TMenuItemParser.GetSubMenuChar: String;
-Begin
-  if FItemType in [menu, menufile, menuprog, menuprogreload] then
+procedure TMenuItemParser.prepareProgreload(const aLine: string);
+var
+  lSl: TStringList;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITmenuprogreload;
+
+    FName := lSl[1];
+    FIcon := lSl[2];
+    FSubMenuReloadInterval := StrToInt(lSl[3]);
+
+    for i := 4 to lsl.Count - 1 do
+      FSubMenuCmd := FSubMenuCmd + ' ' + lsl[i];
+
+    FSubMenuCmd := Trim(FSubMenuCmd);
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
+procedure TMenuItemParser.prepareSeparator(const aLine: string);
+var
+  lSl: TStringList;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITseparator;
+
+    if lSl.Count >= 2 then
+      FName := lSl[1];
+
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
+procedure TMenuItemParser.includeItems(const aLine: string);
+var
+  lSl: TStringList;
+  lFileName, lFileNameCfg: string;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITNone;
+
+    lFileName := lSl[1];
+    lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName;
+
+    if FileExists(lFileName) then
+      MainForm.LoadMenuFromFile(lFileName)
+    else if FileExists(lFileNameCfg) then
+      MainForm.LoadMenuFromFile(lFileNameCfg);
+
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
+function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
+begin
+  Result := TStringList.Create;
+  Result.Delimiter := ' ';
+  Result.DelimitedText := aLine;
+end;
+
+procedure TMenuItemParser.startNewMenu(const aLine: string);
+var
+  lSl: TStringList;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITmenu;
+
+    FName := lSl[1];
+    FIcon := lSl[2];
+    FSubMenuId := MainForm.AddMenu(FName, FMenuId);
+  finally
+    FreeAndNil(lSl);
+  end;
+
+end;
+
+procedure TMenuItemParser.endMenu(const aLine: string);
+var
+  lUpMenuId: integer;
+  lMenuId: longint;
+begin
+  lMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
+  lUpMenuId := MainForm.SQLMenu.FieldByName('upMenuId').AsInteger;
+  FItemType := MITEndMenu;
+  MainForm.setActiveMenu(lUpMenuId);
+end;
+
+function TMenuItemParser.GetSearch: string;
+begin
+  Result := FName;
+end;
+
+function TMenuItemParser.GetSubMenuChar: string;
+begin
+  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload] then
     Result := '>'
   else
     Result := '';
 end;
 
-Constructor TMenuItemParser.Create(Const aLine: String; Const aMenuId: Integer);
-Begin
-  FInputLine :=  aLine;
-  FMenuId := aMenuId;
+constructor TMenuItemParser.Create(const aLine: string);
+begin
+  FInputLine := aLine;
+  FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
 
-  if AnsiStartsText('prog', aLine) then
-    prepareProg(aLine);
-End;
+  if AnsiStartsText('prog ', aLine) then
+    prepareProg(aLine)
+  else if AnsiStartsText('separator', aLine) then
+    prepareSeparator(aLine)
+  else if AnsiStartsText('menu ', aLine) then
+    startNewMenu(aLine)
+  else if AnsiStartsText('}', aLine) then
+    endMenu(aLine)
+  else if AnsiStartsText('include ', aLine) then
+    includeItems(aLine)
+  else if AnsiStartsText('menuprogreload ', aLine) then
+    prepareProgreload(aLine)
+  // menufile
+  // menuprog
+  else
+  begin
+    FItemType := MITNone;
+    WriteLn('!!!!!' + aLine);
+  end;
+end;
 
-Destructor TMenuItemParser.Destroy;
-Begin
-  Inherited Destroy;
-End;
+destructor TMenuItemParser.Destroy;
+begin
+  inherited Destroy;
+end;
 
-End.
-
+end.

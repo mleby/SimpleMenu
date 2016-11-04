@@ -7,7 +7,6 @@ object MainForm: TMainForm
   ClientHeight = 640
   ClientWidth = 462
   Color = 16053492
-  OnActivate = FormActivate
   OnCreate = FormCreate
   LCLVersion = '1.6.0.4'
   object MainGrid: TDBGrid
@@ -46,10 +45,12 @@ object MainForm: TMainForm
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
     ParentColor = True
-    Scrollbars = ssAutoVertical
+    Scrollbars = ssAutoBoth
     TabOrder = 0
+    OnCellClick = MainGridCellClick
     OnDrawColumnCell = MainGridDrawColumnCell
     OnKeyDown = MainGridKeyDown
+    OnKeyUp = MainGridKeyUp
   end
   object pnlBottom: TPanel
     Left = 0
@@ -61,6 +62,7 @@ object MainForm: TMainForm
     ClientHeight = 32
     ClientWidth = 462
     TabOrder = 1
+    Visible = False
     object Edit1: TEdit
       Left = 2
       Height = 25
@@ -143,6 +145,8 @@ object MainForm: TMainForm
     top = 72
   end
   object SQLMenuItems: TSQLQuery
+    PacketRecords = -1
+    IndexName = 'DEFAULT_ORDER'
     FieldDefs = <    
       item
         Name = 'id'
@@ -218,7 +222,6 @@ object MainForm: TMainForm
         Precision = -1
         Size = 255
       end>
-    AfterOpen = SQLMenuItemsAfterOpen
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
@@ -226,6 +229,7 @@ object MainForm: TMainForm
       'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar'
       'from menuItem'
       'where menuId = :id'
+      'Order by id'
     )
     Options = []
     Params = <    
@@ -281,5 +285,21 @@ object MainForm: TMainForm
     FillAttribute = 0
     left = 320
     top = 192
+  end
+  object Process1: TProcess
+    Active = False
+    Options = []
+    Priority = ppNormal
+    StartupOptions = []
+    ShowWindow = swoNone
+    WindowColumns = 0
+    WindowHeight = 0
+    WindowLeft = 0
+    WindowRows = 0
+    WindowTop = 0
+    WindowWidth = 0
+    FillAttribute = 0
+    left = 325
+    top = 261
   end
 end

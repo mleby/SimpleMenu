@@ -33,8 +33,8 @@ type
     procedure FormCreate(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
-    procedure MainGridKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
+    Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
   private
@@ -164,27 +164,6 @@ begin
     end;
 end;
 
-Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: word; Shift: TShiftState);
-Var
-  lItemType: TMenuItemType;
-begin
-  if SQLMenuItems.RecordCount > 0 then
-    lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString)
-  else
-    lItemType := MITNone;
-
-  if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload])) then
-  begin
-    acRun.Execute
-  End
-  else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
-  begin
-    NavigateUp
-  End
-  else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
-    MainForm.Close
-end;
-
 Procedure TMainForm.MainGridKeyPress(Sender: TObject; Var Key: char);
 Begin
   SQLMenuItemsShortcut.Close;
@@ -209,6 +188,33 @@ Begin
     end;
     SQLMenuItems.Locate('shortcut', key, []);
   end
+end;
+
+Procedure TMainForm.MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
+Var
+  lItemType: TMenuItemType;
+begin
+  if SQLMenuItems.RecordCount > 0 then
+    lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString)
+  else
+    lItemType := MITNone;
+
+  if (Key = VK_Return) and not SQLMenuItems.EOF then SQLMenuItems.Prior;
+
+  if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload])) then
+  begin
+    acRun.Execute
+  End
+  else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
+  begin
+    NavigateUp
+  End
+  else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
+    MainForm.Close
+  else if (key = VK_UP) and (SQLMenuItems.RecNo = 1) then
+    SQLMenuItems.Last
+  else if (key = VK_DOWN) and SQLMenuItems.EOF then
+    SQLMenuItems.First
 end;
 
 Procedure TMainForm.acDebugExecute(Sender: TObject);
@@ -350,6 +356,8 @@ Procedure TMainForm.setFormSize;
 var
   lWidth, lHeight: integer;
 begin
+
+
   //lWidth := MainGridIcon.Width + MainGridShortCut.Width; // scroolbar wight + first column
   //for i := 0 to MainGrid.Columns.Count - 1 do // from second column
     //lWidth := lWidth + MainGrid.Columns[i].Width;

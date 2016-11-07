@@ -280,7 +280,7 @@ object MainForm: TMainForm
     top = 136
   end
   object acList: TActionList
-    left = 104
+    left = 125
     top = 16
     object acDebug: TAction
       Caption = 'acDebug'
@@ -312,24 +312,8 @@ object MainForm: TMainForm
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    left = 99
+    left = 125
     top = 80
-  end
-  object Process1: TProcess
-    Active = False
-    Options = []
-    Priority = ppNormal
-    StartupOptions = []
-    ShowWindow = swoNone
-    WindowColumns = 0
-    WindowHeight = 0
-    WindowLeft = 0
-    WindowRows = 0
-    WindowTop = 0
-    WindowWidth = 0
-    FillAttribute = 0
-    left = 104
-    top = 149
   end
   object SQLMenuItemsShortcut: TSQLQuery
     PacketRecords = -1
@@ -431,5 +415,21 @@ object MainForm: TMainForm
       end>
     left = 32
     top = 376
+  end
+  object Process1: TProcess
+    Active = False
+    Options = [poUsePipes, poNoConsole]
+    Priority = ppNormal
+    StartupOptions = []
+    ShowWindow = swoNone
+    WindowColumns = 0
+    WindowHeight = 0
+    WindowLeft = 0
+    WindowRows = 0
+    WindowTop = 0
+    WindowWidth = 0
+    FillAttribute = 0
+    left = 125
+    top = 145
   end
 end

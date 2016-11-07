@@ -56,7 +56,7 @@ var
 
 implementation
 
-uses dateutils, strutils, debugForm, LCLType;
+uses dateutils, strutils, debugForm, StreamIO, LCLType;
 
 {$R *.lfm}
 
@@ -331,16 +331,28 @@ Procedure TMainForm.LoadMenuFromProcess(const aCmd: String);
 Var
   lSl: TStringList;
   i: Integer;
+  F:Text;
+  lLine: String;
 Begin
   // load data from process
-  Process1.Options := [poWaitOnExit, poNoConsole, poUsePipes];
+  //Process1.Options := [poWaitOnExit, poNoConsole, poUsePipes];
   Process1.CurrentDirectory := GetEnvironmentVariable('HOME');
   Process1.CommandLine := aCmd;
   Process1.Execute;
 
   lSl := TStringList.Create;
   Try
-    lSl.LoadFromStream(Process1.Output);
+    //Process1.WaitOnExit;
+    //lSl.LoadFromStream(Process1.Output);
+    AssignStream(F, Process1.Output);
+    Reset(F);
+    while not Eof(F) do
+    begin
+      Readln(F, lLine);
+      lSl.Append(lLine);
+    End;
+    CloseFile(F);
+
     LoadMenuFromLines(lSl);
 
     SQLMenu.Edit;

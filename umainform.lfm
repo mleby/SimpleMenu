@@ -1,7 +1,7 @@
 object MainForm: TMainForm
   Left = 59
   Height = 800
-  Top = 24
+  Top = 70
   Width = 300
   BorderStyle = bsSizeToolWin
   Caption = 'Menu'
@@ -11,6 +11,7 @@ object MainForm: TMainForm
   Constraints.MaxHeight = 800
   FormStyle = fsSystemStayOnTop
   OnCreate = FormCreate
+  PopupMode = pmExplicit
   ShowInTaskBar = stNever
   LCLVersion = '1.6.0.4'
   object MainGrid: TDBGrid
@@ -32,12 +33,14 @@ object MainForm: TMainForm
     DefaultRowHeight = 20
     FixedCols = 0
     Flat = True
-    Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    Options = [dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
     ParentColor = True
     ReadOnly = True
     Scrollbars = ssAutoHorizontal
+    TabAdvance = aaNone
     TabOrder = 0
     OnCellClick = MainGridCellClick
+    OnKeyDown = MainGridKeyDown
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end

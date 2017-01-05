@@ -10,6 +10,8 @@ uses
 
 type
 
+  TFormMode = (FMNormal, FMCentral);
+
   { TMainForm }
 
   TMainForm = class(TForm)
@@ -33,11 +35,14 @@ type
     procedure FormCreate(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+    Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
   private
+    FFormMode: TFormMode;
+    FRecNo: LongInt;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     procedure setFormSize;
@@ -67,6 +72,7 @@ var
   lFile: string;
   lMenuId: integer;
 begin
+  FFormMode := FMNormal;
   // color
 
   // sure create DB
@@ -88,7 +94,13 @@ begin
   lMenuId := AddMenu('ROOT', 0);
   SQLMenu.First;
 
-
+  if Application.HasOption('c', 'center') then
+  begin
+    Width := 500; {TODO -oLebeda -cNone: umožnit zvolit}
+    Height := 563;
+    Position := poScreenCenter;
+    FFormMode := FMCentral;
+  end;
 
   if Application.HasOption('f', 'file') then
   begin
@@ -164,6 +176,15 @@ begin
     end;
 end;
 
+Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
+Begin
+  if (Key = VK_Return) and not SQLMenuItems.EOF then
+  begin
+    FRecNo := SQLMenuItems.RecNo;
+    SQLMenuItems.Prior; // ugly hack - enter goes to next
+  End;
+end;
+
 Procedure TMainForm.MainGridKeyPress(Sender: TObject; Var Key: char);
 Begin
   SQLMenuItemsShortcut.Close;
@@ -199,7 +220,10 @@ begin
   else
     lItemType := MITNone;
 
-  if (Key = VK_Return) and not SQLMenuItems.EOF then SQLMenuItems.Prior;
+  if (Key = VK_Return) and (FRecNo <> SQLMenuItems.RecNo) then
+  begin
+    SQLMenuItems.RecNo := FRecNo;
+  end;
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload])) then
   begin
@@ -349,7 +373,9 @@ Begin
     while not Eof(F) do
     begin
       Readln(F, lLine);
-      lSl.Append(lLine);
+      //ShowMessage('příliš žluťoučký kůň');
+      //ShowMessage(AnsiToUTF8(lLine));
+      lSl.Append(AnsiToUTF8(lLine));
     End;
     CloseFile(F);
 
@@ -388,6 +414,11 @@ begin
 
   MainForm.Height := lHeight;
   MainForm.Caption := SQLMenu.FieldByName('name').AsString;
+
+  if FFormMode = FMCentral then
+  begin
+    top := (Screen.Height div 2) - (MainForm.Height div 2);
+  End;
 end;
 
 Procedure TMainForm.NavigateUp;

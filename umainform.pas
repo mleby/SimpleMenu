@@ -43,6 +43,8 @@ type
   private
     FFormMode: TFormMode;
     FRecNo: LongInt;
+    FKeepOpen: Boolean;
+    Procedure AppDeactivate(Sender: TObject);
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     procedure setFormSize;
@@ -116,6 +118,19 @@ begin
 
   MainGrid.DataSource.DataSet.Active := False;
   MainGrid.DataSource.DataSet.Active := True;
+
+  if not Application.HasOption('k', 'keep') then
+  begin
+    Application.OnDeactivate:=@AppDeactivate;
+    FKeepOpen := False;
+  End
+  else
+    FKeepOpen := True;
+end;
+
+procedure TMainForm.AppDeactivate(Sender: TObject);
+begin
+  MainForm.Close;
 end;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
@@ -264,7 +279,8 @@ begin
   begin
     AsyncProcess1.CommandLine := SQLMenuItems.FieldByName('cmd').AsString;
     AsyncProcess1.Execute;
-    MainForm.Close;
+    if not FKeepOpen then
+      MainForm.Close;
   End
   else if lItemType =  MITmenuprogreload then
   begin

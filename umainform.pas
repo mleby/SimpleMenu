@@ -178,7 +178,7 @@ end;
 
 Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
-  if (Key = VK_Return) and not SQLMenuItems.EOF then
+  if (Key = VK_Return) then
   begin
     FRecNo := SQLMenuItems.RecNo;
     SQLMenuItems.Prior; // ugly hack - enter goes to next

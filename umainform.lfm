@@ -1,9 +1,10 @@
 object MainForm: TMainForm
-  Left = 59
+  Left = 23
   Height = 800
-  Top = 70
+  Top = 120
   Width = 300
-  BorderStyle = bsSizeToolWin
+  BorderStyle = bsDialog
+  BorderWidth = 3
   Caption = 'Menu'
   ClientHeight = 800
   ClientWidth = 300
@@ -15,10 +16,10 @@ object MainForm: TMainForm
   ShowInTaskBar = stNever
   LCLVersion = '1.6.0.4'
   object MainGrid: TDBGrid
-    Left = 20
-    Height = 800
-    Top = 0
-    Width = 215
+    Left = 23
+    Height = 768
+    Top = 3
+    Width = 209
     Align = alClient
     AutoFillColumns = True
     BorderStyle = bsNone
@@ -26,7 +27,7 @@ object MainForm: TMainForm
       item
         SizePriority = 1000
         Title.Caption = 'name'
-        Width = 215
+        Width = 209
         FieldName = 'name'
       end>
     DataSource = MenuItemDS
@@ -45,9 +46,9 @@ object MainForm: TMainForm
     OnKeyUp = MainGridKeyUp
   end
   object MainGridShortCut: TDBGrid
-    Left = 235
-    Height = 800
-    Top = 0
+    Left = 232
+    Height = 768
+    Top = 3
     Width = 65
     Align = alRight
     BorderStyle = bsNone
@@ -79,9 +80,9 @@ object MainForm: TMainForm
     OnKeyUp = MainGridKeyUp
   end
   object MainGridIcon: TDBGrid
-    Left = 0
-    Height = 800
-    Top = 0
+    Left = 3
+    Height = 768
+    Top = 3
     Width = 20
     Align = alLeft
     AutoFillColumns = True
@@ -105,6 +106,29 @@ object MainForm: TMainForm
     OnDrawColumnCell = MainGridDrawColumnCell
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
+  end
+  object pnlFind: TPanel
+    Left = 3
+    Height = 26
+    Top = 771
+    Width = 294
+    Align = alBottom
+    BevelOuter = bvNone
+    Caption = 'pnlFind'
+    ClientHeight = 26
+    ClientWidth = 294
+    TabOrder = 3
+    Visible = False
+    object edFind: TEdit
+      Left = 0
+      Height = 25
+      Top = 1
+      Width = 294
+      Align = alBottom
+      OnKeyDown = edFindKeyDown
+      OnKeyUp = edFindKeyUp
+      TabOrder = 0
+    end
   end
   object MenuDS: TDataSource
     AutoEdit = False
@@ -266,10 +290,9 @@ object MainForm: TMainForm
     Options = []
     Params = <    
       item
-        DataType = ftAutoInc
-        Name = 'Id'
+        DataType = ftUnknown
+        Name = 'id'
         ParamType = ptInput
-        Size = 4
       end>
     DataSource = MenuDS
     left = 32
@@ -294,6 +317,11 @@ object MainForm: TMainForm
       Caption = 'acRun'
       OnExecute = acRunExecute
       ShortCut = 13
+    end
+    object acFind: TAction
+      Caption = 'acFind'
+      OnExecute = acFindExecute
+      ShortCut = 16454
     end
   end
   object MenuItemDS: TDataSource

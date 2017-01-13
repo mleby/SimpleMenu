@@ -5,7 +5,7 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, DB, sqlite3conn, sqldb, FileUtil, Forms, Controls, Graphics, Dialogs, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
+  Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
   AsyncProcess, uMenuItem, process;
 
 type
@@ -18,20 +18,26 @@ type
     acList: TActionList;
     acDebug: TAction;
     acRun: TAction;
+    acFind: TAction;
     AsyncProcess1: TAsyncProcess;
+    edFind: TEdit;
     MainGrid: TDBGrid;
     MainGridShortCut: TDBGrid;
     MainGridIcon: TDBGrid;
     MenuDS: TDataSource;
     MenuDB: TSQLite3Connection;
     MenuItemDS: TDataSource;
+    pnlFind: TPanel;
     Process1: TProcess;
     SQLMenu: TSQLQuery;
     SQLMenuItems: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
     SQLTransaction: TSQLTransaction;
     procedure acDebugExecute(Sender: TObject);
+    Procedure acFindExecute(Sender: TObject);
     procedure acRunExecute(Sender: TObject);
+    Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
+    Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
@@ -45,8 +51,10 @@ type
     FRecNo: LongInt;
     FKeepOpen: Boolean;
     Procedure AppDeactivate(Sender: TObject);
+    Procedure closeFindPanel;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
+    Procedure showMenu;
     procedure setFormSize;
     procedure NavigateUp;
     { private declarations }
@@ -63,7 +71,7 @@ var
 
 implementation
 
-uses dateutils, strutils, debugForm, StreamIO, LCLType;
+uses strutils, debugForm, StreamIO, LCLType;
 
 {$R *.lfm}
 
@@ -132,6 +140,17 @@ procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   MainForm.Close;
 end;
+
+Procedure TMainForm.closeFindPanel;
+Begin
+  if edFind.Text <> '' then
+  begin
+    edFind.Text := '';
+    pnlFind.Visible := false;
+    MainGrid.SetFocus;
+    showMenu;
+  End;
+End;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
 Begin
@@ -268,6 +287,25 @@ begin
   end;
 end;
 
+Procedure TMainForm.acFindExecute(Sender: TObject);
+Begin
+  if not pnlFind.Visible then
+    pnlFind.Visible := True
+  else if pnlFind.Visible and (edFind.Text = '') then
+    pnlFind.Visible := False;
+
+  if pnlFind.Visible and not edFind.Focused then
+  begin
+    edFind.SetFocus;
+  End
+  else
+  begin
+    MainGrid.SetFocus;
+  End;
+
+  setFormSize;
+end;
+
 Procedure TMainForm.acRunExecute(Sender: TObject);
 Var
   lItemType: TMenuItemType;
@@ -321,6 +359,22 @@ begin
   begin
     setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
   End;
+
+  closeFindPanel;
+end;
+
+Procedure TMainForm.edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
+Begin
+  if (Key = VK_DOWN) or (Key = VK_UP) then
+    MainGrid.SetFocus;
+end;
+
+Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
+Begin
+  showMenu;
+
+  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') then
+    acFind.Execute;
 end;
 
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);
@@ -329,16 +383,8 @@ begin
 end;
 
 Procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
-var
-  lId: longint;
 begin
-  SQLMenuItems.Close;
-  lId := SQLMenu.FieldByName('id').AsInteger;
-  SQLMenuItems.ParamByName('id').AsInteger := lId;
-  SQLMenuItems.Open;
-  //MainGrid.DataSource.DataSet.Last;
-  //MainGrid.DataSource.DataSet.first;
-  setFormSize;
+  showMenu;
 end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);
@@ -406,6 +452,37 @@ Begin
   End;
 End;
 
+Procedure TMainForm.showMenu;
+Var
+  lSql: String;
+  lId: String;
+Begin
+  SQLMenuItems.Close;
+  lId := SQLMenu.FieldByName('id').AsString;
+  lSql := 'select id, menuId, itemType, name, search, icon, shortcut, '
+                     + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar '
+                     + ' from menuItem where menuId = ''' + lId + ''' ';
+
+  If edFind.Text <> '' Then
+    lSql := lSql + ' and name like ''%' + edFind.Text + '%'' ';
+
+  lSql := lSql + ' Order by id';
+
+  SQLMenuItems.SQL.Text := lSql;
+  SQLMenuItems.Open;
+  //SQLMenuItems.Close;
+  //lId := SQLMenu.FieldByName('id').AsInteger;
+  //
+  //SQLMenuItems.ParamByName('id').AsInteger := lId;
+  //
+  // SQLMenuItems.ParamByName('fil').AsString := '%' + edFind.Text + '%';
+  //
+  //SQLMenuItems.Open;
+  //MainGrid.DataSource.DataSet.Last;
+  //MainGrid.DataSource.DataSet.first;
+  setFormSize;
+End;
+
 Procedure TMainForm.setFormSize;
 var
   lWidth, lHeight: integer;
@@ -416,7 +493,10 @@ begin
   //for i := 0 to MainGrid.Columns.Count - 1 do // from second column
     //lWidth := lWidth + MainGrid.Columns[i].Width;
 
-  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount;
+  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth);
+
+  if pnlFind.Visible then
+    lHeight := lHeight + pnlFind.Height;
 
   //MainForm.Width := lWidth;
 
@@ -441,6 +521,7 @@ Procedure TMainForm.NavigateUp;
 Var
   lMenuId: LongInt;
 Begin
+  closeFindPanel;
   lMenuId := SQLMenu.FieldByName('id').AsInteger;
   setActiveMenu(SQLMenu.FieldByName('upMenuId').AsInteger);
   SQLMenuItems.Locate('subMenuId', lMenuId, []);

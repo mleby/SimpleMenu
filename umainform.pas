@@ -373,8 +373,8 @@ Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftSta
 Begin
   showMenu;
 
-  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') then
-    acFind.Execute;
+  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
+    acFind.Execute
 end;
 
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);

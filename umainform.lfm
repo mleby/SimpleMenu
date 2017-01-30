@@ -3,7 +3,7 @@ object MainForm: TMainForm
   Height = 800
   Top = 120
   Width = 300
-  BorderStyle = bsDialog
+  BorderStyle = bsNone
   BorderWidth = 3
   Caption = 'Menu'
   ClientHeight = 800
@@ -52,6 +52,7 @@ object MainForm: TMainForm
     Width = 65
     Align = alRight
     BorderStyle = bsNone
+    Color = 16185078
     Columns = <    
       item
         Alignment = taCenter
@@ -71,7 +72,6 @@ object MainForm: TMainForm
     FixedCols = 0
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
-    ParentColor = True
     ReadOnly = True
     Scrollbars = ssAutoVertical
     TabOrder = 1

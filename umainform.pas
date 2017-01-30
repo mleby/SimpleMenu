@@ -79,7 +79,7 @@ uses strutils, debugForm, StreamIO, LCLType;
 
 Procedure TMainForm.FormCreate(Sender: TObject);
 var
-  lFile: string;
+  lFile, lCmd: string;
   lMenuId: integer;
 begin
   FFormMode := FMNormal;
@@ -116,6 +116,12 @@ begin
   begin
     lFile := Application.GetOptionValue('f', 'file');
     LoadMenuFromFile(lFile);
+  end;
+
+  if Application.HasOption('p', 'process') then
+  begin
+    lCmd := Application.GetOptionValue('p', 'process');
+    LoadMenuFromProcess(lCmd);
   end;
 
   MenuDB.Transaction.Commit;

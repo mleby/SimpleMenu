@@ -50,6 +50,7 @@ type
     FFormMode: TFormMode;
     FRecNo: LongInt;
     FKeepOpen: Boolean;
+    FKeyStop: Boolean;
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
@@ -260,14 +261,21 @@ begin
   else
     lItemType := MITNone;
 
-  if (Key = VK_Return) and (FRecNo <> SQLMenuItems.RecNo) then
+  if (Key = VK_Return) and (FRecNo <> SQLMenuItems.RecNo) and (FRecNo > 0) then
   begin
     SQLMenuItems.RecNo := FRecNo;
   end;
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload])) then
   begin
-    acRun.Execute
+    if not FKeyStop then
+    begin
+      acRun.Execute;
+    end
+    else
+    begin
+      FKeyStop := false;
+    end
   End
   else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
   begin
@@ -371,16 +379,19 @@ end;
 
 Procedure TMainForm.edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
-  if (Key = VK_DOWN) or (Key = VK_UP) then
+  if (Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return) then
     MainGrid.SetFocus;
+
+  if (Key = VK_Return) then
+    FKeyStop := True;
 end;
 
 Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
   showMenu;
 
-  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
-    acFind.Execute
+ if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
+    acFind.Execute;
 end;
 
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);

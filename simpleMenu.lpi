@@ -67,9 +67,6 @@
           </SearchPaths>
           <CodeGeneration>
             <SmartLinkUnit Value="True"/>
-            <Optimizations>
-              <OptimizationLevel Value="3"/>
-            </Optimizations>
           </CodeGeneration>
           <Linking>
             <Debugging>
@@ -91,7 +88,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="-p /home/martin/bin/i3menu -c -k"/>
+        <CommandLineParams Value="-f /home/martin/.icewm/menu -c -k"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">

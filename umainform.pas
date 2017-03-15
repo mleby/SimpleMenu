@@ -532,6 +532,13 @@ begin
   begin
     top := (Screen.Height div 2) - (MainForm.Height div 2);
   End;
+
+  // mouse to menu if isn't
+  if Mouse.CursorPos.Y < top then
+    Mouse.CursorPos := Point(Mouse.CursorPos.X ,top +10);
+
+  if Mouse.CursorPos.Y > (top + MainForm.Height) then
+    Mouse.CursorPos := Point(Mouse.CursorPos.X , (top + MainForm.Height) - 10);
 end;
 
 Procedure TMainForm.NavigateUp;

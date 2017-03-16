@@ -323,6 +323,11 @@ object MainForm: TMainForm
       OnExecute = acFindExecute
       ShortCut = 16454
     end
+    object acKeepOpen: TAction
+      Caption = 'acKeepOpen'
+      OnExecute = acKeepOpenExecute
+      ShortCut = 32843
+    end
   end
   object MenuItemDS: TDataSource
     AutoEdit = False

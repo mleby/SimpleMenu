@@ -19,6 +19,7 @@ type
     acDebug: TAction;
     acRun: TAction;
     acFind: TAction;
+    acKeepOpen: TAction;
     AsyncProcess1: TAsyncProcess;
     edFind: TEdit;
     MainGrid: TDBGrid;
@@ -35,6 +36,7 @@ type
     SQLTransaction: TSQLTransaction;
     procedure acDebugExecute(Sender: TObject);
     Procedure acFindExecute(Sender: TObject);
+    Procedure acKeepOpenExecute(Sender: TObject);
     procedure acRunExecute(Sender: TObject);
     Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -145,7 +147,8 @@ end;
 
 procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
-  MainForm.Close;
+  if not FKeepOpen then
+    MainForm.Close;
 end;
 
 Procedure TMainForm.closeFindPanel;
@@ -318,6 +321,21 @@ Begin
   End;
 
   setFormSize;
+end;
+
+Procedure TMainForm.acKeepOpenExecute(Sender: TObject);
+Begin
+  FKeepOpen := not FKeepOpen;
+  if FKeepOpen then
+  begin
+    Self.BorderStyle := bsDialog;
+    Self.FormStyle := fsNormal;
+  End
+  else
+  begin
+    Self.BorderStyle := bsNone;
+    Self.FormStyle := fsSystemStayOnTop;
+  End;
 end;
 
 Procedure TMainForm.acRunExecute(Sender: TObject);

@@ -12,6 +12,7 @@ object MainForm: TMainForm
   Constraints.MaxHeight = 800
   FormStyle = fsSystemStayOnTop
   OnCreate = FormCreate
+  OnShow = FormShow
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
   LCLVersion = '1.6.0.4'

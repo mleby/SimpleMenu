@@ -41,6 +41,7 @@ type
     Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
+    Procedure FormShow(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -53,12 +54,14 @@ type
     FRecNo: LongInt;
     FKeepOpen: Boolean;
     FKeyStop: Boolean;
+    FSearchCount: LongInt;
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel;
+    Procedure FindSwitch;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure showMenu;
-    procedure setFormSize;
+    procedure SetFormSize;
     procedure NavigateUp;
     { private declarations }
   public
@@ -121,6 +124,11 @@ begin
     LoadMenuFromFile(lFile);
   end;
 
+  if Application.HasOption('s', 'process') then
+    FSearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
+  else
+    FSearchCount := MaxInt;
+
   if Application.HasOption('p', 'process') then
   begin
     lCmd := Application.GetOptionValue('p', 'process');
@@ -145,6 +153,11 @@ begin
     FKeepOpen := True;
 end;
 
+Procedure TMainForm.FormShow(Sender: TObject);
+Begin
+
+end;
+
 procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
@@ -160,6 +173,25 @@ Begin
     MainGrid.SetFocus;
     showMenu;
   End;
+End;
+
+Procedure TMainForm.FindSwitch;
+Begin
+  If Not pnlFind.Visible Then
+    pnlFind.Visible := True
+  Else If pnlFind.Visible And (edFind.Text = '') Then
+    pnlFind.Visible := False;
+
+  If pnlFind.Visible And Not edFind.Focused Then
+  Begin
+    edFind.SetFocus;
+  End
+  Else
+  Begin
+    MainGrid.SetFocus;
+  End;
+
+  SetFormSize;
 End;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
@@ -306,21 +338,7 @@ end;
 
 Procedure TMainForm.acFindExecute(Sender: TObject);
 Begin
-  if not pnlFind.Visible then
-    pnlFind.Visible := True
-  else if pnlFind.Visible and (edFind.Text = '') then
-    pnlFind.Visible := False;
-
-  if pnlFind.Visible and not edFind.Focused then
-  begin
-    edFind.SetFocus;
-  End
-  else
-  begin
-    MainGrid.SetFocus;
-  End;
-
-  setFormSize;
+  FindSwitch;
 end;
 
 Procedure TMainForm.acKeepOpenExecute(Sender: TObject);
@@ -515,15 +533,24 @@ Begin
   //SQLMenuItems.Open;
   //MainGrid.DataSource.DataSet.Last;
   //MainGrid.DataSource.DataSet.first;
-  setFormSize;
+  if (FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount) and (Not pnlFind.Visible) then
+  begin
+    pnlFind.Visible := True;
+    ActiveControl := edFind;
+    if MainForm.CanFocus then
+      edFind.SetFocus;
+  End;
+
+  if pnlFind.Visible then
+    ActiveControl := edFind;
+
+  SetFormSize;
 End;
 
-Procedure TMainForm.setFormSize;
+Procedure TMainForm.SetFormSize;
 var
   lWidth, lHeight: integer;
 begin
-
-
   //lWidth := MainGridIcon.Width + MainGridShortCut.Width; // scroolbar wight + first column
   //for i := 0 to MainGrid.Columns.Count - 1 do // from second column
     //lWidth := lWidth + MainGrid.Columns[i].Width;

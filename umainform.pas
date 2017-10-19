@@ -78,7 +78,7 @@ var
 
 implementation
 
-uses strutils, debugForm, StreamIO, LCLType;
+uses strutils, debugForm, StreamIO, LCLType, Dialogs;
 
 {$R *.lfm}
 
@@ -360,7 +360,7 @@ end;
 Procedure TMainForm.RunAsync(Const aCmd{, aParams, aDir, aPath, aName}: string);
 var
   sl, slCmd: TStringList;
-  lParams, lCmd, lPath: string;
+  lParams, lCmd, lPath, l: string;
   lExe: RawByteString;
 Const
   BEGIN_SL = 0;
@@ -388,13 +388,21 @@ begin
     sl.DelimitedText := lParams;
     slCmd.AddStrings(sl);
 
+    //for l in slCmd do
+    //  ShowMessage(l);
+
     // execute process
     //if aDir <> '' then
     //  runAsyncProcess.CurrentDirectory := aDir;
 
     // expand path
-    lPath := GetEnvironmentVariable('PATH');
-    lExe := ExeSearch(lCmd, lPath);
+    if FileExists(lCmd) then
+      lExe := lCmd
+    else
+    begin
+      lPath := GetEnvironmentVariable('PATH');
+      lExe := ExeSearch(lCmd, lPath);
+    End;
 
     AsyncProcess1.Executable := lExe;
     AsyncProcess1.Parameters.Clear;

@@ -506,6 +506,6 @@ object MainForm: TMainForm
     WindowWidth = 0
     FillAttribute = 0
     left = 125
-    top = 145
+    top = 136
   end
 end

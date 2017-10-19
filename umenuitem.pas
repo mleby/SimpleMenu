@@ -29,6 +29,7 @@ type
 
     function GetSearch: string;
     function GetSubMenuChar: string;
+    Procedure QuoteTrim(Var lName: String); // remove leading and ending quotes
     Procedure setNameAndShotrCutKey(Const aName: String);
 
     function SplitMenuLine(const aLine: string): TStringList;
@@ -89,7 +90,9 @@ begin
     FItemType := MITprog;
 
     setNameAndShotrCutKey(lSl[1]);
+
     FIcon := lSl[2];
+    QuoteTrim(FIcon);
 
     for i := 3 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
@@ -148,7 +151,7 @@ begin
     FItemType := MITNone;
 
     lFileName := lSl[1];
-    lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName;
+    lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName; {TODO -oLebeda -cNone: správnou cestu}
 
     if FileExists(lFileName) then
       MainForm.LoadMenuFromFile(lFileName)
@@ -161,10 +164,13 @@ begin
 end;
 
 function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
+Var
+  lLine: String;
 begin
   Result := TStringList.Create;
   Result.Delimiter := ' ';
-  Result.DelimitedText := aLine;
+  lLine := StringReplace(aLine, '"', '"""', [rfReplaceAll]);
+  Result.DelimitedText := lLine;
 end;
 
 procedure TMenuItemParser.startNewMenu(const aLine: string);
@@ -206,11 +212,20 @@ begin
     Result := '';
 end;
 
+Procedure TMenuItemParser.QuoteTrim(Var lName: String);
+Begin
+  If lName[1] = '"' Then
+    Delete(lName, 1, 1);
+  If lName[Length(lName)] = '"' Then
+    Delete(lName, Length(lName), 1);
+End;
+
 procedure TMenuItemParser.setNameAndShotrCutKey(const aName: String);
 Var
   i: Integer;
   lName: String;
 Begin
+  // identify explicit shortcut
   for i := 1 to Length(aName) do
   begin
     if (aName[i] = '_') and (FShortCut = '') and (aName[i + 1] <> '_') then
@@ -219,7 +234,10 @@ Begin
       lName := lName + aName[i];
   End;
 
-  if FShortCut = '' then
+  QuoteTrim(lName);
+
+  // generate implicit shortcut
+  if FShortCut = '' then {TODO -oLebeda -cNone: generate shortcut more inteligent - use 1 unused letter}
     FShortCut := LowerCase(aName[1]);
 
   FName := lName;

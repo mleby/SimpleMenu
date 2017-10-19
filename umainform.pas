@@ -60,6 +60,7 @@ type
     Procedure FindSwitch;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
+    Procedure RunAsync(Const aCmd: string);
     Procedure showMenu;
     procedure SetFormSize;
     procedure NavigateUp;
@@ -124,7 +125,7 @@ begin
     LoadMenuFromFile(lFile);
   end;
 
-  if Application.HasOption('s', 'process') then
+  if Application.HasOption('s', 'search') then
     FSearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
   else
     FSearchCount := MaxInt;
@@ -356,6 +357,56 @@ Begin
   End;
 end;
 
+Procedure TMainForm.RunAsync(Const aCmd{, aParams, aDir, aPath, aName}: string);
+var
+  sl, slCmd: TStringList;
+  lParams, lCmd, lPath: string;
+  lExe: RawByteString;
+Const
+  BEGIN_SL = 0;
+begin
+  // replace macros
+  //if aDir <> '' then
+  //  lParams := StringReplace(aParams, '%d', '"' + aDir + '"', [rfReplaceAll]);
+  //
+  //if aPath <> '' then
+  //  lParams := StringReplace(lParams, '%p', '"' + aPath + '"', [rfReplaceAll]);
+  //
+  //if aName <> '' then
+  //  lParams := StringReplace(lParams, '%f', '"' + aName + '"', [rfReplaceAll]);
+
+  sl := TStringList.Create;
+  try
+    slCmd := tStringList.Create;
+    slCmd.Delimiter := ' ';
+    slCmd.DelimitedText := aCmd;
+    lCmd := slCmd[BEGIN_SL];
+    slCmd.Delete(BEGIN_SL);
+
+    //sl.StrictDelimiter := true;
+    sl.Delimiter := ' ';
+    sl.DelimitedText := lParams;
+    slCmd.AddStrings(sl);
+
+    // execute process
+    //if aDir <> '' then
+    //  runAsyncProcess.CurrentDirectory := aDir;
+
+    // expand path
+    lPath := GetEnvironmentVariable('PATH');
+    lExe := ExeSearch(lCmd, lPath);
+
+    AsyncProcess1.Executable := lExe;
+    AsyncProcess1.Parameters.Clear;
+    AsyncProcess1.Parameters.AddStrings(slCmd);
+    AsyncProcess1.Execute;
+
+  finally
+    FreeAndNil(slCmd);
+    sl.Free;
+  end;
+end;
+
 Procedure TMainForm.acRunExecute(Sender: TObject);
 Var
   lItemType: TMenuItemType;
@@ -365,8 +416,9 @@ begin
 
   if lItemType =  MITprog then
   begin
-    AsyncProcess1.CommandLine := SQLMenuItems.FieldByName('cmd').AsString;
-    AsyncProcess1.Execute;
+    RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
+    // AsyncProcess1.CommandLine := SQLMenuItems.FieldByName('cmd').AsString;
+    //AsyncProcess1.Execute;
     if not FKeepOpen then
       MainForm.Close;
   End
@@ -549,18 +601,12 @@ End;
 
 Procedure TMainForm.SetFormSize;
 var
-  lWidth, lHeight: integer;
+  lHeight: integer;
 begin
-  //lWidth := MainGridIcon.Width + MainGridShortCut.Width; // scroolbar wight + first column
-  //for i := 0 to MainGrid.Columns.Count - 1 do // from second column
-    //lWidth := lWidth + MainGrid.Columns[i].Width;
-
   lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth);
 
   if pnlFind.Visible then
     lHeight := lHeight + pnlFind.Height;
-
-  //MainForm.Width := lWidth;
 
   if MainForm.Constraints.MaxHeight >= lHeight then
   begin

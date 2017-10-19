@@ -260,6 +260,8 @@ begin
     includeItems(aLine)
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
+  else if AnsiStartsText('menusearch ', aLine) then
+    prepareProgreload(aLine) {TODO -oLebeda -cNone: menusearch}
   // menufile
   // menuprog
   else

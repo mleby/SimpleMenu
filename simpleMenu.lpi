@@ -88,7 +88,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="-f /home/martin/.icewm/menu -c -k"/>
+        <CommandLineParams Value="-f /home/martin/.icewm/menu -c -k -s 30"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">

@@ -506,9 +506,11 @@ begin
   begin
     lLine := Trim(aLines[i]);
     lLine := DelSpace1(lLine);
-    if (lLine <> '') and not AnsiStartsStr('#', lLine) then
+    if (lLine <> '') and (not AnsiStartsStr('#', lLine) or AnsiStartsStr('#!', lLine)) then
     begin
-      //lActMenuId := SQLMenu.FieldByName('id').AsInteger;
+      if AnsiStartsStr('#!', lLine) then
+        Delete(lLine, 1, 2);
+
       lMenuItemParser := TMenuItemParser.Create(lLine);
       try
         if not(lMenuItemParser.itemType in [MITEndMenu, MITNone]) then

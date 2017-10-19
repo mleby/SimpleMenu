@@ -40,6 +40,7 @@ type
     procedure acRunExecute(Sender: TObject);
     Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
+    Procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     Procedure FormShow(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
@@ -70,7 +71,9 @@ type
     Function setActiveMenu(const aIdMenu: longint): Boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
-    { public declarations }
+
+    Property FormMode: TFormMode Read FFormMode Write FFormMode;
+    Property SearchCount: LongInt Read FSearchCount Write FSearchCount;
   end;
 
 var
@@ -85,9 +88,6 @@ uses strutils, debugForm, StreamIO, LCLType, Dialogs;
 { TMainForm }
 
 Procedure TMainForm.FormCreate(Sender: TObject);
-var
-  lFile, lCmd: string;
-  lMenuId: integer;
 begin
   FFormMode := FMNormal;
   // color
@@ -98,42 +98,31 @@ begin
   //MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
-  MenuDB.ExecuteDirect(
-    'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
-  MenuDB.ExecuteDirect(
-    'CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, FOREIGN KEY(menuId) REFERENCES menu(id))');
+  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
+  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
 
   SQLMenu.Active := True;
   SQLMenuItems.Active := True;
 
   // fill root menu
-  lMenuId := AddMenu('ROOT', 0);
+  AddMenu('ROOT', 0);
   SQLMenu.First;
-
-  if Application.HasOption('c', 'center') then
-  begin
-    Width := 500; {TODO -oLebeda -cNone: umožnit zvolit}
-    Height := 563;
-    Position := poScreenCenter;
-    FFormMode := FMCentral;
-  end;
 
   if Application.HasOption('f', 'file') then
   begin
-    lFile := Application.GetOptionValue('f', 'file');
-    LoadMenuFromFile(lFile);
+    SQLMenu.Edit;
+    SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('f', 'file');
+    SQLMenu.CheckBrowseMode;
+    LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
   end;
-
-  if Application.HasOption('s', 'search') then
-    FSearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
-  else
-    FSearchCount := MaxInt;
 
   if Application.HasOption('p', 'process') then
   begin
-    lCmd := Application.GetOptionValue('p', 'process');
-    LoadMenuFromProcess(lCmd);
+    SQLMenu.Edit;
+    SQLMenu.FieldByName('cmd').AsString := Application.GetOptionValue('p', 'process');
+    SQLMenu.CheckBrowseMode;
+    LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
   end;
 
   MenuDB.Transaction.Commit;
@@ -159,7 +148,7 @@ Begin
 
 end;
 
-procedure TMainForm.AppDeactivate(Sender: TObject);
+Procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
     MainForm.Close;
@@ -490,6 +479,11 @@ Begin
     acFind.Execute;
 end;
 
+Procedure TMainForm.FormActivate(Sender: TObject);
+Begin
+  {TODO -oLebeda -cNone: reload menu ??}
+end;
+
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);
 begin
   SQLMenu.FieldByName('Load').AsInteger := DateTimeToTimeStamp(time).Time div 1000;
@@ -526,7 +520,7 @@ begin
   end;
 end;
 
-Procedure TMainForm.LoadMenuFromProcess(const aCmd: String);
+Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
   lSl: TStringList;
   i: Integer;

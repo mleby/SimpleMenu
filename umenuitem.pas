@@ -10,7 +10,7 @@ uses
 type
 
   { TMenuItemParser }
-  TMenuItemType = (MITprog, MITmenu, MITrunonce, MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
+  TMenuItemType = (MITprog, MITmenu, MITrunonce, MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone, MITMenusearch);
 
   TMenuItemParser = class(TObject)
   private

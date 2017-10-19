@@ -88,7 +88,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="-p &quot;/home/martin/bin/youtube/menu.sh&quot;  -k"/>
+        <CommandLineParams Value="-f /home/martin/.icewm/menu -c -k"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">

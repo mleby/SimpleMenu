@@ -50,6 +50,7 @@ object MainForm: TMainForm
     0000000000000000000000000000000000000000000000000000000000000000
     0000
   }
+  OnActivate = FormActivate
   OnCreate = FormCreate
   OnShow = FormShow
   PopupMode = pmExplicit

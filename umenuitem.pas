@@ -238,7 +238,7 @@ Begin
 
   // generate implicit shortcut
   if FShortCut = '' then {TODO -oLebeda -cNone: generate shortcut more inteligent - use 1 unused letter}
-    FShortCut := LowerCase(aName[1]);
+    FShortCut := LowerCase(lName[1]);
 
   FName := lName;
 End;

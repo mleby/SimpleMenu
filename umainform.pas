@@ -259,7 +259,10 @@ Begin
   SQLMenuItemsShortcut.Open;
 
   if (SQLMenuItemsShortcut.RecordCount = 1) and SQLMenuItems.Locate('id', SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
-     acRun.Execute
+  begin
+    acRun.Execute;
+    key := #0;
+  End
   else if (SQLMenuItemsShortcut.RecordCount > 1) then
   begin
     if not SQLMenuItems.EOF then
@@ -565,6 +568,7 @@ Procedure TMainForm.showMenu;
 Var
   lSql: String;
   lId: String;
+  lMenuCount: LongInt;
 Begin
   SQLMenuItems.Close;
   lId := SQLMenu.FieldByName('id').AsString;
@@ -579,17 +583,10 @@ Begin
 
   SQLMenuItems.SQL.Text := lSql;
   SQLMenuItems.Open;
-  //SQLMenuItems.Close;
-  //lId := SQLMenu.FieldByName('id').AsInteger;
-  //
-  //SQLMenuItems.ParamByName('id').AsInteger := lId;
-  //
-  // SQLMenuItems.ParamByName('fil').AsString := '%' + edFind.Text + '%';
-  //
-  //SQLMenuItems.Open;
-  //MainGrid.DataSource.DataSet.Last;
-  //MainGrid.DataSource.DataSet.first;
-  if (FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount) and (Not pnlFind.Visible) then
+
+  lMenuCount := SQLMenuItems.RecordCount;
+
+  if (FSearchCount > 0) and (FSearchCount <= lMenuCount) and (Not pnlFind.Visible) then
   begin
     pnlFind.Visible := True;
     ActiveControl := edFind;

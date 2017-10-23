@@ -159,8 +159,8 @@ Begin
   if (edFind.Text <> '') or aForce then
   begin
     edFind.Text := '';
-    MainGrid.SetFocus;
     showMenu;
+    MainGrid.SetFocus;
     pnlFind.Visible := false;
   End;
 End;

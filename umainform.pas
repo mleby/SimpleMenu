@@ -494,7 +494,8 @@ end;
 
 Procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
 begin
-  showMenu;
+ if not SQLMenu.Modified then
+    showMenu;
 end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);

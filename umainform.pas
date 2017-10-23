@@ -311,7 +311,7 @@ begin
   End
   else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
     MainForm.Close
-  else if (key = VK_UP) and (SQLMenuItems.RecNo = 1) then
+  else if (key = VK_UP) and SQLMenuItems.BOF then
     SQLMenuItems.Last
   else if (key = VK_DOWN) and SQLMenuItems.EOF then
     SQLMenuItems.First
@@ -467,7 +467,19 @@ end;
 
 Procedure TMainForm.edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
-  if (Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return) then
+  if (Key = VK_DOWN) then
+  begin
+    SQLMenuItems.First;
+    MainGrid.SetFocus;
+    key := 0;
+  End
+  else if (Key = VK_UP) then
+  begin
+    SQLMenuItems.Last;
+    MainGrid.SetFocus;
+    key := 0;
+  End
+  else if (Key = VK_Return) then
     MainGrid.SetFocus;
 
   if (Key = VK_Return) then
@@ -478,7 +490,7 @@ Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftSta
 Begin
   showMenu;
 
- if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
+  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
     acFind.Execute;
 end;
 
@@ -503,7 +515,6 @@ var
   lLine: string;
   i: integer;
   lMenuItemParser: TMenuItemParser;
-  lMenuId, lActMenuId: longint;
 begin
   // insert into menu
   for i := 0 to aLines.Count - 1 do

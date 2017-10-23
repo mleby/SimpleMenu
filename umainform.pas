@@ -57,7 +57,7 @@ type
     FKeyStop: Boolean;
     FSearchCount: LongInt;
     Procedure AppDeactivate(Sender: TObject);
-    Procedure closeFindPanel;
+    Procedure closeFindPanel(Const aForce: Boolean = false);
     Procedure FindSwitch;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
@@ -154,14 +154,14 @@ begin
     MainForm.Close;
 end;
 
-Procedure TMainForm.closeFindPanel;
+Procedure TMainForm.closeFindPanel(const aForce: Boolean = false);
 Begin
-  if edFind.Text <> '' then
+  if (edFind.Text <> '') or aForce then
   begin
     edFind.Text := '';
-    pnlFind.Visible := false;
     MainGrid.SetFocus;
     showMenu;
+    pnlFind.Visible := false;
   End;
 End;
 
@@ -488,10 +488,15 @@ end;
 
 Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
-  showMenu;
-
-  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '') or (Key = VK_ESCAPE) then
-    acFind.Execute;
+  if (Key = VK_ESCAPE) then
+  begin
+    closeFindPanel(true);
+    NavigateUp;
+  End;
+  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
+    acFind.Execute
+  else
+    showMenu;
 end;
 
 Procedure TMainForm.FormActivate(Sender: TObject);

@@ -42,20 +42,6 @@ Begin
   RequireDerivedFormResource := True;
   Application.Initialize;
   Application.CreateForm(TMainForm, MainForm);
-
-  if Application.HasOption('c', 'center') then
-  begin
-    MainForm.Width := 500; {TODO -oLebeda -cNone: umožnit zvolit}
-    MainForm.Height := 563;
-    MainForm.Position := poScreenCenter;
-    MainForm.FormMode := FMCentral;
-  end;
-
-  if Application.HasOption('s', 'search') then
-    MainForm.SearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
-  else
-    MainForm.SearchCount := MaxInt;
-
   Application.Run;
 End.
 

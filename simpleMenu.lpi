@@ -88,7 +88,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="-f /home/martin/.icewm/menu -c -k -s 40"/>
+        <CommandLineParams Value="-k -s 5 -c -p &quot;/home/martin/bin/locate -n -t program -m&quot;"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">

@@ -52,7 +52,6 @@ object MainForm: TMainForm
   }
   OnActivate = FormActivate
   OnCreate = FormCreate
-  OnShow = FormShow
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
   LCLVersion = '1.6.0.4'

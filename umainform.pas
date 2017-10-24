@@ -42,7 +42,6 @@ type
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    Procedure FormShow(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -62,6 +61,7 @@ type
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure RunAsync(Const aCmd: string);
+    Procedure SetSearchCount(Const aValue: LongInt);
     Procedure showMenu;
     procedure SetFormSize;
     procedure NavigateUp;
@@ -73,7 +73,7 @@ type
     procedure LoadMenuFromFile(const aFile: string);
 
     Property FormMode: TFormMode Read FFormMode Write FFormMode;
-    Property SearchCount: LongInt Read FSearchCount Write FSearchCount;
+    Property SearchCount: LongInt Read FSearchCount Write SetSearchCount;
   end;
 
 var
@@ -109,6 +109,20 @@ begin
   AddMenu('ROOT', 0);
   SQLMenu.First;
 
+  // commandline parameters
+  if Application.HasOption('c', 'center') then
+  begin
+    MainForm.Width := 500; {TODO -oLebeda -cNone: umožnit zvolit}
+    MainForm.Height := 563;
+    MainForm.Position := poScreenCenter;
+    MainForm.FormMode := FMCentral;
+  end;
+
+  if Application.HasOption('s', 'search') then
+    MainForm.SearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
+  else
+    MainForm.SearchCount := MaxInt;
+
   if Application.HasOption('f', 'file') then
   begin
     SQLMenu.Edit;
@@ -143,18 +157,13 @@ begin
     FKeepOpen := True;
 end;
 
-Procedure TMainForm.FormShow(Sender: TObject);
-Begin
-
-end;
-
 Procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
     MainForm.Close;
 end;
 
-Procedure TMainForm.closeFindPanel(const aForce: Boolean = false);
+Procedure TMainForm.closeFindPanel(Const aForce: Boolean);
 Begin
   if (edFind.Text <> '') or aForce then
   begin
@@ -406,6 +415,12 @@ begin
     sl.Free;
   end;
 end;
+
+Procedure TMainForm.SetSearchCount(Const aValue: LongInt);
+Begin
+  If FSearchCount = aValue Then Exit;
+  FSearchCount := aValue;
+End;
 
 Procedure TMainForm.acRunExecute(Sender: TObject);
 Var

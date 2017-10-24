@@ -176,7 +176,9 @@ End;
 
 Procedure TMainForm.FindSwitch;
 Begin
-  If Not pnlFind.Visible Then
+  if MainGrid.Focused then
+    pnlFind.Visible := True
+  else If Not pnlFind.Visible Then
     pnlFind.Visible := True
   Else If pnlFind.Visible And (edFind.Text = '') Then
     pnlFind.Visible := False;
@@ -505,10 +507,13 @@ Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftSta
 Begin
   if (Key = VK_ESCAPE) then
   begin
+    if SQLMenu.FieldByName('upMenuId').AsInteger = 0 then
+      MainForm.Close;
+
     closeFindPanel(true);
     NavigateUp;
-  End;
-  if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
+  End
+  else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
     acFind.Execute
   else
     showMenu;

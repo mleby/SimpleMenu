@@ -42,6 +42,7 @@ type
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    Procedure FormDestroy(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -55,6 +56,7 @@ type
     FKeepOpen: Boolean;
     FKeyStop: Boolean;
     FSearchCount: LongInt;
+    FIconPathHolder: TStringList;
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel(Const aForce: Boolean = false);
     Procedure FindSwitch;
@@ -65,6 +67,7 @@ type
     Procedure showMenu;
     procedure SetFormSize;
     procedure NavigateUp;
+    Function GetFullIconPath(aName: String): String;
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = ''; aPath: string = ''; aReloadInterval: integer = 0): integer;
@@ -157,6 +160,12 @@ begin
     FKeepOpen := True;
 end;
 
+Procedure TMainForm.FormDestroy(Sender: TObject);
+Begin
+  if Assigned(FIconPathHolder) then
+    FreeAndNil(FIconPathHolder);
+end;
+
 Procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
@@ -212,35 +221,10 @@ begin
       bmpImage := TPicture.Create;
       try
         lIconName := MainGridIcon.DataSource.DataSet.FieldByName('icon').AsString;
+        lIconName := GetFullIconPath(lIconName);
 
-        // expansion of icons (from IceWM docs)
         if FileExists(lIconName) then
           bmpImage.LoadFromFile(lIconName)
-        else if FileExists(GetEnvironmentVariable('HOME') + '/.icewm/icons/' + lIconName + '.png') then
-          bmpImage.LoadFromFile(GetEnvironmentVariable('HOME') + '/.icewm/icons/' + lIconName + '.png')
-        else if FileExists(GetEnvironmentVariable('HOME') + '/.icewm/icons/' + lIconName + '.xpm') then
-          bmpImage.LoadFromFile(GetEnvironmentVariable('HOME') + '/.icewm/icons/' + lIconName + '.xpm')
-        else if FileExists('/usr/share/pixmaps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/pixmaps/' + lIconName + '.png')
-        else if FileExists('/usr/share/pixmaps/' + lIconName + '.xpm') then
-          bmpImage.LoadFromFile('/usr/share/pixmaps/' + lIconName + '.xpm')
-        else if FileExists('/usr/share/icewm/icons/' + lIconName + '_16x16.xpm') then
-          bmpImage.LoadFromFile('/usr/share/icewm/icons/' + lIconName + '_16x16.xpm')
-
-        else if FileExists('/usr/share/icons/hicolor/16x16/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/hicolor/16x16/apps/' + lIconName + '.png')
-        else if FileExists('/usr/share/icons/hicolor/32x32/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/hicolor/32x32/apps/' + lIconName + '.png')
-        else if FileExists('/usr/share/icons/hicolor/48x48/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/hicolor/48x48/apps/' + lIconName + '.png')
-
-        else if FileExists('/usr/share/icons/locolor/16x16/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/locolor/16x16/apps/' + lIconName + '.png')
-        else if FileExists('/usr/share/icons/locolor/32x32/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/locolor/32x32/apps/' + lIconName + '.png')
-        else if FileExists('/usr/share/icons/locolor/48x48/apps/' + lIconName + '.png') then
-          bmpImage.LoadFromFile('/usr/share/icons/locolor/48x48/apps/' + lIconName + '.png')
-
         else
           bmpImage.Clear;
 
@@ -252,6 +236,43 @@ begin
       end;
     end;
 end;
+
+Function TMainForm.GetFullIconPath(aName: String): String;
+Var
+  lDir: string;
+  i: Integer;
+Begin
+  if FileExists(aName) then
+    Result := aName
+  else
+  begin
+    if not Assigned(FIconPathHolder) then
+      FIconPathHolder := TStringList.Create;
+
+    if FileExists(GetEnvironmentVariable('HOME') + '/.simpleMenuIcons') then
+      FIconPathHolder.LoadFromFile(GetEnvironmentVariable('HOME') + '/.simpleMenuIcons');
+
+    for i := 0 to FIconPathHolder.Count - 1 do
+    begin
+      lDir := IncludeTrailingPathDelimiter(FIconPathHolder[i]);
+      if FileExists(lDir + aName + '.png') then
+      begin
+        Result := lDir + aName + '.png';
+        Break;
+      End
+      else if FileExists(lDir + aName + '.xpm') then
+      begin
+        Result := lDir + aName + '.xpm';
+        Break;
+      End
+      else if FileExists(lDir + aName + '_16x16.xpm') then
+      begin
+        Result := lDir + aName + '_16x16.xpm';
+        Break;
+      End;
+    End;
+  end
+End;
 
 Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin

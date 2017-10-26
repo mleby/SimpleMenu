@@ -803,7 +803,8 @@ Begin
     ActiveControl := edFind;
 
   // form size
-  SetFormSize;
+  if SQLMenuItems.RecordCount > 0 then
+    SetFormSize;
 End;
 
 Procedure TMainForm.SetFormSize;

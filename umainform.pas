@@ -45,10 +45,12 @@ type
     procedure FormCreate(Sender: TObject);
     Procedure FormDestroy(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
-    procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+    Procedure MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure MainGridIconDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
+    Procedure MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
   private
@@ -58,6 +60,7 @@ type
     FKeyStop: Boolean;
     FSearchCount: LongInt;
     FIconPathHolder: TStringList;
+    FLastResNo: Integer; // for navigation over separators
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel(Const aForce: Boolean = false);
     Procedure FindSwitch;
@@ -67,6 +70,8 @@ type
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure RunAsync(Const aCmd: string);
     Procedure SetSearchCount(Const aValue: LongInt);
+    Procedure SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect;
+      Const aGrid: TDBGrid);
     Procedure showMenu;
     procedure SetFormSize;
     procedure NavigateUp;
@@ -240,7 +245,18 @@ Begin
   acRun.Execute;
 end;
 
-Procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+Procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+Begin
+  SetSeparatorRow(State, Column, DataCol, Rect, MainGrid);
+end;
+
+Procedure TMainForm.MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn;
+  State: TGridDrawState);
+Begin
+  SetSeparatorRow(State, Column, DataCol, Rect, MainGridShortCut);
+end;
+
+Procedure TMainForm.MainGridIconDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
 var
   bmpImage: TPicture;
   lIconName: string;
@@ -266,6 +282,8 @@ begin
         bmpimage.Free;
       end;
     end;
+
+  //SetSeparatorRow(State, Column, DataCol, Rect, MainGridIcon);
 end;
 
 Function TMainForm.GetFullIconPath(aName: String): String;
@@ -307,6 +325,9 @@ End;
 
 Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
+  // navigation over separators
+  FLastResNo := SQLMenuItems.RecNo;
+
   if (Key = VK_Return) then
   begin
     FRecNo := SQLMenuItems.RecNo;
@@ -375,9 +396,21 @@ begin
   else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
     MainForm.Close
   else if (key = VK_UP) and SQLMenuItems.BOF then
-    SQLMenuItems.Last
+  begin
+    SQLMenuItems.Last;
+    FLastResNo := SQLMenuItems.RecNo + 1;
+  end
   else if (key = VK_DOWN) and SQLMenuItems.EOF then
-    SQLMenuItems.First
+  begin
+    SQLMenuItems.First;
+    FLastResNo := SQLMenuItems.RecNo - 1;
+  end;
+
+  if strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator then
+    if SQLMenuItems.RecNo > FLastResNo then
+      SQLMenuItems.Next
+    else
+      SQLMenuItems.Prior;
 end;
 
 Procedure TMainForm.acDebugExecute(Sender: TObject);
@@ -474,6 +507,21 @@ Procedure TMainForm.SetSearchCount(Const aValue: LongInt);
 Begin
   If FSearchCount = aValue Then Exit;
   FSearchCount := aValue;
+End;
+
+Procedure TMainForm.SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect; const aGrid: TDBGrid);
+Begin
+  If SQLMenuItems.Active And (SQLMenuItems.RecordCount > 0) Then
+  Begin
+    If strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator Then
+    Begin
+      aGrid.Canvas.Font.Bold := true;
+      aGrid.Canvas.Brush.Color := clSilver;
+
+      aGrid.Canvas.FillRect(Rect);
+      aGrid.DefaultDrawColumnCell(Rect, DataCol, Column, State);
+    End;
+  End;
 End;
 
 Procedure TMainForm.acRunExecute(Sender: TObject);

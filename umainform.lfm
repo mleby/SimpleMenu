@@ -81,6 +81,7 @@ object MainForm: TMainForm
     TabAdvance = aaNone
     TabOrder = 0
     OnCellClick = MainGridCellClick
+    OnDrawColumnCell = MainGridDrawColumnCell
     OnKeyDown = MainGridKeyDown
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
@@ -116,6 +117,7 @@ object MainForm: TMainForm
     Scrollbars = ssAutoVertical
     TabOrder = 1
     OnCellClick = MainGridCellClick
+    OnDrawColumnCell = MainGridShortCutDrawColumnCell
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end
@@ -143,7 +145,7 @@ object MainForm: TMainForm
     Scrollbars = ssAutoHorizontal
     TabOrder = 2
     OnCellClick = MainGridCellClick
-    OnDrawColumnCell = MainGridDrawColumnCell
+    OnDrawColumnCell = MainGridIconDrawColumnCell
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end

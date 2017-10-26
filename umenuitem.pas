@@ -136,6 +136,9 @@ begin
     if lSl.Count >= 2 then
       FName := lSl[1];
 
+    If (Length(FName) > 0) and (FName[1] = '#') Then
+      Delete(FName, 1, 1);
+
   finally
     FreeAndNil(lSl);
   end;

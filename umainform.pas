@@ -69,6 +69,7 @@ type
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure RunAsync(Const aCmd: string);
+    Procedure setMenuShortcut(Const lId: String; aKeySet: String = '');
     Procedure SetSearchCount(Const aValue: LongInt);
     Procedure SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect;
       Const aGrid: TDBGrid);
@@ -223,7 +224,7 @@ Begin
     Result := 500;
 End;
 
-Function TMainForm.GetTextWidth(const aText: String): Integer;
+Function TMainForm.GetTextWidth(Const aText: String): Integer;
 var
   W: integer;
   BM: TBitmap;
@@ -503,13 +504,51 @@ begin
   end;
 end;
 
+Procedure TMainForm.setMenuShortcut(Const lId: String; aKeySet: String = '');
+Var
+  lShCut: Char;
+  s: Char;
+  lMenuCount: LongInt;
+Begin
+  SQLMenuItems.First;
+  While Not SQLMenuItems.EOF Do
+  Begin
+    If (SQLMenuItems.FieldByName('shortcut').AsString = '') And (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) Then
+    Begin
+      if Length(aKeySet) = 0 then
+        aKeySet := SQLMenuItems.FieldByName('name').AsString;
+      For s In aKeySet Do
+      Begin
+        lShCut := LowerCase(s);
+
+        SQLMenuItemsShortcut.Close;
+        SQLMenuItemsShortcut.ParamByName('idMenu').AsString := lId;
+        SQLMenuItemsShortcut.ParamByName('shortcut').AsString := lShCut;
+        SQLMenuItemsShortcut.Open;
+        lMenuCount := SQLMenuItemsShortcut.RecordCount;
+
+        If (lShCut <> '') And (lMenuCount = 0) And (lShCut In ['a' .. 'z', '0' .. '9']) Then
+        Begin
+          SQLMenuItems.Edit;
+          SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
+          SQLMenuItems.CheckBrowseMode;
+          SQLMenuItems.ApplyUpdates;
+          break;
+        End;
+      End;
+    End;
+    SQLMenuItems.Next;
+  End;
+End;
+
 Procedure TMainForm.SetSearchCount(Const aValue: LongInt);
 Begin
   If FSearchCount = aValue Then Exit;
   FSearchCount := aValue;
 End;
 
-Procedure TMainForm.SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect; const aGrid: TDBGrid);
+Procedure TMainForm.SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect;
+  Const aGrid: TDBGrid);
 Begin
   If SQLMenuItems.Active And (SQLMenuItems.RecordCount > 0) Then
   Begin
@@ -718,8 +757,6 @@ Procedure TMainForm.showMenu;
 Var
   lSql: String;
   lId: String;
-  lMenuCount: LongInt;
-  s, lShCut: Char;
 Begin
   // open Main menu
   MenuItemDS.DataSet := nil;
@@ -745,33 +782,8 @@ Begin
   // fill implicit shortcut
   if FSearchCount > SQLMenuItems.RecordCount then
   begin
-    SQLMenuItems.First;
-    while not SQLMenuItems.EOF do
-    begin
-      if (SQLMenuItems.FieldByName('shortcut').AsString = '') and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) then
-      begin
-        for s in SQLMenuItems.FieldByName('name').AsString do
-        begin
-          lShCut := LowerCase(s);
-
-          SQLMenuItemsShortcut.Close;
-          SQLMenuItemsShortcut.ParamByName('idMenu').AsString := lId;
-          SQLMenuItemsShortcut.ParamByName('shortcut').AsString := lShCut;
-          SQLMenuItemsShortcut.Open;
-          lMenuCount := SQLMenuItemsShortcut.RecordCount;
-
-          if (lShCut <> '') and (lMenuCount = 0) and (lShCut in ['a'..'z','0'..'9']) then
-          begin
-            SQLMenuItems.Edit;
-            SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
-            SQLMenuItems.CheckBrowseMode;
-            SQLMenuItems.ApplyUpdates;
-            break;
-          End;
-        end;
-      End;
-      SQLMenuItems.Next;
-    End;
+    setMenuShortcut(lId);
+    setMenuShortcut(lId, 'abcdefghijklmnopqrstuvwxyz0123456789');
     SQLMenuItems.First;
   End;
 

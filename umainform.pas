@@ -719,7 +719,10 @@ Var
   lSql: String;
   lId: String;
   lMenuCount: LongInt;
+  s, lShCut: Char;
 Begin
+  // open Main menu
+  MenuItemDS.DataSet := nil;
   SQLMenuItems.Close;
   lId := SQLMenu.FieldByName('id').AsString;
   lSql := 'select id, menuId, itemType, name, search, icon, shortcut, '
@@ -734,13 +737,45 @@ Begin
   SQLMenuItems.SQL.Text := lSql;
   SQLMenuItems.Open;
 
+  // open max width query
   SQLMenuItemsMaxWidth.Close;
   SQLMenuItemsMaxWidth.ParamByName('id').AsString := lId;
   SQLMenuItemsMaxWidth.Open;
 
-  lMenuCount := SQLMenuItems.RecordCount;
+  // fill implicit shortcut
+  SQLMenuItems.First;
+  while not SQLMenuItems.EOF do
+  begin
+    if (SQLMenuItems.FieldByName('shortcut').AsString = '') and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) then
+    begin
+      for s in SQLMenuItems.FieldByName('name').AsString do
+      begin
+        lShCut := LowerCase(s);
 
-  if (FSearchCount > 0) and (FSearchCount <= lMenuCount) and (Not pnlFind.Visible) then
+        SQLMenuItemsShortcut.Close;
+        SQLMenuItemsShortcut.ParamByName('idMenu').AsString := lId;
+        SQLMenuItemsShortcut.ParamByName('shortcut').AsString := lShCut;
+        SQLMenuItemsShortcut.Open;
+        lMenuCount := SQLMenuItemsShortcut.RecordCount;
+
+        if (lShCut <> '') and (lMenuCount = 0) and (lShCut in ['a'..'z','0'..'9']) then
+        begin
+          SQLMenuItems.Edit;
+          SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
+          SQLMenuItems.CheckBrowseMode;
+          SQLMenuItems.ApplyUpdates;
+          break;
+        End;
+      end;
+    End;
+    SQLMenuItems.Next;
+  End;
+  SQLMenuItems.First;
+
+  MenuItemDS.DataSet := SQLMenuItems;
+
+  // find panel visibility
+  if (FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount) and (Not pnlFind.Visible) then
   begin
     pnlFind.Visible := True;
     ActiveControl := edFind;
@@ -751,6 +786,7 @@ Begin
   if pnlFind.Visible then
     ActiveControl := edFind;
 
+  // form size
   SetFormSize;
 End;
 

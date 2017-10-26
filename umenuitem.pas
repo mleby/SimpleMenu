@@ -238,11 +238,6 @@ Begin
   End;
 
   QuoteTrim(lName);
-
-  // generate implicit shortcut
-  if FShortCut = '' then {TODO -oLebeda -cNone: generate shortcut more inteligent - use 1 unused letter}
-    FShortCut := LowerCase(lName[1]);
-
   FName := lName;
 End;
 

@@ -135,7 +135,7 @@ begin
   if Application.HasOption('s', 'search') then
     MainForm.SearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
   else
-    MainForm.SearchCount := MaxInt;
+    MainForm.SearchCount := MainForm.Constraints.MaxHeight div MainGrid.DefaultRowHeight;
 
   if Application.HasOption('f', 'file') then
   begin
@@ -743,45 +743,49 @@ Begin
   SQLMenuItemsMaxWidth.Open;
 
   // fill implicit shortcut
-  SQLMenuItems.First;
-  while not SQLMenuItems.EOF do
+  if FSearchCount > SQLMenuItems.RecordCount then
   begin
-    if (SQLMenuItems.FieldByName('shortcut').AsString = '') and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) then
+    SQLMenuItems.First;
+    while not SQLMenuItems.EOF do
     begin
-      for s in SQLMenuItems.FieldByName('name').AsString do
+      if (SQLMenuItems.FieldByName('shortcut').AsString = '') and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) then
       begin
-        lShCut := LowerCase(s);
-
-        SQLMenuItemsShortcut.Close;
-        SQLMenuItemsShortcut.ParamByName('idMenu').AsString := lId;
-        SQLMenuItemsShortcut.ParamByName('shortcut').AsString := lShCut;
-        SQLMenuItemsShortcut.Open;
-        lMenuCount := SQLMenuItemsShortcut.RecordCount;
-
-        if (lShCut <> '') and (lMenuCount = 0) and (lShCut in ['a'..'z','0'..'9']) then
+        for s in SQLMenuItems.FieldByName('name').AsString do
         begin
-          SQLMenuItems.Edit;
-          SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
-          SQLMenuItems.CheckBrowseMode;
-          SQLMenuItems.ApplyUpdates;
-          break;
-        End;
-      end;
+          lShCut := LowerCase(s);
+
+          SQLMenuItemsShortcut.Close;
+          SQLMenuItemsShortcut.ParamByName('idMenu').AsString := lId;
+          SQLMenuItemsShortcut.ParamByName('shortcut').AsString := lShCut;
+          SQLMenuItemsShortcut.Open;
+          lMenuCount := SQLMenuItemsShortcut.RecordCount;
+
+          if (lShCut <> '') and (lMenuCount = 0) and (lShCut in ['a'..'z','0'..'9']) then
+          begin
+            SQLMenuItems.Edit;
+            SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
+            SQLMenuItems.CheckBrowseMode;
+            SQLMenuItems.ApplyUpdates;
+            break;
+          End;
+        end;
+      End;
+      SQLMenuItems.Next;
     End;
-    SQLMenuItems.Next;
+    SQLMenuItems.First;
   End;
-  SQLMenuItems.First;
 
   MenuItemDS.DataSet := SQLMenuItems;
 
-  // find panel visibility
   if (FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount) and (Not pnlFind.Visible) then
   begin
+    // find panel visibility
     pnlFind.Visible := True;
     ActiveControl := edFind;
     if MainForm.CanFocus then
       edFind.SetFocus;
-  End;
+  End
+  else
 
   if pnlFind.Visible then
     ActiveControl := edFind;

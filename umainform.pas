@@ -538,19 +538,32 @@ Procedure TMainForm.edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftS
 Begin
   if (Key = VK_DOWN) then
   begin
-    SQLMenuItems.First;
-    MainGrid.SetFocus;
+    if SQLMenuItems.EOF then
+      SQLMenuItems.First
+    else
+      SQLMenuItems.Next;
+
+    //SQLMenuItems.First;
+    //MainGrid.SetFocus;
     key := 0;
   End
   else if (Key = VK_UP) then
   begin
-    SQLMenuItems.Last;
-    MainGrid.SetFocus;
+    if SQLMenuItems.BOF then
+      SQLMenuItems.Last
+    else
+      SQLMenuItems.Prior;
+
+    //SQLMenuItems.Last;
+    //MainGrid.SetFocus;
     key := 0;
   End
   else if (Key = VK_Return) then
-    MainGrid.SetFocus;
-
+  begin
+    //MainGrid.SetFocus;
+    acRun.Execute;
+    Key := 0;
+  End;
   if (Key = VK_Return) then
     FKeyStop := True;
 end;
@@ -567,7 +580,7 @@ Begin
   End
   else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
     acFind.Execute
-  else
+  else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) then
     showMenu;
 end;
 

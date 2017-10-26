@@ -32,6 +32,7 @@ type
     Process1: TProcess;
     SQLMenu: TSQLQuery;
     SQLMenuItems: TSQLQuery;
+    SQLMenuItemsMaxWidth: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
     SQLTransaction: TSQLTransaction;
     procedure acDebugExecute(Sender: TObject);
@@ -60,6 +61,8 @@ type
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel(Const aForce: Boolean = false);
     Procedure FindSwitch;
+    Function GetMaxWidth: Integer;
+    Function GetTextWidth(Const aText: String): Integer;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure RunAsync(Const aCmd: string);
@@ -92,6 +95,9 @@ uses strutils, debugForm, StreamIO, LCLType, Dialogs;
 
 Procedure TMainForm.FormCreate(Sender: TObject);
 begin
+  MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9);
+  MainForm.Constraints.MaxWidth := round(Screen.Width * 0.9);
+
   FFormMode := FMNormal;
   // color
 
@@ -102,7 +108,7 @@ begin
   MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
-  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, FOREIGN KEY(menuId) REFERENCES menu(id))');
+  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
 
   SQLMenu.Active := True;
@@ -202,6 +208,31 @@ Begin
   End;
 
   SetFormSize;
+End;
+
+Function TMainForm.GetMaxWidth: Integer;
+Begin
+  if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) then
+    Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + 10
+  else
+    Result := 500;
+End;
+
+Function TMainForm.GetTextWidth(const aText: String): Integer;
+var
+  W: integer;
+  BM: TBitmap;
+Begin
+  BM := TBitmap.Create;
+  try
+    BM.Canvas.Font := MainGrid.Font;
+    W := BM.Canvas.TextWidth(aText);
+  Finally
+    BM.Free;
+  End;
+
+  Result := W + 8;
+  //Result := Length(aText) * 30
 End;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
@@ -631,7 +662,7 @@ Begin
   SQLMenuItems.Close;
   lId := SQLMenu.FieldByName('id').AsString;
   lSql := 'select id, menuId, itemType, name, search, icon, shortcut, '
-                     + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar '
+                     + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
                      + ' from menuItem where menuId = ''' + lId + ''' ';
 
   If edFind.Text <> '' Then
@@ -641,6 +672,10 @@ Begin
 
   SQLMenuItems.SQL.Text := lSql;
   SQLMenuItems.Open;
+
+  SQLMenuItemsMaxWidth.Close;
+  SQLMenuItemsMaxWidth.ParamByName('id').AsString := lId;
+  SQLMenuItemsMaxWidth.Open;
 
   lMenuCount := SQLMenuItems.RecordCount;
 
@@ -660,8 +695,11 @@ End;
 
 Procedure TMainForm.SetFormSize;
 var
-  lHeight: integer;
+  lHeight, lWidth: integer;
 begin
+  MainForm.Caption := SQLMenu.FieldByName('name').AsString;
+
+  // height
   lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth);
 
   if pnlFind.Visible then
@@ -676,11 +714,16 @@ begin
     MainGridShortCut.ScrollBars := ssAutoVertical;
 
   MainForm.Height := lHeight;
-  MainForm.Caption := SQLMenu.FieldByName('name').AsString;
 
+  // width
+  lWidth := GetMaxWidth + MainGridIcon.Width + MainGridShortCut.Width + (2* MainForm.BorderWidth);
+   MainForm.Width := lWidth;
+
+  // centralization
   if FFormMode = FMCentral then
   begin
-    top := (Screen.Height div 2) - (MainForm.Height div 2);
+    Top := (Screen.Height div 2) - (MainForm.Height div 2);
+    Left := (Screen.Width div 2) - (MainForm.Width div 2);;
   End;
 
   // mouse to menu if isn't
@@ -738,6 +781,7 @@ begin
   SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger := lMenuItemParser.subMenuReloadInterval;
   SQLMenuItems.FieldByName('subMenuId').AsInteger := lMenuItemParser.subMenuId;
   SQLMenuItems.FieldByName('subMenuChar').AsString := lMenuItemParser.subMenuChar;
+  SQLMenuItems.FieldByName('width').AsInteger := GetTextWidth(lMenuItemParser.Name);
   SQLMenuItems.Post;
   SQLMenuItems.ApplyUpdates;
 end;

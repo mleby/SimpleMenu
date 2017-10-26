@@ -9,7 +9,6 @@ object MainForm: TMainForm
   ClientHeight = 800
   ClientWidth = 300
   Color = 16053492
-  Constraints.MaxHeight = 800
   FormStyle = fsSystemStayOnTop
   Icon.Data = {
     7E04000000000100010010100000010020006804000016000000280000001000
@@ -323,7 +322,8 @@ object MainForm: TMainForm
     Transaction = SQLTransaction
     SQL.Strings = (
       'select id, menuId, itemType, name, search, icon, shortcut,'
-      'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar'
+      'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId,'
+      'subMenuChar, width'
       'from menuItem'
       'where menuId = :id'
       'Order by id'
@@ -508,5 +508,32 @@ object MainForm: TMainForm
     FillAttribute = 0
     left = 125
     top = 136
+  end
+  object SQLMenuItemsMaxWidth: TSQLQuery
+    PacketRecords = -1
+    FieldDefs = <    
+      item
+        Name = 'width'
+        DataType = ftInteger
+        Precision = -1
+      end>
+    Database = MenuDB
+    Transaction = SQLTransaction
+    ReadOnly = True
+    SQL.Strings = (
+      'select max(width) width'
+      'from menuItem'
+      'where menuId = :id'
+      'Order by id'
+    )
+    Options = []
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'id'
+        ParamType = ptInput
+      end>
+    left = 32
+    top = 440
   end
 end

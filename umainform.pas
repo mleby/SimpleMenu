@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
-  AsyncProcess, uMenuItem, process;
+  AsyncProcess, LazUTF8, uMenuItem, process;
 
 type
 
@@ -112,10 +112,11 @@ begin
 
   // sure create DB
   MenuDB.Close;
-  //DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  MenuDB.DatabaseName := ':memory:';
+  DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
+  MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
@@ -730,7 +731,7 @@ end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);
 var
-  lLine: string;
+  lLine: WideString;
   i: integer;
   lMenuItemParser: TMenuItemParser;
 begin
@@ -759,8 +760,9 @@ Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
   lSl: TStringList;
   i: Integer;
-  F:Text;
-  lLine: String;
+  F:TextFile;
+  lLine: WideString;
+  lVal: AnsiString;
   lExt, lCan: Boolean;
 Begin
   lExt := isExternalSearch;
@@ -783,12 +785,17 @@ Begin
       begin
         Readln(F, lLine);
         //ShowMessage('příliš žluťoučký kůň');
-        //ShowMessage(AnsiToUTF8(lLine));
-        lSl.Append(AnsiToUTF8(lLine));
+        lVal := lLine;
+        //lVal := AnsiString(lLine);
+        //lVal := Utf8ToAnsi(lLine);
+        //ShowMessage(lVal);
+        lSl.Append(lVal);
+        //ShowMessage(lSl[0]);
       End;
       CloseFile(F);
 
       LoadMenuFromLines(lSl);
+      lsl.SaveToFile('/tmp/menu.txt');
 
     Finally
       FreeAndNil(lSl);
@@ -946,7 +953,7 @@ begin
   //id, menuId, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
-  SQLMenuItems.FieldByName('name').AsString := lMenuItemParser.Name;
+  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name;
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
   SQLMenuItems.FieldByName('icon').AsString := lMenuItemParser.icon;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;

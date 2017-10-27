@@ -19,7 +19,7 @@ type
     FInputLine: string;
     FItemType: TMenuItemType;
     FMenuId: integer;
-    FName: string;
+    FName: WideString;
     FShortCut: string;
     FSubMenuCmd: string;
     FSubMenuId: integer;
@@ -46,7 +46,7 @@ type
     constructor Create(const aLine: string);
     destructor Destroy; override;
 
-    property Name: string read FName;
+    property Name: WideString read FName;
     property icon: string read FIcon;
     property cmd: string read FCmd;
     property menuId: integer read FMenuId;

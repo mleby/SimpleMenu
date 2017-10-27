@@ -61,11 +61,14 @@ type
     FSearchCount: LongInt;
     FIconPathHolder: TStringList;
     FLastResNo: Integer; // for navigation over separators
+    FLastFind: String;
     Procedure AppDeactivate(Sender: TObject);
     Procedure closeFindPanel(Const aForce: Boolean = false);
     Procedure FindSwitch;
     Function GetMaxWidth: Integer;
     Function GetTextWidth(Const aText: String): Integer;
+    function isExternalSearch: Boolean;
+    function canExternalSearch: Boolean;
     Procedure LoadMenuFromLines(Const aLines: TStringList);
     Procedure LoadMenuFromProcess(Const aCmd: String);
     Procedure RunAsync(Const aCmd: string);
@@ -146,6 +149,14 @@ begin
     LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
   end;
 
+  if Application.HasOption('r', 'reload') then
+  begin
+    SQLMenu.Edit;
+    SQLMenu.FieldByName('Load').AsInteger := -1;
+    SQLMenu.FieldByName('reloadInterval').AsInteger := -1 * StrToInt(Application.GetOptionValue('r', 'reload'));
+    SQLMenu.CheckBrowseMode;
+  End;
+
   if Application.HasOption('p', 'process') then
   begin
     SQLMenu.Edit;
@@ -153,6 +164,8 @@ begin
     SQLMenu.CheckBrowseMode;
     LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
   end;
+
+
 
   MenuDB.Transaction.Commit;
 
@@ -218,7 +231,7 @@ End;
 
 Function TMainForm.GetMaxWidth: Integer;
 Begin
-  if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) then
+  if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) and not SQLMenuItemsMaxWidth.FieldByName('width').IsNull then
     Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + 10
   else
     Result := 500;
@@ -239,6 +252,30 @@ Begin
 
   Result := W + 8;
   //Result := Length(aText) * 30
+End;
+
+Function TMainForm.isExternalSearch: Boolean;
+Var
+  lReloadInterval: LongInt;
+  lCmd: String;
+  lDynCmd: SizeInt;
+Begin
+  lReloadInterval := SQLMenu.FieldByName('reloadInterval').AsInteger;
+  lCmd := SQLMenu.FieldByName('cmd').AsString;
+  lDynCmd := Pos('%s', lCmd);
+  Result := (lReloadInterval < 0) And (lDynCmd > 0)
+End;
+
+Function TMainForm.canExternalSearch: Boolean;
+Var
+  lReloadInterval: LongInt;
+  lCmd: String;
+  lDynCmd: SizeInt;
+Begin
+  lReloadInterval := SQLMenu.FieldByName('reloadInterval').AsInteger;
+  lCmd := SQLMenu.FieldByName('cmd').AsString;
+  lDynCmd := Pos('%s', lCmd);
+  Result := (lReloadInterval < 0) And (Length(edFind.Text) >= abs(lReloadInterval)) And (lDynCmd > 0)
 End;
 
 Procedure TMainForm.MainGridCellClick(Column: TColumn);
@@ -407,7 +444,7 @@ begin
     FLastResNo := SQLMenuItems.RecNo - 1;
   end;
 
-  if strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator then
+  if (SQLMenuItems.RecordCount > 0) and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator) then
     if SQLMenuItems.RecNo > FLastResNo then
       SQLMenuItems.Next
     else
@@ -665,10 +702,14 @@ Begin
     closeFindPanel(true);
     NavigateUp;
   End
-  else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
-    acFind.Execute
-  else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) then
+  {TODO -oLebeda -cNone: realy???}
+  //else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
+  //  acFind.Execute
+  else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) and (FLastFind <> edFind.Text) then
+  begin
     showMenu;
+    FLastFind := edFind.Text;
+  End;
 end;
 
 Procedure TMainForm.FormActivate(Sender: TObject);
@@ -720,44 +761,65 @@ Var
   i: Integer;
   F:Text;
   lLine: String;
+  lExt, lCan: Boolean;
 Begin
-  // load data from process
-  //Process1.Options := [poWaitOnExit, poNoConsole, poUsePipes];
-  Process1.CurrentDirectory := GetEnvironmentVariable('HOME');
-  Process1.CommandLine := aCmd;
-  Process1.Execute;
+  lExt := isExternalSearch;
+  lCan := canExternalSearch;
+  if not lExt or lCan then
+  begin
+    // load data from process
+    //Process1.Options := [poWaitOnExit, poNoConsole, poUsePipes];
+    Process1.CurrentDirectory := GetEnvironmentVariable('HOME');
+    Process1.CommandLine := aCmd;
+    Process1.Execute;
 
-  lSl := TStringList.Create;
-  Try
-    //Process1.WaitOnExit;
-    //lSl.LoadFromStream(Process1.Output);
-    AssignStream(F, Process1.Output);
-    Reset(F);
-    while not Eof(F) do
-    begin
-      Readln(F, lLine);
-      //ShowMessage('příliš žluťoučký kůň');
-      //ShowMessage(AnsiToUTF8(lLine));
-      lSl.Append(AnsiToUTF8(lLine));
+    lSl := TStringList.Create;
+    Try
+      //Process1.WaitOnExit;
+      //lSl.LoadFromStream(Process1.Output);
+      AssignStream(F, Process1.Output);
+      Reset(F);
+      while not Eof(F) do
+      begin
+        Readln(F, lLine);
+        //ShowMessage('příliš žluťoučký kůň');
+        //ShowMessage(AnsiToUTF8(lLine));
+        lSl.Append(AnsiToUTF8(lLine));
+      End;
+      CloseFile(F);
+
+      LoadMenuFromLines(lSl);
+
+    Finally
+      FreeAndNil(lSl);
     End;
-    CloseFile(F);
 
-    LoadMenuFromLines(lSl);
+  end;
 
-    SQLMenu.Edit;
-    SQLMenu.FieldByName('Load').AsInteger := DateTimeToTimeStamp(time).Time div 1000;
-    SQLMenu.Post;
-    SQLMenu.ApplyUpdates;
-  Finally
-    FreeAndNil(lSl);
-  End;
+  SQLMenu.Edit;
+  SQLMenu.FieldByName('Load').AsInteger := DateTimeToTimeStamp(time).Time div 1000;
+  SQLMenu.Post;
+  SQLMenu.ApplyUpdates;
 End;
 
 Procedure TMainForm.showMenu;
 Var
   lSql: String;
-  lId: String;
+  lId, lCmd: String;
 Begin
+  // regenerate if reloadInterval < 0 and edFind.Text and command contains %s
+  if isExternalSearch and (edFind.Text <> FLastFind) then
+  begin
+    MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + SQLMenu.FieldByName('id').AsString);
+    lCmd := ReplaceText(SQLMenu.FieldByName('cmd').AsString, '%s', '"' + edFind.Text + '"');
+    LoadMenuFromProcess(lCmd);
+
+    SQLMenu.Edit;
+    SQLMenu.FieldByName('Load').AsInteger := -1;
+    SQLMenu.CheckBrowseMode;
+    SQLMenu.ApplyUpdates;
+  End;
+
   // open Main menu
   MenuItemDS.DataSet := nil;
   SQLMenuItems.Close;
@@ -766,7 +828,7 @@ Begin
                      + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
                      + ' from menuItem where menuId = ''' + lId + ''' ';
 
-  If edFind.Text <> '' Then
+  If (edFind.Text <> '') and not isExternalSearch Then
     lSql := lSql + ' and name like ''%' + edFind.Text + '%'' ';
 
   lSql := lSql + ' Order by id';
@@ -789,7 +851,7 @@ Begin
 
   MenuItemDS.DataSet := SQLMenuItems;
 
-  if (FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount) and (Not pnlFind.Visible) then
+  if (((FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount)) or isExternalSearch) and (Not pnlFind.Visible) then
   begin
     // find panel visibility
     pnlFind.Visible := True;
@@ -803,8 +865,7 @@ Begin
     ActiveControl := edFind;
 
   // form size
-  if SQLMenuItems.RecordCount > 0 then
-    SetFormSize;
+  SetFormSize;
 End;
 
 Procedure TMainForm.SetFormSize;

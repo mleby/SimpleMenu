@@ -91,7 +91,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="-k -f /home/martin/.icewm/menu -c -s 38"/>
+        <CommandLineParams Value="-k -s 5 -c -r 3 -p &quot;/home/martin/bin/locate -n -m -s %s&quot;"/>
       </local>
     </RunParams>
     <RequiredPackages Count="3">

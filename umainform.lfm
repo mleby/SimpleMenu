@@ -264,7 +264,7 @@ object MainForm: TMainForm
       end    
       item
         Name = 'name'
-        DataType = ftWideString
+        DataType = ftString
         Precision = -1
         Size = 255
       end    

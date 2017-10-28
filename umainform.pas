@@ -749,7 +749,7 @@ end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);
 var
-  lLine: WideString;
+  lLine: String;
   i: integer;
   lMenuItemParser: TMenuItemParser;
 begin
@@ -777,10 +777,10 @@ end;
 Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
   lSl: TStringList;
-  i, j: Integer;
+  j: Integer;
   F:TextFile;
   lLine: WideString;
-  lVal: AnsiString;
+  lVal: String;
   lExt, lCan: Boolean;
   c: WideChar;
 Begin

@@ -35,6 +35,7 @@ type
     SQLMenuItemsMaxWidth: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
     SQLTransaction: TSQLTransaction;
+    ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
     Procedure acFindExecute(Sender: TObject);
     Procedure acKeepOpenExecute(Sender: TObject);
@@ -53,6 +54,7 @@ type
     Procedure MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
+    Procedure ThrTimerTimer(Sender: TObject);
   private
     FFormMode: TFormMode;
     FRecNo: LongInt;
@@ -708,8 +710,17 @@ Begin
   //  acFind.Execute
   else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) and (FLastFind <> edFind.Text) then
   begin
-    showMenu;
-    FLastFind := edFind.Text;
+    if isExternalSearch then
+    begin
+      // restart timer
+      ThrTimer.Enabled := false;
+      ThrTimer.Enabled := True;
+    End
+    else
+    begin
+      showMenu;
+      FLastFind := edFind.Text;
+    End;
   End;
 end;
 
@@ -727,6 +738,13 @@ Procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
 begin
  if not SQLMenu.Modified then
     showMenu;
+end;
+
+Procedure TMainForm.ThrTimerTimer(Sender: TObject);
+Begin
+  showMenu;
+  FLastFind := edFind.Text;
+  ThrTimer.Enabled := False;
 end;
 
 Procedure TMainForm.LoadMenuFromLines(Const aLines: TStringList);
@@ -759,11 +777,12 @@ end;
 Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
   lSl: TStringList;
-  i: Integer;
+  i, j: Integer;
   F:TextFile;
   lLine: WideString;
   lVal: AnsiString;
   lExt, lCan: Boolean;
+  c: WideChar;
 Begin
   lExt := isExternalSearch;
   lCan := canExternalSearch;
@@ -784,11 +803,53 @@ Begin
       while not Eof(F) do
       begin
         Readln(F, lLine);
-        //ShowMessage('příliš žluťoučký kůň');
-        lVal := lLine;
+
+        // ugly hack, but only works - for czech only :-(
+        lVal := '';
+        j := 1;
+        while j <= Length(lLine) do
+        begin
+          c := lLine[j];
+          if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A1) then begin c:= 'á'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8D) then begin c:= 'č'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8F) then begin c:= 'ď'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A9) then begin c:= 'é'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9B) then begin c:= 'ě'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AD) then begin c:= 'í'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$88) then begin c:= 'ň'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$B3) then begin c:= 'ó'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$99) then begin c:= 'ř'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A1) then begin c:= 'š'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A5) then begin c:= 'ť'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BA) then begin c:= 'ú'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AF) then begin c:= 'ů'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BD) then begin c:= 'ý'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BE) then begin c:= 'ž'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$81) then begin c:= 'Á'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8C) then begin c:= 'Č'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8E) then begin c:= 'Ď'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$89) then begin c:= 'É'; Inc(j); end
+          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9A) then begin c:= 'Ě'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8D) then begin c:= 'Í'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$87) then begin c:= 'Ň'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$93) then begin c:= 'Ó'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$98) then begin c:= 'Ř'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A0) then begin c:= 'Š'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A4) then begin c:= 'Ť'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9A) then begin c:= 'Ú'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AE) then begin c:= 'Ů'; Inc(j); end
+          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9D) then begin c:= 'Ý'; Inc(j); end
+          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BD) then begin c:= 'Ž'; Inc(j); end;
+          lVal := lVal + c;
+          Inc(j);
+        End;
+
+        //lVal := UTF8Decode(lLine);
+        //lVal := UTF8ToSys(lLine);
+        //lVal := Utf8ToAnsi(lLine);
         //lVal := AnsiString(lLine);
         //lVal := Utf8ToAnsi(lLine);
-        //ShowMessage(lVal);
+
         lSl.Append(lVal);
         //ShowMessage(lSl[0]);
       End;

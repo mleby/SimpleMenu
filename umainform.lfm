@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 23
+  Left = 12
   Height = 800
-  Top = 53
+  Top = 37
   Width = 300
   BorderStyle = bsNone
   BorderWidth = 3
@@ -537,5 +537,11 @@ object MainForm: TMainForm
       end>
     left = 32
     top = 440
+  end
+  object ThrTimer: TTimer
+    Enabled = False
+    OnTimer = ThrTimerTimer
+    left = 125
+    top = 200
   end
 end

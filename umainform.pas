@@ -506,7 +506,7 @@ begin
 
   sl := TStringList.Create;
   try
-    lPreCmd := ReplaceText(aCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - nemusí fungovat vždy}
+    lPreCmd := ReplaceText(aCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - not functional in all cases!!!}
     slCmd := tStringList.Create;
     slCmd.Delimiter := ' ';
     slCmd.DelimitedText := lPreCmd;

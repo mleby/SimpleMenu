@@ -489,7 +489,7 @@ end;
 Procedure TMainForm.RunAsync(Const aCmd{, aParams, aDir, aPath, aName}: string);
 var
   sl, slCmd: TStringList;
-  lParams, lCmd, lPath, l: string;
+  lParams, lCmd, lPath, l, s, lPreCmd: string;
   lExe: RawByteString;
 Const
   BEGIN_SL = 0;
@@ -506,9 +506,10 @@ begin
 
   sl := TStringList.Create;
   try
+    lPreCmd := ReplaceText(aCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - nemusí fungovat vždy}
     slCmd := tStringList.Create;
     slCmd.Delimiter := ' ';
-    slCmd.DelimitedText := aCmd;
+    slCmd.DelimitedText := lPreCmd;
     lCmd := slCmd[BEGIN_SL];
     slCmd.Delete(BEGIN_SL);
 
@@ -516,6 +517,8 @@ begin
     sl.Delimiter := ' ';
     sl.DelimitedText := lParams;
     slCmd.AddStrings(sl);
+
+    //lParams := slCmd.GetText;
 
     //for l in slCmd do
     //  ShowMessage(l);
@@ -532,6 +535,9 @@ begin
       lPath := GetEnvironmentVariable('PATH');
       lExe := ExeSearch(lCmd, lPath);
     End;
+
+    //for s in slCmd do
+    //  lParams := lParams + s;
 
     AsyncProcess1.Executable := lExe;
     AsyncProcess1.Parameters.Clear;

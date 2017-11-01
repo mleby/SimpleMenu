@@ -29,6 +29,7 @@ Begin
     //writeln('    -a --auto=X           count of character in input for run automatic query, default: 3');
     //writeln('    -n --name=X           set title for window, default: search');
     //{TODO -oLebeda -cNone: debug výpisy do konzole}
+
     exit;
   end;
 

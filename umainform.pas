@@ -56,6 +56,7 @@ type
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
     Procedure ThrTimerTimer(Sender: TObject);
   private
+    FExtraParam: string;
     FFormMode: TFormMode;
     FRecNo: LongInt;
     FKeepOpen: Boolean;
@@ -91,6 +92,7 @@ type
 
     Property FormMode: TFormMode Read FFormMode Write FFormMode;
     Property SearchCount: LongInt Read FSearchCount Write SetSearchCount;
+    Property extraParam: string Read FExtraParam Write FExtraParam;
   end;
 
 var
@@ -168,7 +170,8 @@ begin
     LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
   end;
 
-
+  if Application.HasOption('x', 'extra') then
+    MainForm.extraParam := Application.GetOptionValue('x', 'extra');
 
   MenuDB.Transaction.Commit;
 
@@ -486,7 +489,7 @@ Begin
   End;
 end;
 
-Procedure TMainForm.RunAsync(Const aCmd{, aParams, aDir, aPath, aName}: string);
+Procedure TMainForm.RunAsync(Const aCmd: string);
 var
   sl, slCmd: TStringList;
   lParams, lCmd, lPath, l, s, lPreCmd: string;
@@ -494,38 +497,20 @@ var
 Const
   BEGIN_SL = 0;
 begin
-  // replace macros
-  //if aDir <> '' then
-  //  lParams := StringReplace(aParams, '%d', '"' + aDir + '"', [rfReplaceAll]);
-  //
-  //if aPath <> '' then
-  //  lParams := StringReplace(lParams, '%p', '"' + aPath + '"', [rfReplaceAll]);
-  //
-  //if aName <> '' then
-  //  lParams := StringReplace(lParams, '%f', '"' + aName + '"', [rfReplaceAll]);
-
   sl := TStringList.Create;
   try
-    lPreCmd := ReplaceText(aCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - not functional in all cases!!!}
+    lPreCmd := ReplaceText(aCmd, '%s', extraParam);
+    lPreCmd := ReplaceText(lPreCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - not functional in all cases!!!}
     slCmd := tStringList.Create;
     slCmd.Delimiter := ' ';
     slCmd.DelimitedText := lPreCmd;
     lCmd := slCmd[BEGIN_SL];
     slCmd.Delete(BEGIN_SL);
 
-    //sl.StrictDelimiter := true;
-    sl.Delimiter := ' ';
-    sl.DelimitedText := lParams;
-    slCmd.AddStrings(sl);
-
-    //lParams := slCmd.GetText;
-
-    //for l in slCmd do
-    //  ShowMessage(l);
-
-    // execute process
-    //if aDir <> '' then
-    //  runAsyncProcess.CurrentDirectory := aDir;
+    ////sl.StrictDelimiter := true;
+    //sl.Delimiter := ' ';
+    //sl.DelimitedText := lParams;
+    //slCmd.AddStrings(sl);
 
     // expand path
     if FileExists(lCmd) then

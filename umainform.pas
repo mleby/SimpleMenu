@@ -601,7 +601,7 @@ Var
 begin
   lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
 
-  if lItemType =  MITprog then
+  if lItemType in [MITprog, MITrunonce] then {TODO -oLebeda -cNone: for runonce check running program}
   begin
     RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
     // AsyncProcess1.CommandLine := SQLMenuItems.FieldByName('cmd').AsString;

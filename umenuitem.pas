@@ -38,6 +38,7 @@ type
     procedure endMenu;
 
     procedure prepareProg(const aLine: string);
+    procedure prepareRunOnce(const aLine: string);
     procedure prepareProgreload(const aLine: string);
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
@@ -102,6 +103,31 @@ begin
     FreeAndNil(lSl);
   end;
 end;
+
+Procedure TMenuItemParser.prepareRunOnce(Const aLine: string);
+var
+  lSl: TStringList;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITprog;
+
+    setNameAndShotrCutKey(lSl[1]);
+
+    FIcon := lSl[2];
+    QuoteTrim(FIcon);
+
+    {TODO -oLebeda -cNone: store somewhere runonce check param (3)}
+
+    for i := 4 to lsl.Count - 1 do
+      FCmd := FCmd + ' ' + lsl[i];
+
+    fCmd := Trim(FCmd);
+  finally
+    FreeAndNil(lSl);
+  end;
+End;
 
 Procedure TMenuItemParser.prepareProgreload(Const aLine: string);
 var
@@ -248,6 +274,8 @@ begin
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)
+  else if AnsiStartsText('runonce ', aLine) then
+    prepareRunOnce(aLine)
   else if AnsiStartsText('separator', aLine) then
     prepareSeparator(aLine)
   else if AnsiStartsText('menu ', aLine) then

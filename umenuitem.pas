@@ -15,7 +15,6 @@ type
   TMenuItemParser = class(TObject)
   private
     FCmd: string;
-    FIcon: string;
     FInputLine: string;
     FItemType: TMenuItemType;
     FMenuId: integer;
@@ -48,7 +47,6 @@ type
     destructor Destroy; override;
 
     property Name: String read FName;
-    property icon: string read FIcon;
     property cmd: string read FCmd;
     property menuId: integer read FMenuId;
     property itemType: TMenuItemType read FItemType;
@@ -92,10 +90,7 @@ begin
 
     setNameAndShotrCutKey(lSl[1]);
 
-    FIcon := lSl[2];
-    QuoteTrim(FIcon);
-
-    for i := 3 to lsl.Count - 1 do
+    for i := 2 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
 
     fCmd := Trim(FCmd);
@@ -115,12 +110,9 @@ begin
 
     setNameAndShotrCutKey(lSl[1]);
 
-    FIcon := lSl[2];
-    QuoteTrim(FIcon);
-
     {TODO -oLebeda -cNone: store somewhere runonce check param (3)}
 
-    for i := 4 to lsl.Count - 1 do
+    for i := 3 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
 
     fCmd := Trim(FCmd);
@@ -139,10 +131,9 @@ begin
     FItemType := MITmenuprogreload;
 
     setNameAndShotrCutKey(lSl[1]);
-    FIcon := lSl[2];
-    FSubMenuReloadInterval := StrToInt(lSl[3]);
+    FSubMenuReloadInterval := StrToInt(lSl[2]);
 
-    for i := 4 to lsl.Count - 1 do
+    for i := 3 to lsl.Count - 1 do
       FSubMenuCmd := FSubMenuCmd + ' ' + lsl[i];
 
     FSubMenuCmd := Trim(FSubMenuCmd);
@@ -180,6 +171,7 @@ begin
     FItemType := MITNone;
 
     lFileName := lSl[1];
+    {TODO -oLebeda -cNone: pouze pro linux}
     lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName; {TODO -oLebeda -cNone: správnou cestu}
 
     if FileExists(lFileName) then
@@ -211,7 +203,7 @@ begin
     FItemType := MITmenu;
 
     setNameAndShotrCutKey(lSl[1]);
-    FIcon := lSl[2];
+
     FSubMenuId := MainForm.AddMenu(FName, FMenuId);
   finally
     FreeAndNil(lSl);
@@ -274,7 +266,7 @@ begin
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)
-  else if AnsiStartsText('runonce ', aLine) then
+  else if AnsiStartsText('runonce ', aLine) then { TODO : odstranit jako systémově závislé }
     prepareRunOnce(aLine)
   else if AnsiStartsText('separator', aLine) then
     prepareSeparator(aLine)

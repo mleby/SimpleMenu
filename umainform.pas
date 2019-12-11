@@ -24,7 +24,6 @@ type
     edFind: TEdit;
     MainGrid: TDBGrid;
     MainGridShortCut: TDBGrid;
-    MainGridIcon: TDBGrid;
     MenuDS: TDataSource;
     MenuDB: TSQLite3Connection;
     MenuItemDS: TDataSource;
@@ -47,7 +46,6 @@ type
     Procedure FormDestroy(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     Procedure MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
-    procedure MainGridIconDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -62,7 +60,6 @@ type
     FKeepOpen: Boolean;
     FKeyStop: Boolean;
     FSearchCount: LongInt;
-    FIconPathHolder: TStringList;
     FLastResNo: Integer; // for navigation over separators
     FLastFind: String;
     Procedure AppDeactivate(Sender: TObject);
@@ -82,7 +79,6 @@ type
     Procedure showMenu;
     procedure SetFormSize;
     procedure NavigateUp;
-    Function GetFullIconPath(aName: String): String;
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = ''; aPath: string = ''; aReloadInterval: integer = 0): integer;
@@ -122,7 +118,7 @@ begin
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
-  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
+  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
 
   SQLMenu.Active := True;
@@ -193,8 +189,7 @@ end;
 
 Procedure TMainForm.FormDestroy(Sender: TObject);
 Begin
-  if Assigned(FIconPathHolder) then
-    FreeAndNil(FIconPathHolder);
+
 end;
 
 Procedure TMainForm.AppDeactivate(Sender: TObject);
@@ -299,73 +294,6 @@ Procedure TMainForm.MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: 
 Begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGridShortCut);
 end;
-
-Procedure TMainForm.MainGridIconDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
-var
-  bmpImage: TPicture;
-  lIconName: string;
-begin
-  if Column.FieldName = 'icon' then
-    with MainGridIcon.Canvas do
-    begin
-      fillRect(rect);
-      bmpImage := TPicture.Create;
-      try
-        lIconName := MainGridIcon.DataSource.DataSet.FieldByName('icon').AsString;
-        lIconName := GetFullIconPath(lIconName);
-
-        if FileExists(lIconName) then
-          bmpImage.LoadFromFile(lIconName)
-        else
-          bmpImage.Clear;
-
-
-        StretchDraw(Rect, bmpImage.Bitmap);
-        //Column.Width := MainGridIcon.DefaultRowHeight;
-      finally
-        bmpimage.Free;
-      end;
-    end;
-
-  //SetSeparatorRow(State, Column, DataCol, Rect, MainGridIcon);
-end;
-
-Function TMainForm.GetFullIconPath(aName: String): String;
-Var
-  lDir: string;
-  i: Integer;
-Begin
-  if FileExists(aName) then
-    Result := aName
-  else
-  begin
-    if not Assigned(FIconPathHolder) then
-      FIconPathHolder := TStringList.Create;
-
-    if FileExists(GetEnvironmentVariable('HOME') + '/.simpleMenuIcons') then
-      FIconPathHolder.LoadFromFile(GetEnvironmentVariable('HOME') + '/.simpleMenuIcons');
-
-    for i := 0 to FIconPathHolder.Count - 1 do
-    begin
-      lDir := IncludeTrailingPathDelimiter(FIconPathHolder[i]);
-      if FileExists(lDir + aName + '.png') then
-      begin
-        Result := lDir + aName + '.png';
-        Break;
-      End
-      else if FileExists(lDir + aName + '.xpm') then
-      begin
-        Result := lDir + aName + '.xpm';
-        Break;
-      End
-      else if FileExists(lDir + aName + '_16x16.xpm') then
-      begin
-        Result := lDir + aName + '_16x16.xpm';
-        Break;
-      End;
-    End;
-  end
-End;
 
 Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
 Begin
@@ -519,6 +447,12 @@ begin
     begin
       lPath := GetEnvironmentVariable('PATH');
       lExe := ExeSearch(lCmd, lPath);
+
+      {$IFDEF Windows}
+      // on windows try search with extension .exe
+      if lExe = '' then
+         lExe := ExeSearch(lCmd + '.exe', lPath);
+      {$ENDIF}
     End;
 
     //for s in slCmd do
@@ -883,7 +817,7 @@ Begin
   MenuItemDS.DataSet := nil;
   SQLMenuItems.Close;
   lId := SQLMenu.FieldByName('id').AsString;
-  lSql := 'select id, menuId, itemType, name, search, icon, shortcut, '
+  lSql := 'select id, menuId, itemType, name, search, shortcut, '
                      + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
                      + ' from menuItem where menuId = ''' + lId + ''' ';
 
@@ -950,7 +884,7 @@ begin
   MainForm.Height := lHeight;
 
   // width
-  lWidth := GetMaxWidth + MainGridIcon.Width + MainGridShortCut.Width + (2* MainForm.BorderWidth);
+  lWidth := GetMaxWidth + MainGridShortCut.Width + (2* MainForm.BorderWidth);
    MainForm.Width := lWidth;
 
   // centralization
@@ -1002,12 +936,11 @@ End;
 Procedure TMainForm.AddMenuItem(Var lMenuItemParser: TMenuItemParser);
 begin
   SQLMenuItems.Insert;
-  //id, menuId, itemType, name, search, icon, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
+  //id, menuId, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
   SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name;
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
-  SQLMenuItems.FieldByName('icon').AsString := lMenuItemParser.icon;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;
   SQLMenuItems.FieldByName('subMenuPath').AsString := lMenuItemParser.subMenuPath;

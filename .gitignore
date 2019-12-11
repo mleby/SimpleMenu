@@ -21,3 +21,6 @@ lib/x86_64-linux/
 
 simpleMenu
 unittests
+/*.log
+/*.exe
+/lib/x86_64-win64

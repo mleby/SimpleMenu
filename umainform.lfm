@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Top = 37
   Width = 300
   BorderStyle = bsNone
-  BorderWidth = 3
+  BorderWidth = 5
   Caption = 'Menu'
   ClientHeight = 800
   ClientWidth = 300
@@ -54,12 +54,12 @@ object MainForm: TMainForm
   OnDestroy = FormDestroy
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
-  LCLVersion = '1.6.0.4'
+  LCLVersion = '2.0.6.0'
   object MainGrid: TDBGrid
-    Left = 23
-    Height = 768
-    Top = 3
-    Width = 209
+    Left = 5
+    Height = 764
+    Top = 5
+    Width = 225
     Align = alClient
     AutoFillColumns = True
     BorderStyle = bsNone
@@ -67,7 +67,7 @@ object MainForm: TMainForm
       item
         SizePriority = 1000
         Title.Caption = 'name'
-        Width = 209
+        Width = 225
         FieldName = 'name'
       end>
     DataSource = MenuItemDS
@@ -87,9 +87,9 @@ object MainForm: TMainForm
     OnKeyUp = MainGridKeyUp
   end
   object MainGridShortCut: TDBGrid
-    Left = 232
-    Height = 768
-    Top = 3
+    Left = 230
+    Height = 764
+    Top = 5
     Width = 65
     Align = alRight
     BorderStyle = bsNone
@@ -99,13 +99,13 @@ object MainForm: TMainForm
         Alignment = taCenter
         Font.Color = clSilver
         Title.Caption = 'S'
-        Width = 20
+        Width = 21
         FieldName = 'shortcut'
       end    
       item
         Alignment = taCenter
         Title.Caption = 'M'
-        Width = 20
+        Width = 26
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -121,51 +121,23 @@ object MainForm: TMainForm
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end
-  object MainGridIcon: TDBGrid
-    Left = 3
-    Height = 768
-    Top = 3
-    Width = 20
-    Align = alLeft
-    AutoFillColumns = True
-    BorderStyle = bsNone
-    Columns = <    
-      item
-        Title.Caption = 'ML'
-        Width = 20
-        FieldName = 'icon'
-      end>
-    DataSource = MenuItemDS
-    DefaultRowHeight = 20
-    FixedCols = 0
-    Flat = True
-    Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
-    ParentColor = True
-    ReadOnly = True
-    Scrollbars = ssAutoHorizontal
-    TabOrder = 2
-    OnCellClick = MainGridCellClick
-    OnDrawColumnCell = MainGridIconDrawColumnCell
-    OnKeyPress = MainGridKeyPress
-    OnKeyUp = MainGridKeyUp
-  end
   object pnlFind: TPanel
-    Left = 3
+    Left = 5
     Height = 26
-    Top = 771
-    Width = 294
+    Top = 769
+    Width = 290
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'pnlFind'
     ClientHeight = 26
-    ClientWidth = 294
-    TabOrder = 3
+    ClientWidth = 290
+    TabOrder = 2
     Visible = False
     object edFind: TEdit
       Left = 0
-      Height = 25
-      Top = 1
-      Width = 294
+      Height = 23
+      Top = 3
+      Width = 290
       Align = alBottom
       OnKeyDown = edFindKeyDown
       OnKeyUp = edFindKeyUp
@@ -184,7 +156,6 @@ object MainForm: TMainForm
     DatabaseName = '/tmp/debugMenu.db'
     KeepConnection = True
     Transaction = SQLTransaction
-    Options = []
     left = 32
     top = 200
   end
@@ -238,7 +209,6 @@ object MainForm: TMainForm
     SQL.Strings = (
       'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval from menu'
     )
-    Options = []
     Params = <>
     left = 32
     top = 259
@@ -270,12 +240,6 @@ object MainForm: TMainForm
       end    
       item
         Name = 'search'
-        DataType = ftString
-        Precision = -1
-        Size = 255
-      end    
-      item
-        Name = 'icon'
         DataType = ftString
         Precision = -1
         Size = 255
@@ -323,14 +287,13 @@ object MainForm: TMainForm
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
-      'select id, menuId, itemType, name, search, icon, shortcut,'
+      'select id, menuId, itemType, name, search, shortcut,'
       'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId,'
       'subMenuChar, width'
       'from menuItem'
       'where menuId = :id'
       'Order by id'
     )
-    Options = []
     Params = <    
       item
         DataType = ftUnknown
@@ -344,7 +307,6 @@ object MainForm: TMainForm
   object SQLTransaction: TSQLTransaction
     Active = False
     Database = MenuDB
-    Options = []
     left = 32
     top = 136
   end
@@ -426,12 +388,6 @@ object MainForm: TMainForm
         Size = 255
       end    
       item
-        Name = 'icon'
-        DataType = ftString
-        Precision = -1
-        Size = 255
-      end    
-      item
         Name = 'shortcut'
         DataType = ftString
         Precision = -1
@@ -474,13 +430,12 @@ object MainForm: TMainForm
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
-      'select id, menuId, itemType, name, search, icon, shortcut,'
+      'select id, menuId, itemType, name, search, shortcut,'
       'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar'
       'from menuItem'
       'where menuId = :idMenu and shortcut = :shortcut'
       'Order by id'
     )
-    Options = []
     Params = <    
       item
         DataType = ftUnknown
@@ -528,7 +483,6 @@ object MainForm: TMainForm
       'where menuId = :id'
       'Order by id'
     )
-    Options = []
     Params = <    
       item
         DataType = ftUnknown

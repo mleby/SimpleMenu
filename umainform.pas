@@ -4,6 +4,8 @@ unit uMainForm;
 
 interface
 
+{ TODO : compile and run }
+
 uses
   Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
   AsyncProcess, LazUTF8, uMenuItem, process;
@@ -20,9 +22,11 @@ type
     acRun: TAction;
     acFind: TAction;
     acKeepOpen: TAction;
+    acGlobalSearch: TAction;
     AsyncProcess1: TAsyncProcess;
     edFind: TEdit;
     MainGrid: TDBGrid;
+    MainGridSubmenu: TDBGrid;
     MainGridShortCut: TDBGrid;
     MenuDS: TDataSource;
     MenuDB: TSQLite3Connection;
@@ -37,6 +41,8 @@ type
     ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
     Procedure acFindExecute(Sender: TObject);
+    procedure acGlobalSearchExecute(Sender: TObject);
+    procedure acGlobalSearchUpdate(Sender: TObject);
     Procedure acKeepOpenExecute(Sender: TObject);
     procedure acRunExecute(Sender: TObject);
     Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -49,7 +55,7 @@ type
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
-    Procedure MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    Procedure MainGridSubmenuDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
     Procedure ThrTimerTimer(Sender: TObject);
@@ -96,7 +102,7 @@ var
 
 implementation
 
-uses strutils, debugForm, StreamIO, LCLType, Dialogs;
+uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding;
 
 {$R *.lfm}
 
@@ -112,9 +118,9 @@ begin
 
   // sure create DB
   MenuDB.Close;
-  DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := ':memory:';
+  //DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
@@ -215,8 +221,15 @@ Begin
     pnlFind.Visible := True
   else If Not pnlFind.Visible Then
     pnlFind.Visible := True
-  Else If pnlFind.Visible And (edFind.Text = '') Then
+  Else If pnlFind.Visible And ((edFind.Text = '') or (edFind.Text = '*')) Then
+  begin
     pnlFind.Visible := False;
+    if (edFind.Text = '*') then
+    begin
+      edFind.Text := '';
+      showMenu;
+    end;
+  end;
 
   If pnlFind.Visible And Not edFind.Focused Then
   Begin
@@ -289,10 +302,10 @@ Begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGrid);
 end;
 
-Procedure TMainForm.MainGridShortCutDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn;
+Procedure TMainForm.MainGridSubmenuDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn;
   State: TGridDrawState);
 Begin
-  SetSeparatorRow(State, Column, DataCol, Rect, MainGridShortCut);
+  SetSeparatorRow(State, Column, DataCol, Rect, MainGridSubmenu);
 end;
 
 Procedure TMainForm.MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -400,6 +413,21 @@ end;
 Procedure TMainForm.acFindExecute(Sender: TObject);
 Begin
   FindSwitch;
+end;
+
+procedure TMainForm.acGlobalSearchExecute(Sender: TObject);
+begin
+  FindSwitch;
+  If pnlFind.Visible And (edFind.Text = '') then
+  begin
+    edFind.Text := '*';
+    edFind.SelStart := Length(edFind.Text);
+  end;
+end;
+
+procedure TMainForm.acGlobalSearchUpdate(Sender: TObject);
+begin
+  (Sender as TAction).Enabled := not pnlFind.Visible;
 end;
 
 Procedure TMainForm.acKeepOpenExecute(Sender: TObject);
@@ -703,9 +731,10 @@ Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
   lSl: TStringList;
   j: Integer;
+  //F:TextFile;
   F:TextFile;
   lLine: WideString;
-  lVal: String;
+  lVal, lEncCon, lEncDef: String;
   lExt, lCan: Boolean;
   c: WideChar;
 Begin
@@ -730,50 +759,38 @@ Begin
         Readln(F, lLine);
 
         // ugly hack, but only works - for czech only :-(
-        lVal := '';
-        j := 1;
-        while j <= Length(lLine) do
-        begin
-          c := lLine[j];
-          if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A1) then begin c:= 'á'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8D) then begin c:= 'č'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8F) then begin c:= 'ď'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A9) then begin c:= 'é'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9B) then begin c:= 'ě'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AD) then begin c:= 'í'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$88) then begin c:= 'ň'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$B3) then begin c:= 'ó'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$99) then begin c:= 'ř'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A1) then begin c:= 'š'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A5) then begin c:= 'ť'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BA) then begin c:= 'ú'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AF) then begin c:= 'ů'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BD) then begin c:= 'ý'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BE) then begin c:= 'ž'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$81) then begin c:= 'Á'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8C) then begin c:= 'Č'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8E) then begin c:= 'Ď'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$89) then begin c:= 'É'; Inc(j); end
-          else if (c = #$C4) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9A) then begin c:= 'Ě'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$8D) then begin c:= 'Í'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$87) then begin c:= 'Ň'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$93) then begin c:= 'Ó'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$98) then begin c:= 'Ř'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A0) then begin c:= 'Š'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$A4) then begin c:= 'Ť'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9A) then begin c:= 'Ú'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$AE) then begin c:= 'Ů'; Inc(j); end
-          else if (c = #$C3) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$9D) then begin c:= 'Ý'; Inc(j); end
-          else if (c = #$C5) and ((j+1) <= Length(lLine)) and (lLine[j+1] = #$BD) then begin c:= 'Ž'; Inc(j); end;
-          lVal := lVal + c;
-          Inc(j);
-        End;
-
-        //lVal := UTF8Decode(lLine);
-        //lVal := UTF8ToSys(lLine);
-        //lVal := Utf8ToAnsi(lLine);
-        //lVal := AnsiString(lLine);
-        //lVal := Utf8ToAnsi(lLine);
+        //{$IFDEF Windows}
+        lVal := ReplaceStr(lLine, '├í', 'á');
+        lVal := ReplaceStr(lVal, '─Ź', 'č');
+        lVal := ReplaceStr(lVal, '─Ć', 'ď');
+        lVal := ReplaceStr(lVal, '├ę', 'é');
+        lVal := ReplaceStr(lVal, '─Ť', 'ě');
+        lVal := ReplaceStr(lVal, '├ş', 'í');
+        lVal := ReplaceStr(lVal, '┼ł', 'ň');
+        lVal := ReplaceStr(lVal, '├│', 'ó');
+        lVal := ReplaceStr(lVal, '┼Ö', 'ř');
+        lVal := ReplaceStr(lVal, '┼í', 'š');
+        lVal := ReplaceStr(lVal, '┼ą', 'ť');
+        lVal := ReplaceStr(lVal, '├║', 'ú');
+        lVal := ReplaceStr(lVal, '┼»', 'ů');
+        lVal := ReplaceStr(lVal, '├Ż', 'ý');
+        lVal := ReplaceStr(lVal, '┼ż', 'ž');
+        lVal := ReplaceStr(lVal, '├ü', 'Á');
+        lVal := ReplaceStr(lVal, '─î', 'Č');
+        lVal := ReplaceStr(lVal, '─Ä', 'Ď');
+        lVal := ReplaceStr(lVal, '├ë', 'É');
+        lVal := ReplaceStr(lVal, '─Ü', 'Ě');
+        lVal := ReplaceStr(lVal, '├Ź', 'Í');
+        lVal := ReplaceStr(lVal, '┼ç', 'Ň');
+        lVal := ReplaceStr(lVal, '├ô', 'Ó');
+        lVal := ReplaceStr(lVal, '┼ś', 'Ř');
+        lVal := ReplaceStr(lVal, '┼á', 'Š');
+        lVal := ReplaceStr(lVal, '┼Ą', 'Ť');
+        lVal := ReplaceStr(lVal, '├Ü', 'Ú');
+        lVal := ReplaceStr(lVal, '┼«', 'Ů');
+        lVal := ReplaceStr(lVal, '├Ł', 'Ý');
+        lVal := ReplaceStr(lVal, '┼Ż', 'Ž');
+        //{$ENDIF}
 
         lSl.Append(lVal);
         //ShowMessage(lSl[0]);
@@ -781,7 +798,7 @@ Begin
       CloseFile(F);
 
       LoadMenuFromLines(lSl);
-      lsl.SaveToFile('/tmp/menu.txt');
+      //lsl.SaveToFile('/tmp/menu.txt');
 
     Finally
       FreeAndNil(lSl);
@@ -799,12 +816,34 @@ Procedure TMainForm.showMenu;
 Var
   lSql: String;
   lId, lCmd: String;
+  lSearchText: String;
+  lGlobalSearch: Boolean;
 Begin
-  // regenerate if reloadInterval < 0 and edFind.Text and command contains %s
-  if isExternalSearch and (edFind.Text <> FLastFind) then
+  // initialize local variables
+  lGlobalSearch := false;
+  lSearchText := '';
+
+  // check global search
+  if Length(edFind.Text) > 0 then
+  begin
+    if edFind.Text[1] = '*' then
+    begin
+      lGlobalSearch := true;
+      lSearchText :=  copy(edFind.Text, 2, Integer.MaxValue);
+    end
+    else
+    begin
+      lGlobalSearch := false;
+      lSearchText := edFind.Text;
+    end
+  end;
+
+
+  // regenerate if reloadInterval < 0 and lSearchText and command contains %s
+  if isExternalSearch and (lSearchText <> FLastFind) then
   begin
     MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + SQLMenu.FieldByName('id').AsString);
-    lCmd := ReplaceText(SQLMenu.FieldByName('cmd').AsString, '%s', '"' + edFind.Text + '"');
+    lCmd := ReplaceText(SQLMenu.FieldByName('cmd').AsString, '%s', '"' + lSearchText + '"');
     LoadMenuFromProcess(lCmd);
 
     SQLMenu.Edit;
@@ -819,10 +858,13 @@ Begin
   lId := SQLMenu.FieldByName('id').AsString;
   lSql := 'select id, menuId, itemType, name, search, shortcut, '
                      + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-                     + ' from menuItem where menuId = ''' + lId + ''' ';
+                     + ' from menuItem where 1=1 ';
 
-  If (edFind.Text <> '') and not isExternalSearch Then
-    lSql := lSql + ' and name like ''%' + edFind.Text + '%'' ';
+  if not lGlobalSearch then
+    lSql := lSql + ' and menuId = ''' + lId + ''' ';
+
+  If (lSearchText <> '') and not isExternalSearch Then
+    lSql := lSql + ' and search like ''%' + lSearchText + '%'' ';
 
   lSql := lSql + ' Order by id';
 
@@ -875,16 +917,16 @@ begin
 
   if MainForm.Constraints.MaxHeight >= lHeight then
   begin
-    MainGridShortCut.ScrollBars := ssNone;
+    MainGridSubmenu.ScrollBars := ssNone;
     MainForm.Constraints.MinHeight := lHeight;
   end
   else
-    MainGridShortCut.ScrollBars := ssAutoVertical;
+    MainGridSubmenu.ScrollBars := ssAutoVertical;
 
   MainForm.Height := lHeight;
 
   // width
-  lWidth := GetMaxWidth + MainGridShortCut.Width + (2* MainForm.BorderWidth);
+  lWidth := GetMaxWidth + MainGridSubmenu.Width + MainGridShortCut.Width + (2* MainForm.BorderWidth);
    MainForm.Width := lWidth;
 
   // centralization

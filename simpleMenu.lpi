@@ -115,7 +115,7 @@
         <PackageName Value="LCL"/>
       </Item3>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="5">
       <Unit0>
         <Filename Value="simpleMenu.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -141,6 +141,11 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="debugForm"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="utools.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uTools"/>
+      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

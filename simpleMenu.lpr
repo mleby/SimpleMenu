@@ -8,7 +8,7 @@ Uses
   {$ENDIF}{$ENDIF}
   sysutils,
   Interfaces, // this includes the LCL widgetset
-  Forms, uMainForm, uMenuItem, debugForm
+  Forms, uMainForm, uMenuItem, debugForm, uTools
   { you can add units after this };
 
 {$R *.res}
@@ -29,6 +29,7 @@ Begin
     writeln('    -s X --search=X       count of menu items for automatic enable find feature');
     writeln('    -r X --reload=X       enable dynamic menu filtering and count minimal chars for search');
     writeln('    -x X --showfile=X     extra options for menu cmd');
+    { TODO : use compatible mode - parse with icon and ignore it }
     exit;
   end;
 

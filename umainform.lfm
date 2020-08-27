@@ -56,10 +56,10 @@ object MainForm: TMainForm
   ShowInTaskBar = stNever
   LCLVersion = '2.0.6.0'
   object MainGrid: TDBGrid
-    Left = 5
+    Left = 26
     Height = 764
     Top = 5
-    Width = 225
+    Width = 230
     Align = alClient
     AutoFillColumns = True
     BorderStyle = bsNone
@@ -67,7 +67,7 @@ object MainForm: TMainForm
       item
         SizePriority = 1000
         Title.Caption = 'name'
-        Width = 225
+        Width = 230
         FieldName = 'name'
       end>
     DataSource = MenuItemDS
@@ -86,22 +86,15 @@ object MainForm: TMainForm
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end
-  object MainGridShortCut: TDBGrid
-    Left = 230
+  object MainGridSubmenu: TDBGrid
+    Left = 256
     Height = 764
     Top = 5
-    Width = 65
+    Width = 39
     Align = alRight
     BorderStyle = bsNone
     Color = 16185078
     Columns = <    
-      item
-        Alignment = taCenter
-        Font.Color = clSilver
-        Title.Caption = 'S'
-        Width = 21
-        FieldName = 'shortcut'
-      end    
       item
         Alignment = taCenter
         Title.Caption = 'M'
@@ -117,7 +110,7 @@ object MainForm: TMainForm
     Scrollbars = ssAutoVertical
     TabOrder = 1
     OnCellClick = MainGridCellClick
-    OnDrawColumnCell = MainGridShortCutDrawColumnCell
+    OnDrawColumnCell = MainGridSubmenuDrawColumnCell
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
   end
@@ -143,6 +136,35 @@ object MainForm: TMainForm
       OnKeyUp = edFindKeyUp
       TabOrder = 0
     end
+  end
+  object MainGridShortCut: TDBGrid
+    Left = 5
+    Height = 764
+    Top = 5
+    Width = 21
+    Align = alLeft
+    BorderStyle = bsNone
+    Color = 16185078
+    Columns = <    
+      item
+        Alignment = taCenter
+        Font.Color = clSilver
+        Title.Caption = 'S'
+        Width = 21
+        FieldName = 'shortcut'
+      end>
+    DataSource = MenuItemDS
+    DefaultRowHeight = 20
+    FixedCols = 0
+    Flat = True
+    Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    ReadOnly = True
+    Scrollbars = ssNone
+    TabOrder = 3
+    OnCellClick = MainGridCellClick
+    OnDrawColumnCell = MainGridSubmenuDrawColumnCell
+    OnKeyPress = MainGridKeyPress
+    OnKeyUp = MainGridKeyUp
   end
   object MenuDS: TDataSource
     AutoEdit = False
@@ -283,6 +305,11 @@ object MainForm: TMainForm
         DataType = ftString
         Precision = -1
         Size = 255
+      end    
+      item
+        Name = 'width'
+        DataType = ftInteger
+        Precision = -1
       end>
     Database = MenuDB
     Transaction = SQLTransaction
@@ -335,6 +362,15 @@ object MainForm: TMainForm
       Caption = 'acKeepOpen'
       OnExecute = acKeepOpenExecute
       ShortCut = 32843
+    end
+    object acGlobalSearch: TAction
+      Caption = 'acGlobalSearch'
+      OnExecute = acGlobalSearchExecute
+      OnUpdate = acGlobalSearchUpdate
+      SecondaryShortCuts.Strings = (
+        '*'
+      )
+      ShortCut = 24646
     end
   end
   object MenuItemDS: TDataSource

@@ -5,7 +5,7 @@ unit uMenuItem;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, uTools;
 
 type
 
@@ -222,7 +222,7 @@ end;
 
 Function TMenuItemParser.GetSearch: string;
 begin
-  Result := FName;
+  Result := NormalizeTerm(FName); { TODO : lowercase and remove diacritics }
 end;
 
 Function TMenuItemParser.GetSubMenuChar: string;

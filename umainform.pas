@@ -641,11 +641,10 @@ Begin
   else if (Key = VK_Return) then
   begin
     //MainGrid.SetFocus;
-    acRun.Execute;
     Key := 0;
-  End;
-  if (Key = VK_Return) then
     FKeyStop := True;
+    acRun.Execute;
+  End;
 end;
 
 Procedure TMainForm.edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);

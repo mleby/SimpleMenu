@@ -37,6 +37,7 @@ type
     SQLMenuItems: TSQLQuery;
     SQLMenuItemsMaxWidth: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
+    SQLBatch: TSQLScript;
     SQLTransaction: TSQLTransaction;
     ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
@@ -860,7 +861,10 @@ Begin
                      + ' from menuItem where 1=1 ';
 
   if not lGlobalSearch then
-    lSql := lSql + ' and menuId = ''' + lId + ''' ';
+    lSql := lSql + ' and menuId = ''' + lId + ''' '
+  else
+    lSql := lSql + ' and itemType <> ''MITseparator'' ';
+
 
   If (lSearchText <> '') and not isExternalSearch Then
     lSql := lSql + ' and search like ''%' + lSearchText + '%'' ';
@@ -905,11 +909,13 @@ End;
 Procedure TMainForm.SetFormSize;
 var
   lHeight, lWidth: integer;
+const
+  lHeighReserve = 2;
 begin
   MainForm.Caption := SQLMenu.FieldByName('name').AsString;
 
   // height
-  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth);
+  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth) + lHeighReserve;
 
   if pnlFind.Visible then
     lHeight := lHeight + pnlFind.Height;

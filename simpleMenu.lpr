@@ -19,6 +19,8 @@ Begin
   // setHeapTraceOutput('simpleMenuMem.log'); // supported as of debugger version 3.2.0
   {$endIf}
 
+  Application.Scaled:=True;
+
   if Application.HasOption('h', 'help') then begin
     writeln('Usage: simpleMenu -(f|p) "menu file or cmd" [options...]');
     writeln('         one of -f or -p must be specified as start point for menu');

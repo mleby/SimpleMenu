@@ -65,6 +65,8 @@ object MainForm: TMainForm
     BorderStyle = bsNone
     Columns = <    
       item
+        MinSize = 10
+        MaxSize = 200
         SizePriority = 1000
         Title.Caption = 'name'
         Width = 230
@@ -76,6 +78,7 @@ object MainForm: TMainForm
     Flat = True
     Options = [dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
     ParentColor = True
+    ParentFont = False
     ReadOnly = True
     Scrollbars = ssAutoHorizontal
     TabAdvance = aaNone
@@ -97,8 +100,10 @@ object MainForm: TMainForm
     Columns = <    
       item
         Alignment = taCenter
+        MinSize = 10
+        MaxSize = 200
         Title.Caption = 'M'
-        Width = 26
+        Width = 21
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -106,6 +111,7 @@ object MainForm: TMainForm
     FixedCols = 0
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    ParentFont = False
     ReadOnly = True
     Scrollbars = ssAutoVertical
     TabOrder = 1
@@ -124,6 +130,7 @@ object MainForm: TMainForm
     Caption = 'pnlFind'
     ClientHeight = 26
     ClientWidth = 290
+    ParentFont = False
     TabOrder = 2
     Visible = False
     object edFind: TEdit
@@ -134,6 +141,7 @@ object MainForm: TMainForm
       Align = alBottom
       OnKeyDown = edFindKeyDown
       OnKeyUp = edFindKeyUp
+      ParentFont = False
       TabOrder = 0
     end
   end
@@ -149,8 +157,10 @@ object MainForm: TMainForm
       item
         Alignment = taCenter
         Font.Color = clSilver
+        MinSize = 10
+        MaxSize = 200
         Title.Caption = 'S'
-        Width = 21
+        Width = 17
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS
@@ -158,6 +168,7 @@ object MainForm: TMainForm
     FixedCols = 0
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
+    ParentFont = False
     ReadOnly = True
     Scrollbars = ssNone
     TabOrder = 3
@@ -368,7 +379,7 @@ object MainForm: TMainForm
       OnExecute = acGlobalSearchExecute
       OnUpdate = acGlobalSearchUpdate
       SecondaryShortCuts.Strings = (
-        '*'
+        '-'
       )
       ShortCut = 24646
     end
@@ -536,5 +547,30 @@ object MainForm: TMainForm
     OnTimer = ThrTimerTimer
     left = 125
     top = 200
+  end
+  object SQLBatch: TSQLScript
+    DataBase = MenuDB
+    Transaction = SQLTransaction
+    UseDollarString = False
+    Directives.Strings = (
+      'SET TERM'
+      'COMMIT WORK'
+      'COMMIT RETAIN'
+      'COMMIT'
+      '#IFDEF'
+      '#IFNDEF'
+      '#ELSE'
+      '#ENDIF'
+      '#DEFINE'
+      '#UNDEF'
+      '#UNDEFINE'
+    )
+    Terminator = ';'
+    CommentsinSQL = True
+    UseSetTerm = True
+    UseCommit = True
+    UseDefines = True
+    left = 28
+    top = 504
   end
 end

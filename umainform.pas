@@ -37,7 +37,6 @@ type
     SQLMenuItems: TSQLQuery;
     SQLMenuItemsMaxWidth: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
-    SQLBatch: TSQLScript;
     SQLTransaction: TSQLTransaction;
     ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
@@ -50,9 +49,9 @@ type
     Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    Procedure FormDestroy(Sender: TObject);
     Procedure MainGridCellClick(Column: TColumn);
     Procedure MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure MainGridEnter(Sender: TObject);
     Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
@@ -194,11 +193,6 @@ begin
     FKeepOpen := True;
 end;
 
-Procedure TMainForm.FormDestroy(Sender: TObject);
-Begin
-
-end;
-
 Procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
@@ -301,6 +295,15 @@ end;
 Procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
 Begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGrid);
+end;
+
+procedure TMainForm.MainGridEnter(Sender: TObject);
+begin
+  if SQLMenuItems.RecordCount > 1 then
+   while strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator do
+   begin
+     SQLMenuItems.Next;
+   end;
 end;
 
 Procedure TMainForm.MainGridSubmenuDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn;

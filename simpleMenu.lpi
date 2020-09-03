@@ -97,13 +97,13 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="-k -f C:/Programs/menu.txt -c -s 50"/>
+        <CommandLineParams Value="-k -f C:/SyncRepo/programs/menu.txt -c -s 50"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="-k -f C:/Programs/menu.txt -c -s 50"/>
+            <CommandLineParams Value="-k -f C:/SyncRepo/programs/menu.txt -c -s 50"/>
           </local>
         </Mode0>
       </Modes>

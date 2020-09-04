@@ -1,6 +1,6 @@
-# IceMenu
+# simplemenu file browser
 
-Menu generator for browse filesystem for icewm.
+Menu generator for browse filesystem for simplemenu.
 
 # Install
 
@@ -12,10 +12,6 @@ You can use `--help`:
 
 ```
 Usage of filebrowser:
-  -annex string
-    	open script for git annex managed files
-  -avfs string
-    	mountpoint of avfsdirectory
   -dir string
     	directories for menu, : is separator (default "$HOME")
   -norecur
@@ -28,7 +24,7 @@ Usage of filebrowser:
 
 example usage in `~/.icewm/menu` (if `filebrowser` is in `$PATH`):
 ```
-menuprogreload "Home" folder 10 /home/martin/bin/filebrowser -annex /home/martin/bin/getAndOpen.sh -avfs /home/martin/.avfs -dir /home/martin
+menuprogreload "Home" folder 10 /home/martin/bin/filebrowser -dir /home/martin
 menuprogreload Podcasts podcast.png 0 filebrowser -dir /home/martin/Mobile/ExtraPodcast:/home/martin/Video/other:/home/martin/Downloads -suffix .avi:.mp4:.flv:.webm:.mkv:.ts:.mp3 -open /home/martin/bin/playAndDelete.sh -norecur
 ```
 
@@ -41,9 +37,9 @@ As local menu is used `.filebrowser/static` in local directory and `.filebrowser
 
 Example:
 ```
-prog "Commander"  /usr/share/doublecmd/doc/en/images/doublecmd.png  doublecmd -T Stažené '%s'
-prog "Terminál"  /usr/share/icons/gnome/16x16/apps/xfce-terminal.png  sakura -r 40 -c 120 --working-directory='%s'
-prog "Thunar"  /usr/share/icons/hicolor/16x16/apps/Thunar.png  thunar '%s'
+prog "Commander"  doublecmd -T Stažené '%s'
+prog "Terminál"  sakura -r 40 -c 120 --working-directory='%s'
+prog "Thunar" thunar '%s'
 ```
 
 ## Additional dynamic menu

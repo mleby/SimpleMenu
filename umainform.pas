@@ -8,7 +8,7 @@ interface
 
 uses
   Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
-  AsyncProcess, LazUTF8, uMenuItem, process;
+  AsyncProcess, LazUTF8, UTF8Process, uMenuItem, process;
 
 type
 
@@ -33,6 +33,7 @@ type
     MenuItemDS: TDataSource;
     pnlFind: TPanel;
     Process1: TProcess;
+    ProcessUTF81: TProcessUTF8;
     SQLMenu: TSQLQuery;
     SQLMenuItems: TSQLQuery;
     SQLMenuItemsMaxWidth: TSQLQuery;
@@ -102,7 +103,7 @@ var
 
 implementation
 
-uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding;
+uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding, LazUTF8Classes;
 
 {$R *.lfm}
 
@@ -732,7 +733,7 @@ end;
 
 Procedure TMainForm.LoadMenuFromProcess(Const aCmd: String);
 Var
-  lSl: TStringList;
+  lSl: TStringListUTF8;
   j: Integer;
   //F:TextFile;
   F:TextFile;
@@ -747,23 +748,26 @@ Begin
   begin
     // load data from process
     //Process1.Options := [poWaitOnExit, poNoConsole, poUsePipes];
-    Process1.CurrentDirectory := GetEnvironmentVariable('HOME');
-    Process1.CommandLine := aCmd;
-    Process1.Execute;
+    ProcessUTF81.CurrentDirectory := GetEnvironmentVariable('HOME');
+    ProcessUTF81.CommandLine := aCmd;
+    ProcessUTF81.Execute;
 
-    lSl := TStringList.Create;
+    lSl := TStringListUTF8.Create;
     Try
       //Process1.WaitOnExit;
-      //lSl.LoadFromStream(Process1.Output);
-      AssignStream(F, Process1.Output);
+      //lSl.LoadFromStream(ProcessUTF81.Output);
+      //lsl.SaveToFile('X:\tmp\menu.txt');
+
+      AssignStream(F, ProcessUTF81.Output);
       Reset(F);
       while not Eof(F) do
       begin
         Readln(F, lLine);
 
+        lVal := lLine;
         // ugly hack, but only works - for czech only :-(
         //{$IFDEF Windows}
-        lVal := ReplaceStr(lLine, '├í', 'á');
+        lVal := ReplaceStr(lVal, '├í', 'á');
         lVal := ReplaceStr(lVal, '─Ź', 'č');
         lVal := ReplaceStr(lVal, '─Ć', 'ď');
         lVal := ReplaceStr(lVal, '├ę', 'é');
@@ -801,7 +805,7 @@ Begin
       CloseFile(F);
 
       LoadMenuFromLines(lSl);
-      //lsl.SaveToFile('/tmp/menu.txt');
+      //lsl.SaveToFile('X:\tmp\menu.txt');
 
     Finally
       FreeAndNil(lSl);
@@ -870,7 +874,7 @@ Begin
 
 
   If (lSearchText <> '') and not isExternalSearch Then
-    lSql := lSql + ' and search like ''%' + lSearchText + '%'' ';
+    lSql := lSql + ' and search like ''%' + lSearchText + '%'' '; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
 
   lSql := lSql + ' Order by id';
 

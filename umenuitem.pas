@@ -156,6 +156,7 @@ begin
     If (Length(FName) > 0) and (FName[1] = '#') Then
       Delete(FName, 1, 1);
 
+    FName := FName.Replace('"', '');
   finally
     FreeAndNil(lSl);
   end;

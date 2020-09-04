@@ -874,7 +874,10 @@ Begin
 
 
   If (lSearchText <> '') and not isExternalSearch Then
+  begin
     lSql := lSql + ' and search like ''%' + lSearchText + '%'' '; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
+    lSql := lSql + ' and itemType <> ''MITseparator'' ';
+  end;
 
   lSql := lSql + ' Order by id';
 

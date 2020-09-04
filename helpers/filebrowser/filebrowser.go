@@ -104,6 +104,9 @@ func main() {
 			log.Fatal(err)
 		}
 
+		// title separator
+		fmt.Println(C_SEPARATOR, "\"" + dirElement + "\"")
+
 		// static items
 		globalStaticMenu := printDirMenu(filepath.Join(homedirpath, ".filebrowser"), dirElement, files)         // global
 		localStaticMenu := printDirMenu(filepath.Join(dirElement, ".filebrowser"), dirElement, files)           // local

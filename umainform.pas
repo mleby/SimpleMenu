@@ -192,6 +192,13 @@ begin
   End
   else
     FKeepOpen := True;
+
+  if Application.HasOption('q', 'query') then
+  begin
+    pnlFind.Visible := True;
+    edFind.Text := Application.GetOptionValue('q', 'query');
+    showMenu;
+  end;
 end;
 
 Procedure TMainForm.AppDeactivate(Sender: TObject);
@@ -684,6 +691,8 @@ end;
 Procedure TMainForm.FormActivate(Sender: TObject);
 Begin
   {TODO -oLebeda -cNone: reload menu ??}
+  if pnlFind.Visible then
+    edFind.SelStart := Length(edFind.Text);
 end;
 
 Procedure TMainForm.SQLMenuAfterInsert(DataSet: TDataSet);
@@ -766,6 +775,7 @@ Begin
 
         lVal := lLine;
         // ugly hack, but only works - for czech only :-(
+        { TODO : separate and/or delete hack  }
         //{$IFDEF Windows}
         lVal := ReplaceStr(lVal, '├í', 'á');
         lVal := ReplaceStr(lVal, '─Ź', 'č');

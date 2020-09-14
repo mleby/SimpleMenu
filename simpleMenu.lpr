@@ -29,6 +29,7 @@ Begin
     writeln('    -f X --file=X         path to menu file used as start point for menu');
     writeln('    -p X --process=X      command for generate menu used as start point for menu');
     writeln('    -s X --search=X       count of menu items for automatic enable find feature');
+    writeln('    -q X --query=X        automatic enable find entry and fill query on start');
     writeln('    -r X --reload=X       enable dynamic menu filtering and count minimal chars for search');
     writeln('    -x X --showfile=X     extra options for menu cmd');
     exit;

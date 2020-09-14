@@ -135,6 +135,7 @@ object MainForm: TMainForm
       Top = 3
       Width = 290
       Align = alBottom
+      AutoSelect = False
       OnKeyDown = edFindKeyDown
       OnKeyUp = edFindKeyUp
       ParentFont = False

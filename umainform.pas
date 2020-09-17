@@ -110,9 +110,12 @@ uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding, LazUTF8Clas
 { TMainForm }
 
 Procedure TMainForm.FormCreate(Sender: TObject);
+var ppi, ppiDesigned: Integer;
 begin
-  MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9);
-  MainForm.Constraints.MaxWidth := round(Screen.Width * 0.9);
+  ppiDesigned := self.DesignTimePPI;
+  ppi := Screen.PixelsPerInch;
+  MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9 * (ppiDesigned/ppi));
+  MainForm.Constraints.MaxWidth := round(Screen.Width * 0.9 * (ppiDesigned/ppi));
 
   FFormMode := FMNormal;
   // color

@@ -21,6 +21,7 @@ uses uMainForm;
 
 // https://github.com/Ciantic/VirtualDesktopAccessor
 function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 
 function GetCurrentActiveProcessPath(hWindow: Hwnd): String;
 var
@@ -67,7 +68,7 @@ var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe: String;
-  lDesktop: Integer;
+  lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
 begin
   // load list windows
@@ -78,8 +79,9 @@ begin
     ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
     lDesktop := GetWindowDesktopNumber(hWindow);
+    lIsPined := IsPinnedWindow(hWindow);
 
-    if (Buffer <> '') and IsWindowVisible(hWindow) and (lDesktop >= 0) then
+    if (Buffer <> '') and IsWindowVisible(hWindow) and ((lDesktop >= 0) or (lIsPined = 1)) then
     { TODO -cWM : filter window list}
     begin
       lTitle := Buffer;

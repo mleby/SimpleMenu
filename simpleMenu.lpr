@@ -8,7 +8,7 @@ Uses
   {$ENDIF}{$ENDIF}
   sysutils,
   Interfaces, // this includes the LCL widgetset
-  Forms, uMainForm, uMenuItem, debugForm, uTools
+  Forms, uMainForm, uMenuItem, debugForm, uTools, uwinmanager
   { you can add units after this };
 
 {$R *.res}

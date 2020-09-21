@@ -10,7 +10,16 @@ uses
 type
 
   { TMenuItemParser }
-  TMenuItemType = (MITprog, MITmenu, MITrunonce, MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
+  TMenuItemType = (MITprog, MITmenu,
+                  MITrunonce,   { TODO : implementovat pro windows }
+                  {$IFDEF Windows}
+                  MITmenuwindow, MITwindow,
+                  {$ENDIF}
+                  MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
+
+  { TODO : add MITpath - internal support for generate menu for items in specific directory }
+  { TODO : add MITlist/MITalist - internal support for list of files with relative/absolute paths}
+  { TODO : ??? add MITgit - internal support for load list of files from git }
 
   TMenuItemParser = class(TObject)
   private
@@ -37,13 +46,17 @@ type
     procedure endMenu;
 
     procedure prepareProg(const aLine: string);
+    procedure prepareWindow(const aName, hWindow: string);
     procedure prepareRunOnce(const aLine: string);
     procedure prepareProgreload(const aLine: string);
+    procedure prepareWindowmenu(const aLine: string);
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
   public
 
     constructor Create(const aLine: string);
+    { TODO -cWM : factory method}
+    constructor Create(const aName, hWindow: String); // window item
     destructor Destroy; override;
 
     property Name: String read FName;
@@ -79,7 +92,7 @@ end;
 
 { TMenuItemParser }
 
-Procedure TMenuItemParser.prepareProg(Const aLine: string);
+procedure TMenuItemParser.prepareProg(const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -99,7 +112,14 @@ begin
   end;
 end;
 
-Procedure TMenuItemParser.prepareRunOnce(Const aLine: string);
+procedure TMenuItemParser.prepareWindow(const aName, hWindow: string);
+begin
+  FItemType := MITwindow;
+  setNameAndShotrCutKey(aName);
+  FCmd := hWindow;
+end;
+
+procedure TMenuItemParser.prepareRunOnce(const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -121,7 +141,7 @@ begin
   end;
 End;
 
-Procedure TMenuItemParser.prepareProgreload(Const aLine: string);
+procedure TMenuItemParser.prepareProgreload(const aLine: string);
 var
   lSl: TStringList;
   i: integer;
@@ -142,7 +162,29 @@ begin
   end;
 end;
 
-Procedure TMenuItemParser.prepareSeparator(Const aLine: string);
+{ TODO -cWM : jen pro windows}
+procedure TMenuItemParser.prepareWindowmenu(const aLine: string);
+var
+  lSl: TStringList;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITmenuwindow;
+
+    setNameAndShotrCutKey(lSl[1]);
+    FSubMenuReloadInterval := -1; // const 0s
+
+    for i := 2 to lsl.Count - 1 do
+      FSubMenuCmd := FSubMenuCmd + ' ' + lsl[i];
+
+    //FSubMenuCmd := Trim(FSubMenuCmd);
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
+procedure TMenuItemParser.prepareSeparator(const aLine: string);
 var
   lSl: TStringList;
 begin
@@ -162,7 +204,7 @@ begin
   end;
 end;
 
-Procedure TMenuItemParser.includeItems(Const aLine: string);
+procedure TMenuItemParser.includeItems(const aLine: string);
 var
   lSl: TStringList;
   lFileName, lFileNameCfg: string;
@@ -185,7 +227,7 @@ begin
   end;
 end;
 
-Function TMenuItemParser.SplitMenuLine(Const aLine: string): TStringList;
+function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
 Var
   lLine: String;
 begin
@@ -195,7 +237,7 @@ begin
   Result.DelimitedText := lLine;
 end;
 
-Procedure TMenuItemParser.startNewMenu(Const aLine: string);
+procedure TMenuItemParser.startNewMenu(const aLine: string);
 var
   lSl: TStringList;
 begin
@@ -212,7 +254,7 @@ begin
 
 end;
 
-Procedure TMenuItemParser.endMenu;
+procedure TMenuItemParser.endMenu;
 var
   lUpMenuId: integer;
 begin
@@ -221,20 +263,20 @@ begin
   MainForm.setActiveMenu(lUpMenuId);
 end;
 
-Function TMenuItemParser.GetSearch: string;
+function TMenuItemParser.GetSearch: string;
 begin
   Result := NormalizeTerm(FName); { TODO : lowercase and remove diacritics }
 end;
 
-Function TMenuItemParser.GetSubMenuChar: string;
+function TMenuItemParser.GetSubMenuChar: string;
 begin
-  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload] then
+  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow] then
     Result := '>'
   else
     Result := '';
 end;
 
-Procedure TMenuItemParser.QuoteTrim(Var lName: String);
+procedure TMenuItemParser.QuoteTrim(var lName: String);
 Begin
   If lName[1] = '"' Then
     Delete(lName, 1, 1);
@@ -242,7 +284,7 @@ Begin
     Delete(lName, Length(lName), 1);
 End;
 
-Procedure TMenuItemParser.setNameAndShotrCutKey(Const aName: String);
+procedure TMenuItemParser.setNameAndShotrCutKey(const aName: String);
 Var
   i: Integer;
   lName: String;
@@ -260,17 +302,19 @@ Begin
   FName := lName;
 End;
 
-Constructor TMenuItemParser.Create(Const aLine: string);
+constructor TMenuItemParser.Create(const aLine: string);
 begin
   FInputLine := aLine;
   FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)
-  else if AnsiStartsText('runonce ', aLine) then { TODO : odstranit jako systémově závislé }
+  else if AnsiStartsText('runonce ', aLine) then { TODO : implementace pro windows }
     prepareRunOnce(aLine)
   else if AnsiStartsText('separator', aLine) then
     prepareSeparator(aLine)
+  else if AnsiStartsText('menuwindow ', aLine) then
+    prepareWindowmenu(aLine)
   else if AnsiStartsText('menu ', aLine) then
     startNewMenu(aLine)
   else if AnsiStartsText('}', aLine) then
@@ -290,7 +334,14 @@ begin
   end;
 end;
 
-Destructor TMenuItemParser.Destroy;
+constructor TMenuItemParser.Create(const aName, hWindow: String);
+begin
+  FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
+
+  prepareWindow(aName, hWindow)
+end;
+
+destructor TMenuItemParser.Destroy;
 begin
   inherited Destroy;
 end;

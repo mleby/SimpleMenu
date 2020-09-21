@@ -27,6 +27,7 @@ Begin
     writeln('    -h --help             show this help');
     writeln('    -k --keep             keep menu open after choise');
     writeln('    -f X --file=X         path to menu file used as start point for menu');
+    writeln('    -m X --menu=X         text content of menu');
     writeln('    -p X --process=X      command for generate menu used as start point for menu');
     writeln('    -s X --search=X       count of menu items for automatic enable find feature');
     writeln('    -q X --query=X        automatic enable find entry and fill query on start');
@@ -35,7 +36,7 @@ Begin
     exit;
   end;
 
-  if not (Application.HasOption('f', 'file') or Application.HasOption('p', 'process'))then
+  if not (Application.HasOption('f', 'file') or Application.HasOption('p', 'process') or Application.HasOption('m', 'menu'))then
   begin
     writeln('One menu source must be specified (file or process).');
     exit;

@@ -12,6 +12,20 @@ Principles and ideas:
 
 # Command line
 
+```
+    Usage: simpleMenu -(f|p|m) "menu file or cmd" [options...]
+             one of -f/-p/-m must be specified as start point for menu
+        -h --help             show this help
+        -k --keep             keep menu open after choise
+        -f X --file=X         path to menu file used as start point for menu
+        -m X --menuitem=X     text content of menu
+        -p X --process=X      command for generate menu
+        -s X --search=X       count of menu items for automatic enable find
+        -q X --query=X        automatic enable find entry and fill start query
+        -r X --reload=X       dynamic menu with minimal chars for search
+        -x X --showfile=X     extra options for menu cmd
+```
+
 # Keyboard shortcut
 
 # Search in menu

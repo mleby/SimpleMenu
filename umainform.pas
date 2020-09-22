@@ -115,6 +115,29 @@ uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding, LazUTF8Clas
 procedure TMainForm.FormCreate(Sender: TObject);
 var ppi, ppiDesigned: Integer;
 begin
+  if Application.HasOption('h', 'help') then begin
+    showMessage(
+    'Usage: simpleMenu -(f|p|m) "menu file or cmd" [options...]' +#10#13 +
+    '         one of -f/-p/-m must be specified as start point for menu' + #10#13 +
+    '    -h --help             show this help' + #10#13 +
+    '    -k --keep             keep menu open after choise' + #10#13 +
+    '    -f X --file=X         path to menu file used as start point for menu' + #10#13 +
+    '    -m X --menuitem=X     text content of menu' + #10#13 +
+    '    -p X --process=X      command for generate menu' + #10#13 +
+    '    -s X --search=X       count of menu items for automatic enable find' + #10#13 +
+    '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
+    '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
+    '    -x X --showfile=X     extra options for menu cmd');
+    Halt;
+  end;
+
+  if not (Application.HasOption('f', 'file') or Application.HasOption('p', 'process') or Application.HasOption('m', 'menu'))then
+  begin
+    showMessage('One menu source must be specified (file or process or menuitem).');
+    Halt;
+  End;
+
+
   ppiDesigned := self.DesignTimePPI;
   ppi := Screen.PixelsPerInch;
   MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9 * (ppiDesigned/ppi));
@@ -163,7 +186,7 @@ begin
     LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
   end;
 
-  if Application.HasOption('m', 'menu') then
+  if Application.HasOption('m', 'menuitem') then
   begin
     LoadMenuFromString(Application.GetOptionValue('m', 'menu'));
   end;
@@ -212,7 +235,7 @@ begin
 
   showMenu;
 
-  if Application.HasOption('m', 'menu') and (SQLMenu.RecordCount = 1) then
+  if Application.HasOption('m', 'menuitem') and (SQLMenu.RecordCount = 1) then
   begin
     acRun.Execute;
 

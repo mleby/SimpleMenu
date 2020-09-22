@@ -14,6 +14,7 @@ uses
 
 procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 procedure ActivateWindow(const aWindowHandle: String);
+function ActivateProcess(const aExe: String): Boolean;
 
 implementation
 
@@ -22,6 +23,7 @@ uses uMainForm;
 // https://github.com/Ciantic/VirtualDesktopAccessor
 function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 
 function GetCurrentActiveProcessPath(hWindow: Hwnd): String;
 var
@@ -105,6 +107,40 @@ begin
         finally
           FreeAndNil(lMenuItemParser);
         end;
+      end;
+    end;
+    hWindow := GetWindow(hWindow, GW_HWNDNEXT);
+  end;
+end;
+
+function ActivateProcess(const aExe: String): Boolean;
+var
+  hDesktop, hWindow: Hwnd;
+  Buffer: array[0..255] of char;
+  lTitle, lClass, lMenuTitle, lExeFile, lFullExe: String;
+  lDesktop, lIsPined: Integer;
+  lMenuItemParser: TMenuItemParser;
+begin
+  Result := False;
+
+  // load list windows
+  hDesktop := GetDeskTopWindow;
+  hWindow := GetWindow(hDesktop, GW_CHILD);
+  while hWindow <> 0 do begin
+    //GetWindowText(hWindow, Buffer, 255);
+    ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
+
+    lDesktop := GetWindowDesktopNumber(hWindow);
+    lIsPined := IsPinnedWindow(hWindow);
+
+    if IsWindowVisible(hWindow) and ((lDesktop = GetCurrentDesktopNumber()) or (lIsPined = 1)) then
+    begin
+      lFullExe := GetCurrentActiveProcessPath(hWindow);
+
+      if aExe = lFullExe then // not menu itself
+      begin
+        ActivateWindow(IntToHex(hWindow,4));
+        Result := True;
       end;
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);

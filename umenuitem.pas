@@ -126,13 +126,16 @@ var
 begin
   lSl := SplitMenuLine(aLine);
   try
-    FItemType := MITprog;
+    FItemType := MITprog; // on linux simple run
+    {$IFDEF Windows}
+    FItemType := MITrunonce;
+    {$ENDIF}
 
     setNameAndShotrCutKey(lSl[1]);
 
     {TODO -oLebeda -cNone: store somewhere runonce check param (3)}
 
-    for i := 3 to lsl.Count - 1 do
+    for i := 2 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
 
     fCmd := Trim(FCmd);

@@ -604,16 +604,36 @@ Var
   lItemType: TMenuItemType;
   lSubMenuId, lMenuItemId, lLoad, lReload, lTime, lInterval: LongInt;
   lResult: Boolean;
+  slCmd: TStringList;
+  lCmd: String;
 begin
   lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
 
-  if lItemType in [MITprog, MITrunonce] then {TODO -oLebeda -cNone: for runonce check running program}
+  if lItemType in [MITprog] then
   begin
     RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
-    // AsyncProcess1.CommandLine := SQLMenuItems.FieldByName('cmd').AsString;
-    //AsyncProcess1.Execute;
     if not FKeepOpen then
       MainForm.Close;
+  End
+  else if lItemType in [MITrunonce] then
+  begin
+    {$IFDEF Windows}
+    {TODO -oLebeda -cNone: for runonce check running program on current desktop by exe}
+    slCmd := tStringList.Create;
+    try
+        slCmd.Delimiter := ' ';
+        slCmd.DelimitedText := SQLMenuItems.FieldByName('cmd').AsString;
+        lCmd := slCmd[0];
+    finally
+      FreeAndNil(slCmd);
+    end;
+    if not ActivateProcess(lCmd) then
+    {$ENDIF}
+    begin
+      RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
+      if not FKeepOpen then
+        MainForm.Close;
+    end;
   End
   {$IFDEF Windows}
   else if lItemType =  MITwindow then

@@ -22,7 +22,7 @@
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="9"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="18"/>
+      <BuildNr Value="20"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>
@@ -104,13 +104,13 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -k"/>
+        <CommandLineParams Value="-k -m &quot;menuwindow windows&quot; -c"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -k"/>
+            <CommandLineParams Value="-k -m &quot;menuwindow windows&quot; -c"/>
           </local>
         </Mode0>
       </Modes>

@@ -315,7 +315,7 @@ Begin
     BM.Free;
   End;
 
-  Result := W + 8;
+  Result := W + 8; { TODO : Magic const 8 }
   //Result := Length(aText) * 30
 End;
 

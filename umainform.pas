@@ -86,7 +86,7 @@ type
     Procedure SetSearchCount(Const aValue: LongInt);
     Procedure SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect;
       Const aGrid: TDBGrid);
-    procedure showMenu(const aOrderBy: String = 'id');
+    procedure showMenu(const aOrderBy: String = 'id'; const aName: String = '');
     procedure SetFormSize;
     procedure NavigateUp;
     { private declarations }
@@ -95,7 +95,6 @@ type
     Function setActiveMenu(const aIdMenu: longint): Boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
-    procedure LoadMenuFromString(const aMenu: string);
 
     Property FormMode: TFormMode Read FFormMode Write FFormMode;
     Property SearchCount: LongInt Read FSearchCount Write SetSearchCount;
@@ -115,6 +114,7 @@ uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding, LazUTF8Clas
 
 procedure TMainForm.FormCreate(Sender: TObject);
 var ppi, ppiDesigned: Integer;
+  lMenuName: String;
 begin
   if Application.HasOption('h', 'help') then begin
     showMessage(
@@ -188,11 +188,6 @@ begin
     LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
   end;
 
-  if Application.HasOption('m', 'menuitem') then
-  begin
-    LoadMenuFromString(Application.GetOptionValue('m', 'menu'));
-  end;
-
   if Application.HasOption('r', 'reload') then
   begin
     SQLMenu.Edit;
@@ -235,20 +230,26 @@ begin
     edFind.Text := Application.GetOptionValue('q', 'query');
   end;
 
-  showMenu;
-
-  if Application.HasOption('m', 'menuitem') and (SQLMenu.RecordCount = 1) then
+  if Application.HasOption('m', 'menuitem') then
   begin
-    acRun.Execute;
+    lMenuName := Application.GetOptionValue('m', 'menu');
+    showMenu('id', lMenuName);
 
-    // root on current menu
-    SQLMenu.Edit;
-    SQLMenu.FieldByName('upMenuId').AsInteger := 0;
-    SQLMenu.CheckBrowseMode;
+    if SQLMenuItems.RecordCount = 1 then
+    begin
+      acRun.Execute;
+
+      // root on current menu
+      SQLMenu.Edit;
+      SQLMenu.FieldByName('upMenuId').AsInteger := 0;
+      SQLMenu.CheckBrowseMode;
+    end;
 
     //MenuDB.ExecuteDirect('update menuItem set menuId = 1 where id = 2');
     //setActiveMenu(1);
-  end;
+  end
+  else
+    showMenu;
 end;
 
 procedure TMainForm.AppDeactivate(Sender: TObject);
@@ -966,7 +967,7 @@ Begin
   SQLMenu.ApplyUpdates;
 End;
 
-procedure TMainForm.showMenu(const aOrderBy: String);
+procedure TMainForm.showMenu(const aOrderBy: String; const aName: String);
 Var
   lSql: String;
   lId, lCmd: String;
@@ -1019,13 +1020,15 @@ Begin
                        + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
                        + ' from menuItem where 1=1 ';
 
-    if not lGlobalSearch then
+    if aName <> '' then
+      lSql := lSql + ' and name = ''' + aName + ''' '
+    else if not lGlobalSearch then
       lSql := lSql + ' and menuId = ''' + lId + ''' '
     else
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
 
 
-    If (lSearchText <> '') and not isExternalSearch Then
+    If (lSearchText <> '') and not isExternalSearch and (aName <> '') Then
     begin
       lSql := lSql + ' and search like ''%' + lSearchText + '%'' '; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
@@ -1184,19 +1187,6 @@ begin
   finally
     FreeAndNil(sl);
   end;
-end;
-
-procedure TMainForm.LoadMenuFromString(const aMenu: string);
-var
-  sl: TStringList;
-begin
-  sl := TStringListUTF8.Create;
-  Try
-    sl.Add(aMenu);
-    LoadMenuFromLines(sl);
-  Finally
-    FreeAndNil(sl);
-  End;
 end;
 
 end.

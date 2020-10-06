@@ -1028,7 +1028,7 @@ Begin
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
 
 
-    If (lSearchText <> '') and not isExternalSearch and (aName <> '') Then
+    If (lSearchText <> '') and not isExternalSearch and (aName = '') Then
     begin
       lSql := lSql + ' and search like ''%' + lSearchText + '%'' '; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
       lSql := lSql + ' and itemType <> ''MITseparator'' ';

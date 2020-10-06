@@ -28,7 +28,7 @@ object DebugForm: TDebugForm
       ClientHeight = 336
       object MenuGrid1: TDBGrid
         Left = 0
-        Height = 240
+        Height = 208
         Top = 0
         Width = 800
         Align = alClient
@@ -41,12 +41,12 @@ object DebugForm: TDebugForm
       end
       object Panel1: TPanel
         Left = 0
-        Height = 96
-        Top = 240
+        Height = 128
+        Top = 208
         Width = 800
         Align = alBottom
         Caption = 'Panel1'
-        ClientHeight = 96
+        ClientHeight = 128
         ClientWidth = 800
         ParentFont = False
         TabOrder = 1
@@ -60,10 +60,10 @@ object DebugForm: TDebugForm
           ParentFont = False
         end
         object DBEdit1: TDBEdit
-          Left = 56
+          Left = 72
           Height = 23
           Top = 8
-          Width = 729
+          Width = 713
           DataField = 'name'
           DataSource = MainForm.MenuItemDS
           Anchors = [akTop, akLeft, akRight]
@@ -73,10 +73,10 @@ object DebugForm: TDebugForm
           TabOrder = 0
         end
         object DBEdit2: TDBEdit
-          Left = 56
+          Left = 72
           Height = 23
           Top = 36
-          Width = 729
+          Width = 713
           DataField = 'search'
           DataSource = MainForm.MenuItemDS
           ReadOnly = True
@@ -96,10 +96,10 @@ object DebugForm: TDebugForm
           ParentFont = False
         end
         object DBEdit3: TDBEdit
-          Left = 56
+          Left = 72
           Height = 23
           Top = 64
-          Width = 729
+          Width = 713
           DataField = 'cmd'
           DataSource = MainForm.MenuItemDS
           Anchors = [akTop, akLeft, akRight]
@@ -117,19 +117,41 @@ object DebugForm: TDebugForm
           ParentColor = False
           ParentFont = False
         end
+        object DBEdit4: TDBEdit
+          Left = 72
+          Height = 23
+          Top = 92
+          Width = 713
+          DataField = 'itemType'
+          DataSource = MainForm.MenuItemDS
+          Anchors = [akTop, akLeft, akRight]
+          CharCase = ecNormal
+          MaxLength = 0
+          ParentFont = False
+          TabOrder = 3
+        end
+        object Label4: TLabel
+          Left = 8
+          Height = 15
+          Top = 96
+          Width = 51
+          Caption = 'itemType:'
+          ParentColor = False
+          ParentFont = False
+        end
       end
     end
     object PairSplitterSide2: TPairSplitterSide
       Cursor = crArrow
       Left = 0
-      Height = 223
-      Top = 340
+      Height = 222
+      Top = 341
       Width = 800
       ClientWidth = 800
-      ClientHeight = 223
+      ClientHeight = 222
       object MenuGrid: TDBGrid
         Left = 0
-        Height = 223
+        Height = 222
         Top = 0
         Width = 800
         Align = alClient

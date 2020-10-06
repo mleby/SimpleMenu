@@ -16,9 +16,11 @@ Type
     DBEdit1: TDBEdit;
     DBEdit2: TDBEdit;
     DBEdit3: TDBEdit;
+    DBEdit4: TDBEdit;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    Label4: TLabel;
     MenuGrid: TDBGrid;
     MenuGrid1: TDBGrid;
     MenuItemGrid: TDBGrid;

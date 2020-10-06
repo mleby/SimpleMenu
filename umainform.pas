@@ -40,6 +40,7 @@ type
     SQLMenuItems: TSQLQuery;
     SQLMenuItemsMaxWidth: TSQLQuery;
     SQLMenuItemsShortcut: TSQLQuery;
+    SQLMenuItemsShortcutByCmd: TSQLQuery;
     SQLTransaction: TSQLTransaction;
     ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
@@ -118,7 +119,7 @@ begin
   if Application.HasOption('h', 'help') then begin
     showMessage(
     'Usage: simpleMenu -(f|p|m) "menu file or cmd" [options...]' +#10#13 +
-    '         one of -f/-p/-m must be specified as start point for menu' + #10#13 +
+    '         one of -f/-p/-m must be specified as  point for menu' + #10#13 +
     '    -h --help             show this help' + #10#13 +
     '    -k --keep             keep menu open after choise' + #10#13 +
     '    -f X --file=X         path to menu file used as start point for menu' + #10#13 +
@@ -148,8 +149,9 @@ begin
 
   // sure create DB
   MenuDB.Close;
+  { TODO : only for dev }
   //DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := '/tmp/debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := 'C:\tmp\debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
@@ -968,15 +970,14 @@ procedure TMainForm.showMenu(const aOrderBy: String);
 Var
   lSql: String;
   lId, lCmd: String;
-  lSearchText: String;
+  lSearchText, i: String;
   lGlobalSearch: Boolean;
+  lRecNo: LongInt;
 Begin
   MainGrid.BeginUpdate;
   MainGridShortCut.BeginUpdate;
   MainGridSubmenu.BeginUpdate;
   try
-
-
     // initialize local variables
     lGlobalSearch := false;
     lSearchText := '';

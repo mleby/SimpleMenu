@@ -1,7 +1,7 @@
 object MainForm: TMainForm
-  Left = 12
+  Left = 1
   Height = 801
-  Top = 41
+  Top = 107
   Width = 300
   BorderStyle = bsNone
   BorderWidth = 5
@@ -64,8 +64,6 @@ object MainForm: TMainForm
     BorderStyle = bsNone
     Columns = <    
       item
-        MinSize = 10
-        MaxSize = 200
         SizePriority = 1000
         Title.Caption = 'name'
         Width = 230
@@ -100,10 +98,8 @@ object MainForm: TMainForm
     Columns = <    
       item
         Alignment = taCenter
-        MinSize = 10
-        MaxSize = 200
         Title.Caption = 'M'
-        Width = 21
+        Width = 26
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -158,10 +154,8 @@ object MainForm: TMainForm
       item
         Alignment = taCenter
         Font.Color = clSilver
-        MinSize = 10
-        MaxSize = 200
         Title.Caption = 'S'
-        Width = 17
+        Width = 21
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS
@@ -189,6 +183,9 @@ object MainForm: TMainForm
     LoginPrompt = False
     DatabaseName = '/tmp/debugMenu.db'
     KeepConnection = True
+    Params.Strings = (
+      'synchronous=off'
+    )
     Transaction = SQLTransaction
     left = 32
     top = 200
@@ -249,7 +246,80 @@ object MainForm: TMainForm
   end
   object SQLMenuItems: TSQLQuery
     PacketRecords = -1
-    FieldDefs = <>
+    FieldDefs = <    
+      item
+        Name = 'id'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'menuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'itemType'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'name'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'search'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'shortcut'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'cmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuPath'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuCmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuReloadInterval'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuChar'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'width'
+        DataType = ftInteger
+        Precision = -1
+      end>
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
@@ -425,8 +495,8 @@ object MainForm: TMainForm
         Name = 'shortcut'
         ParamType = ptInput
       end>
-    left = 32
-    top = 376
+    left = 56
+    top = 384
   end
   object Process1: TProcess
     Active = False
@@ -467,8 +537,8 @@ object MainForm: TMainForm
         Name = 'id'
         ParamType = ptInput
       end>
-    left = 32
-    top = 440
+    left = 56
+    top = 448
   end
   object ThrTimer: TTimer
     Enabled = False
@@ -491,5 +561,90 @@ object MainForm: TMainForm
     FillAttribute = 0
     left = 208
     top = 136
+  end
+  object SQLMenuItemsShortcutByCmd: TSQLQuery
+    PacketRecords = -1
+    FieldDefs = <    
+      item
+        Name = 'id'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'menuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'itemType'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'name'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'search'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'shortcut'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'cmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuPath'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuCmd'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end    
+      item
+        Name = 'subMenuReloadInterval'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuId'
+        DataType = ftInteger
+        Precision = -1
+      end    
+      item
+        Name = 'subMenuChar'
+        DataType = ftString
+        Precision = -1
+        Size = 255
+      end>
+    Database = MenuDB
+    Transaction = SQLTransaction
+    SQL.Strings = (
+      'select shortcut from menuItem WHERE cmd like :cmd limit 1'
+    )
+    Params = <    
+      item
+        DataType = ftUnknown
+        Name = 'cmd'
+        ParamType = ptInput
+      end>
+    left = 80
+    top = 520
   end
 end

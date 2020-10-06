@@ -55,8 +55,7 @@ type
   public
 
     constructor Create(const aLine: string);
-    { TODO -cWM : factory method}
-    constructor Create(const aName, hWindow: String); // window item
+    constructor Create(const aName, hWindow, aShortcut: String); // window item
     destructor Destroy; override;
 
     property Name: String read FName;
@@ -268,7 +267,7 @@ end;
 
 function TMenuItemParser.GetSearch: string;
 begin
-  Result := NormalizeTerm(FName); { TODO : lowercase and remove diacritics }
+  Result := NormalizeTerm(FName); // lowercase and remove diacritics
 end;
 
 function TMenuItemParser.GetSubMenuChar: string;
@@ -337,10 +336,10 @@ begin
   end;
 end;
 
-constructor TMenuItemParser.Create(const aName, hWindow: String);
+constructor TMenuItemParser.Create(const aName, hWindow, aShortcut: String);
 begin
   FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
-
+  FShortCut := aShortcut;
   prepareWindow(aName, hWindow)
 end;
 

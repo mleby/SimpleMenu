@@ -69,7 +69,7 @@ procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
-  lTitle, lClass, lMenuTitle, lExeFile, lFullExe: String;
+  lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut: String;
   lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
 begin
@@ -98,10 +98,16 @@ begin
       lExeFile := ExtractFileName(lFullExe);
       lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + lTitle + ' (' + lExeFile +')';
 
+      MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
+      MainForm.SQLMenuItemsShortcutByCmd.open;
+      if MainForm.SQLMenuItemsShortcutByCmd.RecordCount = 1 then
+        lShortCut := MainForm.SQLMenuItemsShortcutByCmd.FieldByName('shortcut').AsString;
+      MainForm.SQLMenuItemsShortcutByCmd.close;
+
       //showmessage(lExeFile + ' <> ' + ExtractFileName(aSelfExe));
       if lExeFile <> ExtractFileName(aSelfExe) then // not menu itself
       begin
-        lMenuItemParser := TMenuItemParser.Create(lMenuTitle, IntToHex(hWindow,4));
+        lMenuItemParser := TMenuItemParser.Create(lMenuTitle, IntToHex(hWindow,4), lShortCut);
         try
           MainForm.AddMenuItem(lMenuItemParser);
         finally
@@ -111,6 +117,16 @@ begin
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);
   end;
+
+      { TODO : Nefunkční volání }
+    // aply postmenusql script
+    //if MainForm.PostMenuSQL.Script.Count > 0 then
+    //begin
+    //  //ShowMessage(PostMenuSQL.Script.Text);
+    //  for i in MainForm.PostMenuSQL.Script do
+    //    MainForm.MenuDB.ExecuteDirect(i);
+    //  //MenuDB.ExecuteDirect('update menuItem set shortcut=''d'' where itemType = ''MITwindow'' and name like ''%(bds.exe)''');
+    //end;
 end;
 
 function ActivateProcess(const aExe: String): Boolean;

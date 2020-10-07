@@ -150,8 +150,8 @@ begin
   // sure create DB
   MenuDB.Close;
   { TODO : only for dev }
-  //DeleteFile('/tmp/debugMenu.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := 'C:\tmp\debugMenu.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //DeleteFile('C:\tmp\debugMenu2.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
@@ -1018,7 +1018,7 @@ Begin
     lId := SQLMenu.FieldByName('id').AsString;
     lSql := 'select id, menuId, itemType, name, search, shortcut, '
                        + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-                       + ' from menuItem where 1=1 ';
+                       + ' from menuItem where itemType <> ''MITwinkey''  ';
 
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '

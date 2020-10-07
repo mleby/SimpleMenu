@@ -636,7 +636,9 @@ object MainForm: TMainForm
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
-      'select shortcut from menuItem WHERE cmd like :cmd limit 1'
+      'select shortcut from menuItem WHERE itemType = ''MITwinkey'' and name = :cmd'
+      'union all'
+      'select shortcut from menuItem WHERE cmd like :cmd'
     )
     Params = <    
       item

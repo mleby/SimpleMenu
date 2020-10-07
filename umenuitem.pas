@@ -13,7 +13,7 @@ type
   TMenuItemType = (MITprog, MITmenu,
                   MITrunonce,   { TODO : implementovat pro windows }
                   {$IFDEF Windows}
-                  MITmenuwindow, MITwindow,
+                  MITmenuwindow, MITwindow, MITwinkey,
                   {$ENDIF}
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
 
@@ -50,6 +50,7 @@ type
     procedure prepareRunOnce(const aLine: string);
     procedure prepareProgreload(const aLine: string);
     procedure prepareWindowmenu(const aLine: string);
+    procedure prepareWinKey(const aLine: string);
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
   public
@@ -181,6 +182,27 @@ begin
       FSubMenuCmd := FSubMenuCmd + ' ' + lsl[i];
 
     //FSubMenuCmd := Trim(FSubMenuCmd);
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
+procedure TMenuItemParser.prepareWinKey(const aLine: string);
+var
+  lSl: TStringList;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITwinkey;
+
+    FName := lSl[1];
+    QuoteTrim(FName);
+    FName := Trim(FName);
+
+    FCmd := FName;
+
+    FShortCut := lSl[2];
+
   finally
     FreeAndNil(lSl);
   end;
@@ -318,6 +340,8 @@ begin
     prepareSeparator(aLine)
   else if AnsiStartsText('menuwindow ', aLine) then
     prepareWindowmenu(aLine)
+  else if AnsiStartsText('winkey ', aLine) then
+    prepareWinKey(aLine)
   else if AnsiStartsText('menu ', aLine) then
     startNewMenu(aLine)
   else if AnsiStartsText('}', aLine) then

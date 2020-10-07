@@ -100,7 +100,7 @@ begin
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
       MainForm.SQLMenuItemsShortcutByCmd.open;
-      if MainForm.SQLMenuItemsShortcutByCmd.RecordCount = 1 then
+      if MainForm.SQLMenuItemsShortcutByCmd.RecordCount >= 1 then
         lShortCut := MainForm.SQLMenuItemsShortcutByCmd.FieldByName('shortcut').AsString;
       MainForm.SQLMenuItemsShortcutByCmd.close;
 

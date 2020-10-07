@@ -301,6 +301,7 @@ Begin
   End;
 
   QuoteTrim(lName);
+  lName := Trim(lName);
   FName := lName;
 End;
 

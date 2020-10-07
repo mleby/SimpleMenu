@@ -1021,7 +1021,7 @@ Begin
                        + ' from menuItem where 1=1 ';
 
     if aName <> '' then
-      lSql := lSql + ' and name = ''' + aName + ''' '
+      lSql := lSql + ' and name = ''' + Trim(aName) + ''' '
     else if not lGlobalSearch then
       lSql := lSql + ' and menuId = ''' + lId + ''' '
     else

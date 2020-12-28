@@ -129,6 +129,7 @@ begin
     '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
     '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
     '    -x X --showfile=X     extra options for menu cmd');
+    { TODO : -w window }
     Halt;
   end;
 
@@ -1016,16 +1017,23 @@ Begin
     MenuItemDS.DataSet := nil;
     SQLMenuItems.Close;
     lId := SQLMenu.FieldByName('id').AsString;
-    lSql := 'select id, menuId, itemType, name, search, shortcut, '
-                       + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-                       + ' from menuItem where itemType <> ''MITwinkey''  ';
+    lSql := 'select id, menuId, itemType, '
+            + ' name '
+            + ' , search, shortcut, '
+            + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
+            + ' from menuItem where itemType <> ''MITwinkey''  ';
 
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '
     else if not lGlobalSearch then
+    begin
       lSql := lSql + ' and menuId = ''' + lId + ''' '
+    end
     else
+    begin
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
+      lSql := lSql + ' and itemType <> ''MITmenu'' ';
+    end;
 
 
     If (lSearchText <> '') and not isExternalSearch and (aName = '') Then

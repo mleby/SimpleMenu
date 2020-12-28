@@ -78,7 +78,7 @@ begin
   hWindow := GetWindow(hDesktop, GW_CHILD);
   while hWindow <> 0 do begin
     GetWindowText(hWindow, Buffer, 255);
-    ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
+    //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
     lDesktop := GetWindowDesktopNumber(hWindow);
     lIsPined := IsPinnedWindow(hWindow);
@@ -144,7 +144,7 @@ begin
   hWindow := GetWindow(hDesktop, GW_CHILD);
   while hWindow <> 0 do begin
     //GetWindowText(hWindow, Buffer, 255);
-    ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
+    //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
     lDesktop := GetWindowDesktopNumber(hWindow);
     lIsPined := IsPinnedWindow(hWindow);

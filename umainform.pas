@@ -60,6 +60,8 @@ type
     Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
     Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
     Procedure MainGridSubmenuDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure pnlFindEnter(Sender: TObject);
+    procedure pnlFindExit(Sender: TObject);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
     Procedure ThrTimerTimer(Sender: TObject);
@@ -129,7 +131,7 @@ begin
     '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
     '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
     '    -x X --showfile=X     extra options for menu cmd');
-    { TODO : -w window }
+    { TODO : -w X window=X     window menu, filtered for X}
     Halt;
   end;
 
@@ -267,6 +269,7 @@ Begin
     showMenu;
     MainGrid.SetFocus;
     pnlFind.Visible := false;
+    MainGridShortCut.Visible := not pnlFind.Visible;
   End;
 End;
 
@@ -294,6 +297,8 @@ Begin
   Begin
     MainGrid.SetFocus;
   End;
+
+  MainGridShortCut.Visible := not pnlFind.Visible;
 
   SetFormSize;
 End;
@@ -371,6 +376,16 @@ procedure TMainForm.MainGridSubmenuDrawColumnCell(Sender: TObject;
   const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
 Begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGridSubmenu);
+end;
+
+procedure TMainForm.pnlFindEnter(Sender: TObject);
+begin
+  MainGridShortCut.Visible := not pnlFind.Visible;
+end;
+
+procedure TMainForm.pnlFindExit(Sender: TObject);
+begin
+  MainGridShortCut.Visible := not pnlFind.Visible;
 end;
 
 procedure TMainForm.MainGridKeyDown(Sender: TObject; var Key: Word;

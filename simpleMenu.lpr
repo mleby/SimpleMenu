@@ -6,9 +6,8 @@ Uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
   {$ENDIF}{$ENDIF}
-  sysutils,
-  Interfaces, // this includes the LCL widgetset
-  Forms, Dialogs, uMainForm, uMenuItem, debugForm, uTools, uwinmanager
+  sysutils, Forms, Dialogs, Interfaces, uMainForm, uMenuItem, debugForm, uTools,
+  uwinmanager
   { you can add units after this };
 
 {$R *.res}

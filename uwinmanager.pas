@@ -85,7 +85,6 @@ begin
     lIsPined := IsPinnedWindow(hWindow);
 
     if (Buffer <> '') and IsWindowVisible(hWindow) and ((lDesktop >= 0) or (lIsPined = 1)) then
-    { TODO -cWM : filter window list}
     begin
       lTitle := Buffer;
       //lTitle:= AnsiToUtf8(lTitle);

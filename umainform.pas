@@ -183,7 +183,7 @@ begin
   // commandline parameters
   if Application.HasOption('c', 'center') then
   begin
-    MainForm.Width := 500; {TODO -oLebeda -cNone: umožnit zvolit}
+    MainForm.Width := 500;
     MainForm.Height := 563;
     MainForm.Position := poScreenCenter;
     MainForm.FormMode := FMCentral;
@@ -594,6 +594,9 @@ begin
 
     //for s in slCmd do
     //  lParams := lParams + s;
+
+    if lExe = '' then
+       lExe := lCmd; // on windows this work ok ie. for pwsh.exe
 
     AsyncProcess1.Executable := lExe;
     { TODO : add execute in specific directory }
@@ -1178,9 +1181,7 @@ var
   lLoad: LongInt;
   lSubMenuId, lMenuItemId: Integer;
 begin
-  { TODO : Zajistit vstup pro vyhledání a command pro případ nedohledání - URGENT }
   { TODO -cWM : zlikvidovat duplicitní konstrukce}
-  { TODO -cWM : vyrobit menu oken - ROZPRACOVANO}
   lSubMenuId := aSubMenuId;
   lMenuItemId := aMenuItemId;
 

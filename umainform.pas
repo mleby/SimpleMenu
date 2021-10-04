@@ -70,6 +70,8 @@ type
     FFormMode: TFormMode;
     FRecNo: LongInt;
     FKeepOpen: Boolean;
+    FExecIfOne: Boolean;
+    FDefaultItem: string;
     FKeyStop: Boolean;
     FSearchCount: LongInt;
     FLastResNo: Integer; // for navigation over separators
@@ -91,12 +93,14 @@ type
     procedure showMenu(const aOrderBy: String = 'id'; const aName: String = '');
     procedure SetFormSize;
     procedure NavigateUp;
+    procedure WindowMenu(const aSubMenuId, aMenuItemId: Integer; const aRoot: Boolean = False);
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = ''; aPath: string = ''; aReloadInterval: integer = 0): integer;
     Function setActiveMenu(const aIdMenu: longint): Boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
+    procedure AppendMenuItem(const aItem: string);
 
     Property FormMode: TFormMode Read FFormMode Write FFormMode;
     Property SearchCount: LongInt Read FSearchCount Write SetSearchCount;
@@ -130,12 +134,18 @@ begin
     '    -s X --search=X       count of menu items for automatic enable find' + #10#13 +
     '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
     '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
-    '    -x X --showfile=X     extra options for menu cmd');
-    { TODO : -w X window=X     window menu, filtered for X}
+    '    -x X --showfile=X     extra options for menu cmd' + #10#13 +
+    '    -w X --windowmenu=X   window menu, execute X if 0 items found or append X to menu' + #10#13 +
+    '    -1 -execone           automatic execute if matched only one item');
+    { TODO : append default command in window menu }
     Halt;
   end;
 
-  if not (Application.HasOption('f', 'file') or Application.HasOption('p', 'process') or Application.HasOption('m', 'menu'))then
+  if not (Application.HasOption('f', 'file')
+     or Application.HasOption('p', 'process')
+     or Application.HasOption('m', 'menu')
+     or Application.HasOption('w', 'windowmenu'))
+  then
   begin
     showMessage('One menu source must be specified (file or process or menuitem).');
     Halt;
@@ -161,6 +171,7 @@ begin
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
+  { TODO : připojení externích 'předkompilovaných' zdrojů menu }
 
   SQLMenu.Active := True;
   SQLMenuItems.Active := True;
@@ -221,11 +232,19 @@ begin
 
   if not Application.HasOption('k', 'keep') then
   begin
-    Application.OnDeactivate:=@AppDeactivate;
+      Application.OnDeactivate:=@AppDeactivate;
     FKeepOpen := False;
   End
   else
     FKeepOpen := True;
+
+  if Application.HasOption('1', 'execone') then
+  begin
+    FExecIfOne := True;
+    FDefaultItem := Application.GetOptionValue('1', 'execone');
+  End
+  else
+    FExecIfOne := False;
 
   if Application.HasOption('q', 'query') then
   begin
@@ -233,7 +252,9 @@ begin
     edFind.Text := Application.GetOptionValue('q', 'query');
   end;
 
-  if Application.HasOption('m', 'menuitem') then
+  if Application.HasOption('w', 'windowmenu') then
+     WindowMenu(0,0, True)
+  else if Application.HasOption('m', 'menuitem') then
   begin
     lMenuName := Application.GetOptionValue('m', 'menu');
     showMenu('id', lMenuName);
@@ -247,6 +268,8 @@ begin
       SQLMenu.FieldByName('upMenuId').AsInteger := 0;
       SQLMenu.CheckBrowseMode;
     end;
+
+    { TODO : Nefunguje filtr z cmd po zobrazení submenu }
 
     //MenuDB.ExecuteDirect('update menuItem set menuId = 1 where id = 2');
     //setActiveMenu(1);
@@ -263,10 +286,14 @@ end;
 
 procedure TMainForm.closeFindPanel(const aForce: Boolean);
 Begin
-  if (edFind.Text <> '') or aForce then
+  if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
+  begin
+    AppDeactivate(self);
+  end
+  else if (edFind.Text <> '') or aForce then
   begin
     edFind.Text := '';
-    showMenu;
+  //  showMenu; { TODO : jen pokud není zavíráno }
     MainGrid.SetFocus;
     pnlFind.Visible := false;
     MainGridShortCut.Visible := not pnlFind.Visible;
@@ -684,52 +711,7 @@ begin
   end
   else if lItemType =  MITmenuwindow then
   begin
-    { TODO -cWM : zlikvidovat duplicitní konstrukce}
-    { TODO -cWM : vyrobit menu oken}
-    lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
-    lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
-
-    MainGrid.BeginUpdate;
-    MainGridShortCut.BeginUpdate;
-    MainGridSubmenu.BeginUpdate;
-    try
-      if lSubMenuId = 0 then
-      begin
-        // create menu
-        lSubMenuId := AddMenu(
-            SQLMenuItems.FieldByName('name').AsString,
-            SQLMenu.FieldByName('id').AsInteger,
-            SQLMenuItems.FieldByName('subMenuCmd').AsString,
-            '',
-            SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger
-        );
-        MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
-        LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
-      End
-      else
-      begin
-        setActiveMenu(lSubMenuId);
-
-        lLoad := SQLMenu.FieldByName('Load').AsInteger;
-        lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
-        lTime := DateTimeToTimeStamp(time).Time div 1000;
-        lInterval := lTime - lLoad;
-        if lInterval > lReload then
-        begin
-          MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(lSubMenuId));
-          LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
-        End;
-
-      End;
-      lResult := setActiveMenu(lSubMenuId); // reload after build
-      if lResult then
-         showMenu('name');
-
-    finally
-      MainGrid.EndUpdate(true);
-      MainGridShortCut.EndUpdate(true);
-      MainGridSubmenu.EndUpdate(true);
-    end;
+    WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger, SQLMenuItems.FieldByName('id').AsInteger);
   end
   {$ENDIF}
   else if lItemType =  MITmenuprogreload then
@@ -812,16 +794,20 @@ Begin
   End;
 end;
 
-procedure TMainForm.edFindKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
+procedure TMainForm.edFindKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  lUpMenuId: Integer;
 Begin
   if (Key = VK_ESCAPE) then
   begin
-    if SQLMenu.FieldByName('upMenuId').AsInteger = 0 then
-      MainForm.Close;
-
-    closeFindPanel(true);
-    NavigateUp;
+    lUpMenuId := SQLMenu.FieldByName('upMenuId').AsInteger;
+    if (lUpMenuId = 0) or FExecIfOne then { TODO : FExecIfOne není možná správné řešení }
+      MainForm.Close
+    else
+    begin
+      closeFindPanel(true);
+      NavigateUp;
+    end;
   End
   {TODO -oLebeda -cNone: realy???}
   //else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
@@ -844,6 +830,11 @@ end;
 
 procedure TMainForm.FormActivate(Sender: TObject);
 Begin
+  if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
+  begin
+   MainForm.Close;
+  end;
+
   {TODO -oLebeda -cNone: reload menu ??}
   if pnlFind.Visible then
     edFind.SelStart := Length(edFind.Text);
@@ -1053,7 +1044,7 @@ Begin
 
     If (lSearchText <> '') and not isExternalSearch and (aName = '') Then
     begin
-      lSql := lSql + ' and search like ''%' + lSearchText + '%'' '; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
+      lSql := lSql + ' and ((search like ''%' + lSearchText + '%'') or (name like ''%' + lSearchText + '%''))'; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
     end;
 
@@ -1061,6 +1052,25 @@ Begin
 
     SQLMenuItems.SQL.Text := lSql;
     SQLMenuItems.Open;
+
+    // direct execute if FExecIfOne and only one item found
+    if FExecIfOne then
+    begin
+      if (SQLMenuItems.RecordCount = 1) then
+      begin
+        acRun.Execute;
+        AppDeactivate(self);
+      end
+      else
+      begin
+        AppendMenuItem(FDefaultItem);
+        if (SQLMenuItems.RecordCount = 1) then { TODO : deduplicate }
+        begin
+          acRun.Execute;
+          AppDeactivate(self);
+        end;
+      end;
+    end;
 
     // open max width query
     SQLMenuItemsMaxWidth.Close;
@@ -1091,9 +1101,8 @@ Begin
       edFind.SetFocus;
   End
   else
-
-  if pnlFind.Visible then
-    ActiveControl := edFind;
+    if pnlFind.Visible then
+      ActiveControl := edFind;
 
   // form size
   SetFormSize;
@@ -1152,6 +1161,74 @@ Begin
   SQLMenuItems.Locate('subMenuId', lMenuId, []);
 End;
 
+procedure TMainForm.WindowMenu(const aSubMenuId, aMenuItemId: Integer; const aRoot: Boolean = False);
+var
+  lResult: Boolean;
+  lInterval: LongInt;
+  lTime: LongInt;
+  lReload: LongInt;
+  lLoad: LongInt;
+  lSubMenuId, lMenuItemId: Integer;
+begin
+  { TODO : Zajistit vstup pro vyhledání a command pro případ nedohledání - URGENT }
+  { TODO -cWM : zlikvidovat duplicitní konstrukce}
+  { TODO -cWM : vyrobit menu oken - ROZPRACOVANO}
+  lSubMenuId := aSubMenuId;
+  lMenuItemId := aMenuItemId;
+
+  MainGrid.BeginUpdate;
+  MainGridShortCut.BeginUpdate;
+  MainGridSubmenu.BeginUpdate;
+  try
+    if lSubMenuId = 0 then // if 0 create new menuitem
+    begin
+      // create menu
+      lSubMenuId := AddMenu(
+          SQLMenuItems.FieldByName('name').AsString,
+          SQLMenu.FieldByName('id').AsInteger,
+          SQLMenuItems.FieldByName('subMenuCmd').AsString,
+          '',
+          SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger
+      );
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
+        lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
+    end
+    else
+    begin
+      setActiveMenu(lSubMenuId);
+
+      lLoad := SQLMenu.FieldByName('Load').AsInteger;
+      lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
+      lTime := DateTimeToTimeStamp(time).Time div 1000;
+      lInterval := lTime - lLoad;
+      if lInterval > lReload then
+      begin
+        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(
+          lSubMenuId));
+        LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
+      end;
+
+    end;
+    lResult := setActiveMenu(lSubMenuId); // reload after build
+    { TODO : zakomentováno - pokud funguje, smazat }
+    //if lResult then
+       //showMenu('name');
+
+    if aRoot then
+    begin
+      SQLMenu.Edit;
+      SQLMenu.FieldByName('upMenuId').AsInteger := 0;
+      SQLMenu.CheckBrowseMode;
+    end;
+
+  finally
+    MainGrid.EndUpdate(true);
+    MainGridShortCut.EndUpdate(true);
+    MainGridSubmenu.EndUpdate(true);
+  end;
+end;
+
 function TMainForm.AddMenu(aName: string; aUpMenuId: longint; aCmd: string;
   aPath: string; aReloadInterval: integer): integer;
 begin
@@ -1181,11 +1258,11 @@ End;
 
 procedure TMainForm.AddMenuItem(var lMenuItemParser: TMenuItemParser);
 begin
-  SQLMenuItems.Insert;
+  SQLMenuItems.Append;
   //id, menuId, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
-  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name;
+  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name; { TODO : nahradit _ mezerami ve jméně }
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;
@@ -1206,6 +1283,19 @@ begin
   sl := TStringList.Create;
   try
     sl.LoadFromFile(aFile);
+    LoadMenuFromLines(sl);
+  finally
+    FreeAndNil(sl);
+  end;
+end;
+
+procedure TMainForm.AppendMenuItem(const aItem: string);
+var
+  sl: TStringList;
+begin
+  sl := TStringList.Create;
+  try
+    sl.Add(aItem);
     LoadMenuFromLines(sl);
   finally
     FreeAndNil(sl);

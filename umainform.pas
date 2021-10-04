@@ -1005,6 +1005,14 @@ Begin
       end
     end;
 
+    // prepare search
+    If (lSearchText <> '') then
+    begin
+      {$IFDEF Windows}
+      lSearchText := lSearchText.Replace('%CurDestop%', GetCurrentDesktopName());
+      {$ENDIF}
+    end;
+
 
     // regenerate if reloadInterval < 0 and lSearchText and command contains %s
     if isExternalSearch and (lSearchText <> FLastFind) then

@@ -15,6 +15,7 @@ uses
 procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 procedure ActivateWindow(const aWindowHandle: String);
 function ActivateProcess(const aExe: String): Boolean;
+function GetCurrentDesktopName(): string;
 
 implementation
 
@@ -161,6 +162,11 @@ begin
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);
   end;
+end;
+
+function GetCurrentDesktopName(): string;
+begin
+  Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
 end;
 
 procedure ActivateWindow(const aWindowHandle: String);

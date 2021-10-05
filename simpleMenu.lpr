@@ -23,6 +23,12 @@ Begin
   RequireDerivedFormResource := True;
   Application.Initialize;
   Application.CreateForm(TMainForm, MainForm);
+
+  {$IFDEF Windows}
+  Application.MainFormOnTaskBar := False;
+  Application.TaskBarBehavior := tbSingleButton;
+  {$ENDIF}
+
   Application.Run;
 End.
 

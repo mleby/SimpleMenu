@@ -104,6 +104,7 @@ begin
         lShortCut := MainForm.SQLMenuItemsShortcutByCmd.FieldByName('shortcut').AsString;
       MainForm.SQLMenuItemsShortcutByCmd.close;
 
+      { TODO -cWM : seøadit dle desktopu a názvu}
       //showmessage(lExeFile + ' <> ' + ExtractFileName(aSelfExe));
       if lExeFile <> ExtractFileName(aSelfExe) then // not menu itself
       begin
@@ -118,7 +119,7 @@ begin
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);
   end;
 
-      { TODO : NefunkÄnÃ­ volÃ¡nÃ­ }
+      { TODO : Nefunkèní volání }
     // aply postmenusql script
     //if MainForm.PostMenuSQL.Script.Count > 0 then
     //begin

@@ -97,7 +97,7 @@ type
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = ''; aPath: string = ''; aReloadInterval: integer = 0): integer;
-    Function setActiveMenu(const aIdMenu: longint): Boolean;
+    Function setActiveMenu(const aIdMenu: longint; const aOrderBy: String = 'id'): Boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
     procedure AppendMenuItem(const aItem: string);
@@ -124,7 +124,7 @@ var ppi, ppiDesigned: Integer;
 begin
   if Application.HasOption('h', 'help') then begin
     showMessage(
-    'Usage: simpleMenu -(f|p|m) "menu file or cmd" [options...]' +#10#13 +
+    'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' +#10#13 +
     '         one of -f/-p/-m must be specified as  point for menu' + #10#13 +
     '    -h --help             show this help' + #10#13 +
     '    -k --keep             keep menu open after choise' + #10#13 +
@@ -135,10 +135,10 @@ begin
     '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
     '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
     '    -x X --showfile=X     extra options for menu cmd' + #10#13 +
-    '    -w X --windowmenu=X   window menu, execute X if 0 items found or append X to menu' + #10#13 +
-    '    -1 -execone           automatic execute if matched only one item');
-    { TODO : append default command in window menu }
+    '    -w --windowmenu       window menu' + #10#13 +
+    '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
     Halt;
+  { TODO : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
   end;
 
   if not (Application.HasOption('f', 'file')
@@ -162,15 +162,18 @@ begin
 
   // sure create DB
   MenuDB.Close;
-  { TODO : only for dev }
+
+  // only for dev
   //DeleteFile('C:\tmp\debugMenu2.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
   //MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
+
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
+
   { TODO : připojení externích 'předkompilovaných' zdrojů menu }
 
   SQLMenu.Active := True;
@@ -565,7 +568,7 @@ begin
   sl := TStringList.Create;
   try
     lPreCmd := ReplaceText(aCmd, '%s', extraParam);
-    lPreCmd := ReplaceText(lPreCmd, '''', '"'); {TODO -oLebeda -cNone: ???? - not functional in all cases!!!}
+    lPreCmd := ReplaceText(lPreCmd, '''', '"');
     slCmd := tStringList.Create;
     slCmd.Delimiter := ' ';
     slCmd.DelimitedText := lPreCmd;
@@ -804,7 +807,7 @@ Begin
   if (Key = VK_ESCAPE) then
   begin
     lUpMenuId := SQLMenu.FieldByName('upMenuId').AsInteger;
-    if (lUpMenuId = 0) or FExecIfOne then { TODO : FExecIfOne není možná správné řešení }
+    if (lUpMenuId = 0) or FExecIfOne then
       MainForm.Close
     else
     begin
@@ -812,9 +815,6 @@ Begin
       NavigateUp;
     end;
   End
-  {TODO -oLebeda -cNone: realy???}
-  //else if ((Key = VK_DELETE) or (Key = VK_BACK)) and (edFind.Text = '')  then
-  //  acFind.Execute
   else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) and (FLastFind <> edFind.Text) then
   begin
     if isExternalSearch then
@@ -1219,10 +1219,7 @@ begin
       end;
 
     end;
-    lResult := setActiveMenu(lSubMenuId); // reload after build
-    { TODO : zakomentováno - pokud funguje, smazat }
-    //if lResult then
-       //showMenu('name');
+    lResult := setActiveMenu(lSubMenuId, 'name'); // reload after build
 
     if aRoot then
     begin
@@ -1255,14 +1252,14 @@ begin
   Result := SQLMenu.FieldByName('id').AsInteger;
 end;
 
-function TMainForm.setActiveMenu(const aIdMenu: longint): Boolean;
+function TMainForm.setActiveMenu(const aIdMenu: longint; const aOrderBy: String = 'id'): Boolean;
 Begin
   // sure the changes are saved
   SQLMenu.CheckBrowseMode;
   SQLMenu.ApplyUpdates;
 
   Result := SQLMenu.Locate('id', aIdMenu, []);
-  showMenu;
+  showMenu(aOrderBy);
 End;
 
 procedure TMainForm.AddMenuItem(var lMenuItemParser: TMenuItemParser);

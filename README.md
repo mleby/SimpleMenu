@@ -13,8 +13,8 @@ Principles and ideas:
 # Command line
 
 ```
-    Usage: simpleMenu -(f|p|m) "menu file or cmd" [options...]
-             one of -f/-p/-m must be specified as start point for menu
+    Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]
+             one of -f/-p/-m/-w must be specified as start point for menu
         -h --help             show this help
         -k --keep             keep menu open after choise
         -f X --file=X         path to menu file used as start point for menu
@@ -24,11 +24,19 @@ Principles and ideas:
         -q X --query=X        automatic enable find entry and fill start query
         -r X --reload=X       dynamic menu with minimal chars for search
         -x X --showfile=X     extra options for menu cmd
+        -w --windowmenu       window menu
+        -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu
+
+        
 ```
 
 # Keyboard shortcut
 
+TODO
+
 # Search in menu
+
+TODO
 
 # Syntax of menu file
 
@@ -41,12 +49,15 @@ menu NAME {
 }
 ```
 
+TODO
+
 - `NAME` - name of menuitem, submenu... Can be with space with `"` 
   (ie: "name with space"). With first character `_` explicitly make shortcut (ie: `na_me`
   will show `name` ans `m` as shortcut. Shortcut will be automatic append if
   user explicitly not write it. For off automatic insert shortcut, can be use
   as shortcut space (ie: `"name_ "`). 
   
+- `COMMANDLINE` - external program, which write menu structure to its standard output.
   
 ## Dynamic submenu
 

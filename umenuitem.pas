@@ -19,6 +19,7 @@ type
 
   { TODO : add MITpath - internal support for generate menu for items in specific directory }
   { TODO : add MITlist/MITalist - internal support for list of files with relative/absolute paths}
+  { TODO : add  }
   { TODO : ??? add MITgit - internal support for load list of files from git }
 
   TMenuItemParser = class(TObject)
@@ -238,8 +239,10 @@ begin
     FItemType := MITNone;
 
     lFileName := lSl[1];
-    {TODO -oLebeda -cNone: pouze pro linux}
-    lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName; {TODO -oLebeda -cNone: spr√°vnou cestu}
+    lFileNameCfg := '';
+    {$IFNDEF Windows}
+    lFileNameCfg := GetEnvironmentVariable('HOME') + '/.icewm/' + lFileName; {TODO -oLebeda -cNone: spr·vnou cestu}
+    {$ENDIF}
 
     if FileExists(lFileName) then
       MainForm.LoadMenuFromFile(lFileName)
@@ -348,6 +351,8 @@ begin
     endMenu
   else if AnsiStartsText('include ', aLine) then
     includeItems(aLine)
+  { TODO : includeprog - include output from program (once) }
+  { TODO : lazyinclude/lazyincludeprog - include in separate thread }
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
   //else if AnsiStartsText('menusearch ', aLine) then

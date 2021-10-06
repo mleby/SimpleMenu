@@ -1,14 +1,15 @@
 object MainForm: TMainForm
   Left = 1
-  Height = 801
+  Height = 1001
   Top = 2
-  Width = 300
+  Width = 375
   BorderStyle = bsNone
   BorderWidth = 5
   Caption = 'Menu'
-  ClientHeight = 801
-  ClientWidth = 300
+  ClientHeight = 1001
+  ClientWidth = 375
   Color = 16053492
+  DesignTimePPI = 120
   FormStyle = fsSystemStayOnTop
   Icon.Data = {
     7E04000000000100010010100000010020006804000016000000280000001000
@@ -55,22 +56,24 @@ object MainForm: TMainForm
   ShowInTaskBar = stNever
   LCLVersion = '2.0.12.0'
   object MainGrid: TDBGrid
-    Left = 26
-    Height = 765
+    Left = 31
+    Height = 959
     Top = 5
-    Width = 230
+    Width = 290
     Align = alClient
     AutoFillColumns = True
     BorderStyle = bsNone
     Columns = <    
       item
+        MinSize = 12
+        MaxSize = 250
         SizePriority = 1000
         Title.Caption = 'name'
-        Width = 230
+        Width = 290
         FieldName = 'name'
       end>
     DataSource = MenuItemDS
-    DefaultRowHeight = 20
+    DefaultRowHeight = 25
     FixedCols = 0
     Flat = True
     Options = [dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
@@ -88,22 +91,24 @@ object MainForm: TMainForm
     OnKeyUp = MainGridKeyUp
   end
   object MainGridSubmenu: TDBGrid
-    Left = 256
-    Height = 765
+    Left = 321
+    Height = 959
     Top = 5
-    Width = 39
+    Width = 49
     Align = alRight
     BorderStyle = bsNone
     Color = 16185078
     Columns = <    
       item
         Alignment = taCenter
+        MinSize = 12
+        MaxSize = 250
         Title.Caption = 'M'
-        Width = 26
+        Width = 35
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
-    DefaultRowHeight = 20
+    DefaultRowHeight = 25
     FixedCols = 0
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
@@ -118,14 +123,14 @@ object MainForm: TMainForm
   end
   object pnlFind: TPanel
     Left = 5
-    Height = 26
-    Top = 770
-    Width = 290
+    Height = 32
+    Top = 964
+    Width = 365
     Align = alBottom
     BevelOuter = bvNone
     Caption = 'pnlFind'
-    ClientHeight = 26
-    ClientWidth = 290
+    ClientHeight = 32
+    ClientWidth = 365
     ParentFont = False
     TabOrder = 2
     Visible = False
@@ -133,9 +138,9 @@ object MainForm: TMainForm
     OnExit = pnlFindExit
     object edFind: TEdit
       Left = 0
-      Height = 23
-      Top = 3
-      Width = 290
+      Height = 28
+      Top = 4
+      Width = 365
       Align = alBottom
       AutoSelect = False
       OnKeyDown = edFindKeyDown
@@ -146,9 +151,9 @@ object MainForm: TMainForm
   end
   object MainGridShortCut: TDBGrid
     Left = 5
-    Height = 765
+    Height = 959
     Top = 5
-    Width = 21
+    Width = 26
     Align = alLeft
     BorderStyle = bsNone
     Color = 16185078
@@ -157,17 +162,19 @@ object MainForm: TMainForm
         Alignment = taCenter
         Font.CharSet = EASTEUROPE_CHARSET
         Font.Color = clBlack
-        Font.Height = -12
+        Font.Height = -15
         Font.Name = 'Segoe UI Black'
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
         Font.Style = [fsBold]
+        MinSize = 12
+        MaxSize = 250
         Title.Caption = 'S'
-        Width = 21
+        Width = 29
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS
-    DefaultRowHeight = 20
+    DefaultRowHeight = 25
     FixedCols = 0
     Flat = True
     Options = [dgTabs, dgRowSelect, dgAlwaysShowSelection, dgConfirmDelete, dgCancelOnExit, dgAutoSizeColumns, dgDisableDelete, dgDisableInsert]
@@ -183,8 +190,8 @@ object MainForm: TMainForm
   object MenuDS: TDataSource
     AutoEdit = False
     DataSet = SQLMenu
-    Left = 32
-    Top = 16
+    Left = 40
+    Top = 20
   end
   object MenuDB: TSQLite3Connection
     Connected = True
@@ -196,8 +203,8 @@ object MainForm: TMainForm
     )
     Transaction = SQLTransaction
     AlwaysUseBigint = False
-    Left = 32
-    Top = 200
+    Left = 40
+    Top = 250
   end
   object SQLMenu: TSQLQuery
     FieldDefs = <    
@@ -250,8 +257,8 @@ object MainForm: TMainForm
       'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval from menu'
     )
     Params = <>
-    Left = 32
-    Top = 259
+    Left = 40
+    Top = 324
   end
   object SQLMenuItems: TSQLQuery
     PacketRecords = -1
@@ -346,18 +353,18 @@ object MainForm: TMainForm
         ParamType = ptInput
       end>
     DataSource = MenuDS
-    Left = 32
-    Top = 315
+    Left = 40
+    Top = 394
   end
   object SQLTransaction: TSQLTransaction
     Active = True
     Database = MenuDB
-    Left = 32
-    Top = 136
+    Left = 40
+    Top = 170
   end
   object acList: TActionList
-    Left = 125
-    Top = 16
+    Left = 156
+    Top = 20
     object acDebug: TAction
       Caption = 'acDebug'
       OnExecute = acDebugExecute
@@ -394,8 +401,8 @@ object MainForm: TMainForm
   object MenuItemDS: TDataSource
     AutoEdit = False
     DataSet = SQLMenuItems
-    Left = 32
-    Top = 80
+    Left = 40
+    Top = 100
   end
   object AsyncProcess1: TAsyncProcess
     Active = False
@@ -410,8 +417,8 @@ object MainForm: TMainForm
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 125
-    Top = 80
+    Left = 156
+    Top = 100
   end
   object SQLMenuItemsShortcut: TSQLQuery
     PacketRecords = -1
@@ -504,8 +511,8 @@ object MainForm: TMainForm
         Name = 'shortcut'
         ParamType = ptInput
       end>
-    Left = 56
-    Top = 384
+    Left = 70
+    Top = 480
   end
   object Process1: TProcess
     Active = False
@@ -520,8 +527,8 @@ object MainForm: TMainForm
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 125
-    Top = 136
+    Left = 156
+    Top = 170
   end
   object SQLMenuItemsMaxWidth: TSQLQuery
     PacketRecords = -1
@@ -546,14 +553,14 @@ object MainForm: TMainForm
         Name = 'id'
         ParamType = ptInput
       end>
-    Left = 56
-    Top = 448
+    Left = 70
+    Top = 560
   end
   object ThrTimer: TTimer
     Enabled = False
     OnTimer = ThrTimerTimer
-    Left = 125
-    Top = 200
+    Left = 156
+    Top = 250
   end
   object ProcessUTF81: TProcessUTF8
     Active = False
@@ -568,8 +575,8 @@ object MainForm: TMainForm
     WindowTop = 0
     WindowWidth = 0
     FillAttribute = 0
-    Left = 208
-    Top = 136
+    Left = 260
+    Top = 170
   end
   object SQLMenuItemsShortcutByCmd: TSQLQuery
     PacketRecords = -1
@@ -655,7 +662,7 @@ object MainForm: TMainForm
         Name = 'cmd'
         ParamType = ptInput
       end>
-    Left = 80
-    Top = 520
+    Left = 100
+    Top = 650
   end
 end

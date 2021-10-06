@@ -58,5 +58,4 @@ in unspecified future/maybe if I get feel or I need it:
 
 - work with submenu generated at once with main (for files)
 - insert param for switch hiden files
-- support for blackbox wm menu format
 - some other functionality...

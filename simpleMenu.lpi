@@ -22,7 +22,7 @@
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="9"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="56"/>
+      <BuildNr Value="58"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>
@@ -104,13 +104,13 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="-w -c -s 50"/>
+        <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -c -s 50"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="-w -c -s 50"/>
+            <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -c -s 50"/>
           </local>
         </Mode0>
       </Modes>
@@ -129,7 +129,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="6">
+    <Units Count="7">
       <Unit0>
         <Filename Value="simpleMenu.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -164,6 +164,11 @@
         <Filename Value="uwinmanager.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="uhacks.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uHacks"/>
+      </Unit6>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

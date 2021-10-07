@@ -11,16 +11,15 @@ type
 
   { TMenuItemParser }
   TMenuItemType = (MITprog, MITmenu,
-                  MITrunonce,   { TODO : implementovat pro windows }
+                  MITrunonce,   { TODO -cfeat : implementovat pro windows }
                   {$IFDEF Windows}
                   MITmenuwindow, MITwindow, MITwinkey,
                   {$ENDIF}
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
 
-  { TODO : add MITpath - internal support for generate menu for items in specific directory }
-  { TODO : add MITlist/MITalist - internal support for list of files with relative/absolute paths}
-  { TODO : add  }
-  { TODO : ??? add MITgit - internal support for load list of files from git }
+  { TODO -cfeat : ??? add MITpath - internal support for generate menu for items in specific directory }
+  { TODO -cfeat : ??? add MITlist/MITalist - internal support for list of files with relative/absolute paths}
+  { TODO -cfeat : ??? add MITgit - internal support for load list of files from git }
 
   TMenuItemParser = class(TObject)
   private
@@ -134,7 +133,7 @@ begin
 
     setNameAndShotrCutKey(lSl[1]);
 
-    {TODO -oLebeda -cNone: store somewhere runonce check param (3)}
+    {TODO -oLebeda -cfeat: store somewhere runonce check param (3)}
 
     for i := 2 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
@@ -337,7 +336,7 @@ begin
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)
-  else if AnsiStartsText('runonce ', aLine) then { TODO : implementace pro windows }
+  else if AnsiStartsText('runonce ', aLine) then { TODO -cfeat : implementace pro windows }
     prepareRunOnce(aLine)
   else if AnsiStartsText('separator', aLine) then
     prepareSeparator(aLine)
@@ -351,8 +350,8 @@ begin
     endMenu
   else if AnsiStartsText('include ', aLine) then
     includeItems(aLine)
-  { TODO : includeprog - include output from program (once) }
-  { TODO : lazyinclude/lazyincludeprog - include in separate thread }
+  { TODO -cfeat : includeprog - include output from program (once) }
+  { TODO -cfeat : lazyinclude/lazyincludeprog - include in separate thread }
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
   //else if AnsiStartsText('menusearch ', aLine) then

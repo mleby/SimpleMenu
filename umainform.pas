@@ -112,7 +112,10 @@ var
 
 implementation
 
-uses strutils, debugForm, StreamIO, LCLType, Dialogs, lconvencoding, LazUTF8Classes;
+uses strutils, debugForm, uHacks, StreamIO, LCLType, Dialogs, lconvencoding,
+  LazUTF8Classes;
+
+const C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 {$R *.lfm}
 
@@ -138,7 +141,9 @@ begin
     '    -w --windowmenu       window menu' + #10#13 +
     '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
     Halt;
-  { TODO : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
+  { TODO -cfeat : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
+  { TODO -crefactor : Vyčlenit práci s DB do samostatného DM }
+
   end;
 
   if not (Application.HasOption('f', 'file')
@@ -174,8 +179,6 @@ begin
   MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
 
-  { TODO : připojení externích 'předkompilovaných' zdrojů menu }
-
   SQLMenu.Active := True;
   SQLMenuItems.Active := True;
 
@@ -183,6 +186,7 @@ begin
   AddMenu('ROOT', 0);
   SQLMenu.First;
 
+  { TODO -crefactor : command line params do lpr }
   // commandline parameters
   if Application.HasOption('c', 'center') then
   begin
@@ -272,7 +276,7 @@ begin
       SQLMenu.CheckBrowseMode;
     end;
 
-    { TODO : Nefunguje filtr z cmd po zobrazení submenu }
+    { TODO -cfix : Nefunguje filtr z cmd po zobrazení submenu }
 
     //MenuDB.ExecuteDirect('update menuItem set menuId = 1 where id = 2');
     //setActiveMenu(1);
@@ -354,7 +358,7 @@ Begin
     BM.Free;
   End;
 
-  Result := W + 8; { TODO : Magic const 8 }
+  Result := W + 8; { TODO -crefactor : Magic const 8 }
   //Result := Length(aText) * 30
 End;
 
@@ -602,7 +606,7 @@ begin
        lExe := lCmd; // on windows this work ok ie. for pwsh.exe
 
     AsyncProcess1.Executable := lExe;
-    { TODO : add execute in specific directory }
+    { TODO -cfeat : add execute in specific directory }
     // AsyncProcess1.CurrentDirectory := ;
     AsyncProcess1.Parameters.Clear;
     AsyncProcess1.Parameters.AddStrings(slCmd);
@@ -693,7 +697,7 @@ begin
   else if lItemType in [MITrunonce] then
   begin
     {$IFDEF Windows}
-    {TODO -oLebeda -cNone: for runonce check running program on current desktop by exe}
+    {TODO -oLebeda -cfeat: for runonce check running program on current desktop by exe}
     slCmd := tStringList.Create;
     try
         slCmd.Delimiter := ' ';
@@ -725,7 +729,7 @@ begin
     lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
     lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
 
-    { TODO : sjednotit s předchozí větví a obalit beginUpdate/EndUpdate }
+    { TODO -crefactor : sjednotit s předchozí větví a obalit beginUpdate/EndUpdate }
     if lSubMenuId = 0 then
     begin
       // create menu
@@ -838,7 +842,6 @@ Begin
    MainForm.Close;
   end;
 
-  {TODO -oLebeda -cNone: reload menu ??}
   if pnlFind.Visible then
     edFind.SelStart := Length(edFind.Text);
 end;
@@ -850,6 +853,7 @@ end;
 
 procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
 begin
+  { TODO -crefactor : smazat zakomentovaný kód a prázdné metody }
  //if not SQLMenu.Modified then
  //   showMenu;
 end;
@@ -921,41 +925,7 @@ Begin
       begin
         Readln(F, lLine);
 
-        lVal := lLine;
-        // ugly hack, but only works - for czech only :-(
-        { TODO : separate and/or delete hack  }
-        //{$IFDEF Windows}
-        lVal := ReplaceStr(lVal, '├í', 'á');
-        lVal := ReplaceStr(lVal, '─Ź', 'č');
-        lVal := ReplaceStr(lVal, '─Ć', 'ď');
-        lVal := ReplaceStr(lVal, '├ę', 'é');
-        lVal := ReplaceStr(lVal, '─Ť', 'ě');
-        lVal := ReplaceStr(lVal, '├ş', 'í');
-        lVal := ReplaceStr(lVal, '┼ł', 'ň');
-        lVal := ReplaceStr(lVal, '├│', 'ó');
-        lVal := ReplaceStr(lVal, '┼Ö', 'ř');
-        lVal := ReplaceStr(lVal, '┼í', 'š');
-        lVal := ReplaceStr(lVal, '┼ą', 'ť');
-        lVal := ReplaceStr(lVal, '├║', 'ú');
-        lVal := ReplaceStr(lVal, '┼»', 'ů');
-        lVal := ReplaceStr(lVal, '├Ż', 'ý');
-        lVal := ReplaceStr(lVal, '┼ż', 'ž');
-        lVal := ReplaceStr(lVal, '├ü', 'Á');
-        lVal := ReplaceStr(lVal, '─î', 'Č');
-        lVal := ReplaceStr(lVal, '─Ä', 'Ď');
-        lVal := ReplaceStr(lVal, '├ë', 'É');
-        lVal := ReplaceStr(lVal, '─Ü', 'Ě');
-        lVal := ReplaceStr(lVal, '├Ź', 'Í');
-        lVal := ReplaceStr(lVal, '┼ç', 'Ň');
-        lVal := ReplaceStr(lVal, '├ô', 'Ó');
-        lVal := ReplaceStr(lVal, '┼ś', 'Ř');
-        lVal := ReplaceStr(lVal, '┼á', 'Š');
-        lVal := ReplaceStr(lVal, '┼Ą', 'Ť');
-        lVal := ReplaceStr(lVal, '├Ü', 'Ú');
-        lVal := ReplaceStr(lVal, '┼«', 'Ů');
-        lVal := ReplaceStr(lVal, '├Ł', 'Ý');
-        lVal := ReplaceStr(lVal, '┼Ż', 'Ž');
-        //{$ENDIF}
+        lVal := RepairCzechCharacters(lLine);
 
         lSl.Append(lVal);
         //ShowMessage(lSl[0]);
@@ -1055,7 +1025,7 @@ Begin
 
     If (lSearchText <> '') and not isExternalSearch and (aName = '') Then
     begin
-      lSql := lSql + ' and ((search like ''%' + lSearchText + '%'') or (name like ''%' + lSearchText + '%''))'; {TODO -oLebeda -cNone: split lSearchText by space and simulate fuzzy search}
+      lSql := lSql + ' and ((search like ''%' + lSearchText + '%'') or (name like ''%' + lSearchText + '%''))'; {TODO -oLebeda -cfeat: split lSearchText by space and simulate fuzzy search}
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
     end;
 
@@ -1075,7 +1045,7 @@ Begin
       else
       begin
         AppendMenuItem(FDefaultItem);
-        if (SQLMenuItems.RecordCount = 1) then { TODO : deduplicate }
+        if (SQLMenuItems.RecordCount = 1) then { TODO -crefactor : deduplicate }
         begin
           acRun.Execute;
           AppDeactivate(self);
@@ -1092,7 +1062,7 @@ Begin
     if FSearchCount > SQLMenuItems.RecordCount then
     begin
       setMenuShortcut(lId);
-      setMenuShortcut(lId, 'abcdefghijklmnopqrstuvwxyz0123456789');
+      setMenuShortcut(lId, C_SHORTCUT_MENU_CHARS);
       SQLMenuItems.First;
     End;
 
@@ -1268,7 +1238,7 @@ begin
   //id, menuId, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
-  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name; { TODO : nahradit _ mezerami ve jméně }
+  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name; { TODO -cfeat : nahradit _ mezerami ve jméně }
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;

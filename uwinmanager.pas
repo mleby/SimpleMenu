@@ -118,16 +118,6 @@ begin
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);
   end;
-
-      { TODO : Nefunkèní volání }
-    // aply postmenusql script
-    //if MainForm.PostMenuSQL.Script.Count > 0 then
-    //begin
-    //  //ShowMessage(PostMenuSQL.Script.Text);
-    //  for i in MainForm.PostMenuSQL.Script do
-    //    MainForm.MenuDB.ExecuteDirect(i);
-    //  //MenuDB.ExecuteDirect('update menuItem set shortcut=''d'' where itemType = ''MITwindow'' and name like ''%(bds.exe)''');
-    //end;
 end;
 
 function ActivateProcess(const aExe: String): Boolean;

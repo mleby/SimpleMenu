@@ -7,7 +7,7 @@ Uses
   cthreads,
   {$ENDIF}{$ENDIF}
   sysutils, Forms, Dialogs, Interfaces, uMainForm, uMenuItem, debugForm, uTools,
-  uwinmanager
+  uwinmanager, uHacks
   { you can add units after this };
 
 {$R *.res}

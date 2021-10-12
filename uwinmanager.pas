@@ -166,7 +166,7 @@ begin
   lCnt := 0;
   hWindow := LongHexToDec(aWindowHandle);
   actHandle := GetForegroundWindow;
-  while ((actHandle <> hWindow) or (lCnt < 10)) do { TODO : const for max cnt }
+  while ((actHandle <> hWindow) and (lCnt < 10)) do { TODO : const for max cnt }
   begin
     if IsIconic(hWindow) then
       ShowWindow(hWindow,SW_RESTORE);

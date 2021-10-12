@@ -13,7 +13,7 @@ uses
   windows, JwaPsApi, LConvEncoding;
 
 procedure LoadMenuWindows(const aFilter, aSelfExe: String);
-procedure ActivateWindow(const aWindowHandle: String);
+function ActivateWindow(const aWindowHandle: String): Boolean;
 function ActivateProcess(const aExe: String): Boolean;
 function GetCurrentDesktopName(): string;
 
@@ -146,8 +146,7 @@ begin
 
       if aExe = lFullExe then // not menu itself
       begin
-        ActivateWindow(IntToHex(hWindow,4));
-        Result := True;
+        Result := ActivateWindow(IntToHex(hWindow,4));
       end;
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);
@@ -159,14 +158,24 @@ begin
   Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
 end;
 
-procedure ActivateWindow(const aWindowHandle: String);
-var hWindow: Hwnd;
+function ActivateWindow(const aWindowHandle: String): Boolean;
+var hWindow, actHandle: Hwnd;
+  lCnt: Integer;
 begin
+  Result := False;
+  lCnt := 0;
   hWindow := LongHexToDec(aWindowHandle);
-  if IsIconic(hWindow) then
-    ShowWindow(hWindow,SW_RESTORE);
-  SetForegroundWindow(hWindow);
-  SetActiveWindow(hWindow);
+  actHandle := GetForegroundWindow;
+  while ((actHandle <> hWindow) or (lCnt < 10)) do { TODO : const for max cnt }
+  begin
+    if IsIconic(hWindow) then
+      ShowWindow(hWindow,SW_RESTORE);
+    SetForegroundWindow(hWindow);
+    SetActiveWindow(hWindow);
+    Sleep(200);
+    Inc(lCnt);
+  end;
+  Result := True;
 end;
 
 end.

@@ -99,9 +99,13 @@ begin
       lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + lTitle + ' (' + lExeFile +')';
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
+      MainForm.SQLMenuItemsShortcutByCmd.ParamByName('name').AsString := lExeFile;
       MainForm.SQLMenuItemsShortcutByCmd.open;
       if MainForm.SQLMenuItemsShortcutByCmd.RecordCount >= 1 then
+      begin
+        MainForm.SQLMenuItemsShortcutByCmd.First;
         lShortCut := MainForm.SQLMenuItemsShortcutByCmd.FieldByName('shortcut').AsString;
+      end;
       MainForm.SQLMenuItemsShortcutByCmd.close;
 
       { TODO -cWM : seøadit dle desktopu a názvu}
@@ -159,21 +163,24 @@ begin
 end;
 
 function ActivateWindow(const aWindowHandle: String): Boolean;
-var hWindow, actHandle: Hwnd;
-  lCnt: Integer;
+var hWindow: Hwnd;
+  { TODO : test and delete death code }
+  //actHandle: Hwnd;
+  //lCnt: Integer;
 begin
   Result := False;
-  lCnt := 0;
+  //lCnt := 0;
   hWindow := LongHexToDec(aWindowHandle);
-  actHandle := GetForegroundWindow;
-  while ((actHandle <> hWindow) and (lCnt < 10)) do { TODO : const for max cnt }
+  //actHandle := GetFocus;
+  //while ((actHandle <> hWindow) and (lCnt < 10)) do { TODO : const for max cnt }
   begin
     if IsIconic(hWindow) then
       ShowWindow(hWindow,SW_RESTORE);
     SetForegroundWindow(hWindow);
     SetActiveWindow(hWindow);
-    Sleep(200);
-    Inc(lCnt);
+    SetFocus(hWindow);
+    //Sleep(50);
+    //Inc(lCnt);
   end;
   Result := True;
 end;

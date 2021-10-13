@@ -169,9 +169,9 @@ begin
   MenuDB.Close;
 
   // only for dev
-  //DeleteFile('C:\tmp\debugMenu2.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  //MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
-  MenuDB.DatabaseName := ':memory:';
+  DeleteFile('C:\tmp\debugMenu2.db'); // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
+  //MenuDB.DatabaseName := ':memory:';
 
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
@@ -207,6 +207,17 @@ begin
     SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('f', 'file');
     SQLMenu.CheckBrowseMode;
     LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
+  end;
+
+  if Application.HasOption('w', 'windowmenu') then
+  begin
+    if Application.GetOptionValue('w', 'windowmenu') <> '' then
+    begin
+      SQLMenu.Edit;
+      SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('w', 'windowmenu');
+      SQLMenu.CheckBrowseMode;
+      LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
+    end
   end;
 
   if Application.HasOption('r', 'reload') then
@@ -917,7 +928,7 @@ Begin
     Try
       //Process1.WaitOnExit;
       //lSl.LoadFromStream(ProcessUTF81.Output);
-      //lsl.SaveToFile('X:\tmp\menu.txt');
+      //lsl.SaveToFile('c:\tmp\menuDebug.txt');
 
       AssignStream(F, ProcessUTF81.Output);
       Reset(F);
@@ -933,7 +944,7 @@ Begin
       CloseFile(F);
 
       LoadMenuFromLines(lSl);
-      //lsl.SaveToFile('X:\tmp\menu.txt');
+      //lsl.SaveToFile('c:\tmp\menuDebug.txt');
 
     Finally
       FreeAndNil(lSl);

@@ -490,7 +490,7 @@ object MainForm: TMainForm
       'select id, menuId, itemType, name, search, shortcut,'
       'cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar'
       'from menuItem'
-      'where menuId = :idMenu and shortcut = :shortcut'
+      'where menuId = :idMenu and shortcut = :shortcut and itemType <> ''MITwinkey'''
       'Order by id'
     )
     Params = <    

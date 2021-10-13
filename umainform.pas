@@ -447,18 +447,22 @@ Begin
 end;
 
 procedure TMainForm.MainGridKeyPress(Sender: TObject; var Key: char);
+var
+  lRecCount: LongInt;
 Begin
   SQLMenuItemsShortcut.Close;
   SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
   SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
   SQLMenuItemsShortcut.Open;
 
-  if (SQLMenuItemsShortcut.RecordCount = 1) and SQLMenuItems.Locate('id', SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
+  lRecCount := SQLMenuItemsShortcut.RecordCount;
+
+  if (lRecCount = 1) and SQLMenuItems.Locate('id', SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
   begin
     acRun.Execute;
     key := #0;
   End
-  else if (SQLMenuItemsShortcut.RecordCount > 1) then
+  else if (lRecCount > 1) then
   begin
     if not SQLMenuItems.EOF then
       SQLMenuItems.next

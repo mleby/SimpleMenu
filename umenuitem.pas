@@ -78,7 +78,7 @@ function strToMit(const aMenuTypeStr: string): TMenuItemType;
 
 implementation
 
-uses Dialogs, uMainForm, strutils;
+uses Dialogs, uMainForm, strutils, clipbrd;
 
 function MitToStr(const aMenuType: TMenuItemType): string;
 begin
@@ -217,7 +217,10 @@ begin
     FItemType := MITseparator;
 
     if lSl.Count >= 2 then
+    begin
       FName := lSl[1];
+      FName := FName.Replace('%clipbrd%', Clipboard.AsText);
+    end;
 
     If (Length(FName) > 0) and (FName[1] = '#') Then
       Delete(FName, 1, 1);
@@ -325,6 +328,9 @@ Begin
   End;
 
   QuoteTrim(lName);
+
+  lName := lName.Replace('%clipbrd%', Clipboard.AsText);
+
   lName := Trim(lName);
   FName := lName;
 End;

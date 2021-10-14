@@ -5,8 +5,9 @@ unit uMainForm;
 interface
 
 uses
-  Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics, DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
-  AsyncProcess, LazUTF8, UTF8Process, uMenuItem,
+  Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics,
+  DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
+  AsyncProcess, Clipbrd, LazUTF8, UTF8Process, uMenuItem,
   {$IFDEF Windows}
   uwinmanager,
   {$ENDIF}
@@ -44,67 +45,72 @@ type
     SQLTransaction: TSQLTransaction;
     ThrTimer: TTimer;
     procedure acDebugExecute(Sender: TObject);
-    Procedure acFindExecute(Sender: TObject);
+    procedure acFindExecute(Sender: TObject);
     procedure acGlobalSearchExecute(Sender: TObject);
     procedure acGlobalSearchUpdate(Sender: TObject);
-    Procedure acKeepOpenExecute(Sender: TObject);
+    procedure acKeepOpenExecute(Sender: TObject);
     procedure acRunExecute(Sender: TObject);
-    Procedure edFindKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
-    Procedure edFindKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
-    Procedure FormActivate(Sender: TObject);
+    procedure edFindKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure edFindKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    Procedure MainGridCellClick(Column: TColumn);
-    Procedure MainGridDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure MainGridCellClick(Column: TColumn);
+    procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure MainGridEnter(Sender: TObject);
-    Procedure MainGridKeyDown(Sender: TObject; Var Key: Word; Shift: TShiftState);
-    Procedure MainGridKeyPress(Sender: TObject; Var Key: char);
-    Procedure MainGridKeyUp(Sender: TObject; Var Key: Word; Shift: TShiftState);
-    Procedure MainGridSubmenuDrawColumnCell(Sender: TObject; Const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure MainGridKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure MainGridKeyPress(Sender: TObject; var Key: char);
+    procedure MainGridKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+    procedure MainGridSubmenuDrawColumnCell(Sender: TObject;
+      const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure pnlFindEnter(Sender: TObject);
     procedure pnlFindExit(Sender: TObject);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
     procedure SQLMenuAfterScroll(DataSet: TDataSet);
-    Procedure ThrTimerTimer(Sender: TObject);
+    procedure ThrTimerTimer(Sender: TObject);
   private
     FExtraParam: string;
     FFormMode: TFormMode;
-    FRecNo: LongInt;
-    FKeepOpen: Boolean;
-    FExecIfOne: Boolean;
+    FRecNo: longint;
+    FKeepOpen: boolean;
+    FExecIfOne: boolean;
     FDefaultItem: string;
-    FKeyStop: Boolean;
-    FSearchCount: LongInt;
-    FLastResNo: Integer; // for navigation over separators
-    FLastFind: String;
-    Procedure AppDeactivate(Sender: TObject);
-    Procedure closeFindPanel(Const aForce: Boolean = false);
-    Procedure FindSwitch;
-    Function GetMaxWidth: Integer;
-    Function GetTextWidth(Const aText: String): Integer;
-    function isExternalSearch: Boolean;
-    function canExternalSearch: Boolean;
-    Procedure LoadMenuFromLines(Const aLines: TStringList);
-    Procedure LoadMenuFromProcess(Const aCmd: String);
-    Procedure RunAsync(Const aCmd: string);
-    Procedure setMenuShortcut(Const lId: String; aKeySet: String = '');
-    Procedure SetSearchCount(Const aValue: LongInt);
-    Procedure SetSeparatorRow(Const State: TGridDrawState; Const Column: TColumn; Const DataCol: Integer; Const Rect: TRect;
-      Const aGrid: TDBGrid);
-    procedure showMenu(const aOrderBy: String = 'id'; const aName: String = '');
+    FKeyStop: boolean;
+    FSearchCount: longint;
+    FLastResNo: integer; // for navigation over separators
+    FLastFind: string;
+    procedure AppDeactivate(Sender: TObject);
+    procedure closeFindPanel(const aForce: boolean = False);
+    procedure FindSwitch;
+    function GetMaxWidth: integer;
+    function GetTextWidth(const aText: string): integer;
+    function isExternalSearch: boolean;
+    function canExternalSearch: boolean;
+    procedure LoadMenuFromLines(const aLines: TStringList);
+    procedure LoadMenuFromProcess(const aCmd: string);
+    procedure RunAsync(const aCmd: string);
+    procedure setMenuShortcut(const lId: string; aKeySet: string = '');
+    procedure SetSearchCount(const aValue: longint);
+    procedure SetSeparatorRow(const State: TGridDrawState; const Column: TColumn;
+      const DataCol: integer; const Rect: TRect; const aGrid: TDBGrid);
+    procedure showMenu(const aOrderBy: string = 'id'; const aName: string = '');
     procedure SetFormSize;
     procedure NavigateUp;
-    procedure WindowMenu(const aSubMenuId, aMenuItemId: Integer; const aRoot: Boolean = False);
+    procedure WindowMenu(const aSubMenuId, aMenuItemId: integer;
+      const aRoot: boolean = False);
     { private declarations }
   public
-    function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = ''; aPath: string = ''; aReloadInterval: integer = 0): integer;
-    Function setActiveMenu(const aIdMenu: longint; const aOrderBy: String = 'id'): Boolean;
+    function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = '';
+      aPath: string = ''; aReloadInterval: integer = 0): integer;
+    function setActiveMenu(const aIdMenu: longint;
+      const aOrderBy: string = 'id'): boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
     procedure AppendMenuItem(const aItem: string);
 
-    Property FormMode: TFormMode Read FFormMode Write FFormMode;
-    Property SearchCount: LongInt Read FSearchCount Write SetSearchCount;
-    Property extraParam: string Read FExtraParam Write FExtraParam;
+    property FormMode: TFormMode read FFormMode write FFormMode;
+    property SearchCount: longint read FSearchCount write SetSearchCount;
+    property extraParam: string read FExtraParam write FExtraParam;
   end;
 
 var
@@ -115,52 +121,53 @@ implementation
 uses strutils, debugForm, uHacks, StreamIO, LCLType, Dialogs, lconvencoding,
   LazUTF8Classes;
 
-const C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+const
+  C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 {$R *.lfm}
 
 { TMainForm }
 
 procedure TMainForm.FormCreate(Sender: TObject);
-var ppi, ppiDesigned: Integer;
-  lMenuName: String;
+var
+  ppi, ppiDesigned: integer;
+  lMenuName: string;
 begin
-  if Application.HasOption('h', 'help') then begin
-    showMessage(
-    'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' +#10#13 +
-    '         one of -f/-p/-m must be specified as  point for menu' + #10#13 +
-    '    -h --help             show this help' + #10#13 +
-    '    -k --keep             keep menu open after choise' + #10#13 +
-    '    -f X --file=X         path to menu file used as start point for menu' + #10#13 +
-    '    -m X --menuitem=X     text content of menu' + #10#13 +
-    '    -p X --process=X      command for generate menu' + #10#13 +
-    '    -s X --search=X       count of menu items for automatic enable find' + #10#13 +
-    '    -q X --query=X        automatic enable find entry and fill start query' + #10#13 +
-    '    -r X --reload=X       dynamic menu with minimal chars for search' + #10#13 +
-    '    -x X --showfile=X     extra options for menu cmd' + #10#13 +
-    '    -w --windowmenu       window menu' + #10#13 +
-    '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
+  if Application.HasOption('h', 'help') then
+  begin
+    ShowMessage(
+      'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' + #10#13 +
+      '         one of -f/-p/-m must be specified as  point for menu' +
+      #10#13 + '    -h --help             show this help' + #10#13 +
+      '    -k --keep             keep menu open after choise' + #10#13 +
+      '    -f X --file=X         path to menu file used as start point for menu' +
+      #10#13 + '    -m X --menuitem=X     text content of menu' + #10#13 +
+      '    -p X --process=X      command for generate menu' + #10#13 +
+      '    -s X --search=X       count of menu items for automatic enable find' +
+      #10#13 + '    -q X --query=X        automatic enable find entry and fill start query'
+      + #10#13 + '    -r X --reload=X       dynamic menu with minimal chars for search' +
+      #10#13 + '    -x X --showfile=X     extra options for menu cmd' +
+      #10#13 + '    -w --windowmenu       window menu' + #10#13 +
+      '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
     Halt;
-  { TODO -cfeat : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
-  { TODO -crefactor : Vyčlenit práci s DB do samostatného DM }
+    { TODO -cfeat : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
+    { TODO -crefactor : Vyčlenit práci s DB do samostatného DM }
 
   end;
 
-  if not (Application.HasOption('f', 'file')
-     or Application.HasOption('p', 'process')
-     or Application.HasOption('m', 'menu')
-     or Application.HasOption('w', 'windowmenu'))
-  then
+  if not (Application.HasOption('f', 'file') or
+    Application.HasOption('p', 'process') or Application.HasOption('m', 'menu') or
+    Application.HasOption('w', 'windowmenu')) then
   begin
-    showMessage('One menu source must be specified (file or process or menuitem).');
+    ShowMessage('One menu source must be specified (file or process or menuitem).');
     Halt;
-  End;
+  end;
 
 
   ppiDesigned := self.DesignTimePPI;
   ppi := Screen.PixelsPerInch;
-  MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9 * (ppiDesigned/ppi));
-  MainForm.Constraints.MaxWidth := round(Screen.Width * 0.9 * (ppiDesigned/ppi));
+  MainForm.Constraints.MaxHeight := round(Screen.Height * 0.9 * (ppiDesigned / ppi));
+  MainForm.Constraints.MaxWidth := round(Screen.Width * 0.9 * (ppiDesigned / ppi));
 
   FFormMode := FMNormal;
   // color
@@ -175,8 +182,10 @@ begin
 
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
-  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
-  MenuDB.ExecuteDirect('CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
+  MenuDB.ExecuteDirect(
+    'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
+  MenuDB.ExecuteDirect(
+    'CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
 
   SQLMenu.Active := True;
@@ -214,19 +223,21 @@ begin
     if Application.GetOptionValue('w', 'windowmenu') <> '' then
     begin
       SQLMenu.Edit;
-      SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('w', 'windowmenu');
+      SQLMenu.FieldByName('path').AsString :=
+        Application.GetOptionValue('w', 'windowmenu');
       SQLMenu.CheckBrowseMode;
       LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
-    end
+    end;
   end;
 
   if Application.HasOption('r', 'reload') then
   begin
     SQLMenu.Edit;
     SQLMenu.FieldByName('Load').AsInteger := -1;
-    SQLMenu.FieldByName('reloadInterval').AsInteger := -1 * StrToInt(Application.GetOptionValue('r', 'reload'));
+    SQLMenu.FieldByName('reloadInterval').AsInteger :=
+      -1 * StrToInt(Application.GetOptionValue('r', 'reload'));
     SQLMenu.CheckBrowseMode;
-  End;
+  end;
 
   if Application.HasOption('p', 'process') then
   begin
@@ -250,9 +261,9 @@ begin
 
   if not Application.HasOption('k', 'keep') then
   begin
-      Application.OnDeactivate:=@AppDeactivate;
+    Application.OnDeactivate := @AppDeactivate;
     FKeepOpen := False;
-  End
+  end
   else
     FKeepOpen := True;
 
@@ -260,7 +271,7 @@ begin
   begin
     FExecIfOne := True;
     FDefaultItem := Application.GetOptionValue('1', 'execone');
-  End
+  end
   else
     FExecIfOne := False;
 
@@ -271,7 +282,7 @@ begin
   end;
 
   if Application.HasOption('w', 'windowmenu') then
-     WindowMenu(0,0, True)
+    WindowMenu(0, 0, True)
   else if Application.HasOption('m', 'menuitem') then
   begin
     lMenuName := Application.GetOptionValue('m', 'menu');
@@ -302,8 +313,8 @@ begin
     MainForm.Close;
 end;
 
-procedure TMainForm.closeFindPanel(const aForce: Boolean);
-Begin
+procedure TMainForm.closeFindPanel(const aForce: boolean);
+begin
   if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
   begin
     AppDeactivate(self);
@@ -311,20 +322,20 @@ Begin
   else if (edFind.Text <> '') or aForce then
   begin
     edFind.Text := '';
-  //  showMenu; { TODO : jen pokud není zavíráno }
+    //  showMenu; { TODO : jen pokud není zavíráno }
     MainGrid.SetFocus;
-    pnlFind.Visible := false;
+    pnlFind.Visible := False;
     MainGridShortCut.Visible := not pnlFind.Visible;
-  End;
-End;
+  end;
+end;
 
 procedure TMainForm.FindSwitch;
-Begin
+begin
   if MainGrid.Focused then
     pnlFind.Visible := True
-  else If Not pnlFind.Visible Then
+  else if not pnlFind.Visible then
     pnlFind.Visible := True
-  Else If pnlFind.Visible And ((edFind.Text = '') or (edFind.Text = '*')) Then
+  else if pnlFind.Visible and ((edFind.Text = '') or (edFind.Text = '*')) then
   begin
     pnlFind.Visible := False;
     if (edFind.Text = '*') then
@@ -334,92 +345,94 @@ Begin
     end;
   end;
 
-  If pnlFind.Visible And Not edFind.Focused Then
-  Begin
+  if pnlFind.Visible and not edFind.Focused then
+  begin
     edFind.SetFocus;
-  End
-  Else
-  Begin
+  end
+  else
+  begin
     MainGrid.SetFocus;
-  End;
+  end;
 
   MainGridShortCut.Visible := not pnlFind.Visible;
 
   SetFormSize;
-End;
+end;
 
-function TMainForm.GetMaxWidth: Integer;
-Begin
-  if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) and not SQLMenuItemsMaxWidth.FieldByName('width').IsNull then
+function TMainForm.GetMaxWidth: integer;
+begin
+  if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) and
+    not SQLMenuItemsMaxWidth.FieldByName('width').IsNull then
     Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + 10
   else
     Result := 500;
-End;
+end;
 
-function TMainForm.GetTextWidth(const aText: String): Integer;
+function TMainForm.GetTextWidth(const aText: string): integer;
 var
   W: integer;
   BM: TBitmap;
-Begin
+begin
   BM := TBitmap.Create;
   try
     BM.Canvas.Font := MainGrid.Font;
     W := BM.Canvas.TextWidth(aText);
-  Finally
+  finally
     BM.Free;
-  End;
+  end;
 
   Result := W + 8; { TODO -crefactor : Magic const 8 }
   //Result := Length(aText) * 30
-End;
+end;
 
-function TMainForm.isExternalSearch: Boolean;
-Var
-  lReloadInterval: LongInt;
-  lCmd: String;
+function TMainForm.isExternalSearch: boolean;
+var
+  lReloadInterval: longint;
+  lCmd: string;
   lDynCmd: SizeInt;
-Begin
+begin
   lReloadInterval := SQLMenu.FieldByName('reloadInterval').AsInteger;
   lCmd := SQLMenu.FieldByName('cmd').AsString;
   lDynCmd := Pos('%s', lCmd);
-  Result := (lReloadInterval < 0) And (lDynCmd > 0)
-End;
+  Result := (lReloadInterval < 0) and (lDynCmd > 0);
+end;
 
-function TMainForm.canExternalSearch: Boolean;
-Var
-  lReloadInterval: LongInt;
-  lCmd: String;
+function TMainForm.canExternalSearch: boolean;
+var
+  lReloadInterval: longint;
+  lCmd: string;
   lDynCmd: SizeInt;
-Begin
+begin
   lReloadInterval := SQLMenu.FieldByName('reloadInterval').AsInteger;
   lCmd := SQLMenu.FieldByName('cmd').AsString;
   lDynCmd := Pos('%s', lCmd);
-  Result := (lReloadInterval < 0) And (Length(edFind.Text) >= abs(lReloadInterval)) And (lDynCmd > 0)
-End;
+  Result := (lReloadInterval < 0) and (Length(edFind.Text) >= abs(lReloadInterval)) and
+    (lDynCmd > 0);
+end;
 
 procedure TMainForm.MainGridCellClick(Column: TColumn);
-Begin
+begin
   acRun.Execute;
 end;
 
 procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; const Rect: TRect;
-  DataCol: Integer; Column: TColumn; State: TGridDrawState);
-Begin
+  DataCol: integer; Column: TColumn; State: TGridDrawState);
+begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGrid);
 end;
 
 procedure TMainForm.MainGridEnter(Sender: TObject);
 begin
   if SQLMenuItems.RecordCount > 1 then
-   while strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator do
-   begin
-     SQLMenuItems.Next;
-   end;
+    while strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator do
+    begin
+      SQLMenuItems.Next;
+    end;
 end;
 
 procedure TMainForm.MainGridSubmenuDrawColumnCell(Sender: TObject;
-  const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
-Begin
+  const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGridSubmenu);
 end;
 
@@ -433,9 +446,8 @@ begin
   MainGridShortCut.Visible := not pnlFind.Visible;
 end;
 
-procedure TMainForm.MainGridKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-Begin
+procedure TMainForm.MainGridKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
   // navigation over separators
   FLastResNo := SQLMenuItems.RecNo;
 
@@ -443,31 +455,33 @@ Begin
   begin
     FRecNo := SQLMenuItems.RecNo;
     SQLMenuItems.Prior; // ugly hack - enter goes to next
-  End;
+  end;
 end;
 
 procedure TMainForm.MainGridKeyPress(Sender: TObject; var Key: char);
 var
-  lRecCount: LongInt;
-Begin
+  lRecCount: longint;
+begin
   SQLMenuItemsShortcut.Close;
-  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
+  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger :=
+    SQLMenu.FieldByName('id').AsInteger;
   SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
   SQLMenuItemsShortcut.Open;
 
   lRecCount := SQLMenuItemsShortcut.RecordCount;
 
-  if (lRecCount = 1) and SQLMenuItems.Locate('id', SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
+  if (lRecCount = 1) and SQLMenuItems.Locate('id',
+    SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
   begin
     acRun.Execute;
     key := #0;
-  End
+  end
   else if (lRecCount > 1) then
   begin
     if not SQLMenuItems.EOF then
-      SQLMenuItems.next
+      SQLMenuItems.Next
     else
-      SQLMenuItems.first;
+      SQLMenuItems.First;
 
     while not SQLMenuItems.EOF do
     begin
@@ -476,12 +490,11 @@ Begin
       SQLMenuItems.Next;
     end;
     SQLMenuItems.Locate('shortcut', key, []);
-  end
+  end;
 end;
 
-procedure TMainForm.MainGridKeyUp(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-Var
+procedure TMainForm.MainGridKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+var
   lItemType: TMenuItemType;
 begin
   if SQLMenuItems.RecordCount > 0 then
@@ -494,7 +507,9 @@ begin
     SQLMenuItems.RecNo := FRecNo;
   end;
 
-  if (Key = VK_Return) or ((Key = VK_RIGHT) and (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload, MITmenuwindow])) then
+  if (Key = VK_Return) or ((Key = VK_RIGHT) and
+    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload,
+    MITmenuwindow])) then
   begin
     if not FKeyStop then
     begin
@@ -502,13 +517,14 @@ begin
     end
     else
     begin
-      FKeyStop := false;
-    end
-  End
-  else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
+      FKeyStop := False;
+    end;
+  end
+  else if ((Key = VK_LEFT) or (Key = VK_BACK) or (Key = VK_ESCAPE)) and
+    (SQLMenu.FieldByName('upMenuId').AsInteger > 0) then
   begin
-    NavigateUp
-  End
+    NavigateUp;
+  end
   else if (Key = VK_ESCAPE) and (SQLMenu.FieldByName('upMenuId').AsInteger = 0) then
     MainForm.Close
   else if (key = VK_UP) and SQLMenuItems.BOF then
@@ -522,7 +538,8 @@ begin
     FLastResNo := SQLMenuItems.RecNo - 1;
   end;
 
-  if (SQLMenuItems.RecordCount > 0) and (strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator) then
+  if (SQLMenuItems.RecordCount > 0) and
+    (strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator) then
     if SQLMenuItems.RecNo > FLastResNo then
       SQLMenuItems.Next
     else
@@ -542,14 +559,14 @@ begin
 end;
 
 procedure TMainForm.acFindExecute(Sender: TObject);
-Begin
+begin
   FindSwitch;
 end;
 
 procedure TMainForm.acGlobalSearchExecute(Sender: TObject);
 begin
   FindSwitch;
-  If pnlFind.Visible And (edFind.Text = '') then
+  if pnlFind.Visible and (edFind.Text = '') then
   begin
     edFind.Text := '*';
     edFind.SelStart := Length(edFind.Text);
@@ -562,38 +579,40 @@ begin
 end;
 
 procedure TMainForm.acKeepOpenExecute(Sender: TObject);
-Begin
+begin
   FKeepOpen := not FKeepOpen;
   if FKeepOpen then
   begin
     Self.BorderStyle := bsDialog;
     Self.FormStyle := fsNormal;
-  End
+  end
   else
   begin
     Self.BorderStyle := bsNone;
     Self.FormStyle := fsSystemStayOnTop;
-  End;
+  end;
 end;
 
 procedure TMainForm.RunAsync(const aCmd: string);
 var
   sl, slCmd: TStringList;
-  lParams, lCmd, lPath, l, s, lPreCmd: string;
+  lParam, lCmd, lPath, l, s, lPreCmd: string;
   lExe: RawByteString;
-Const
+const
   BEGIN_SL = 0;
 begin
   sl := TStringList.Create;
   try
     lPreCmd := ReplaceText(aCmd, '%s', extraParam);
     lPreCmd := ReplaceText(lPreCmd, '''', '"');
-    slCmd := tStringList.Create;
+    slCmd := TStringList.Create;
     slCmd.Delimiter := ' ';
     slCmd.DelimitedText := lPreCmd;
     lCmd := slCmd[BEGIN_SL];
     slCmd.Delete(BEGIN_SL);
 
+    AsyncProcess1.ShowWindow := swoShow;
+    AsyncProcess1.CurrentDirectory := GetEnvironmentVariable('HOME');
     ////sl.StrictDelimiter := true;
     //sl.Delimiter := ' ';
     //sl.DelimitedText := lParams;
@@ -610,21 +629,36 @@ begin
       {$IFDEF Windows}
       // on windows try search with extension .exe
       if lExe = '' then
-         lExe := ExeSearch(lCmd + '.exe', lPath);
+        lExe := ExeSearch(lCmd + '.exe', lPath);
       {$ENDIF}
-    End;
-
-    //for s in slCmd do
-    //  lParams := lParams + s;
+    end;
 
     if lExe = '' then
-       lExe := lCmd; // on windows this work ok ie. for pwsh.exe
+      lExe := lCmd; // on windows this work ok ie. for pwsh.exe
 
     AsyncProcess1.Executable := lExe;
     { TODO -cfeat : add execute in specific directory }
     // AsyncProcess1.CurrentDirectory := ;
     AsyncProcess1.Parameters.Clear;
-    AsyncProcess1.Parameters.AddStrings(slCmd);
+
+    for s in slCmd do
+    begin
+      lParam := s.Replace('%clipbrd%', Clipboard.AsText);
+
+      { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY }
+      if lParam = '#max' then
+        AsyncProcess1.ShowWindow := swoMaximize
+      else if lParam = '#min' then
+        AsyncProcess1.ShowWindow := swoMinimize
+      else if StartsStr('#dir:', lParam) then
+      begin
+        lParam := ReplaceStr(lParam, '#dir:', '');
+        AsyncProcess1.CurrentDirectory := lParam;
+      end
+      else
+        AsyncProcess1.Parameters.Add(lParam);
+    end;
+
     AsyncProcess1.Execute;
 
   finally
@@ -633,21 +667,22 @@ begin
   end;
 end;
 
-procedure TMainForm.setMenuShortcut(const lId: String; aKeySet: String);
-Var
-  lShCut: Char;
-  s: Char;
-  lMenuCount: LongInt;
-Begin
+procedure TMainForm.setMenuShortcut(const lId: string; aKeySet: string);
+var
+  lShCut: char;
+  s: char;
+  lMenuCount: longint;
+begin
   SQLMenuItems.First;
-  While Not SQLMenuItems.EOF Do
-  Begin
-    If (SQLMenuItems.FieldByName('shortcut').AsString = '') And (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) Then
-    Begin
+  while not SQLMenuItems.EOF do
+  begin
+    if (SQLMenuItems.FieldByName('shortcut').AsString = '') and
+      (strToMit(SQLMenuItems.FieldByName('itemType').AsString) <> MITseparator) then
+    begin
       if Length(aKeySet) = 0 then
         aKeySet := SQLMenuItems.FieldByName('name').AsString;
-      For s In aKeySet Do
-      Begin
+      for s in aKeySet do
+      begin
         lShCut := LowerCase(s);
 
         SQLMenuItemsShortcut.Close;
@@ -656,50 +691,52 @@ Begin
         SQLMenuItemsShortcut.Open;
         lMenuCount := SQLMenuItemsShortcut.RecordCount;
 
-        If (lShCut <> '') And (lMenuCount = 0) And (lShCut In ['a' .. 'z', '0' .. '9']) Then
-        Begin
+        if (lShCut <> '') and (lMenuCount = 0) and
+          (lShCut in ['a' .. 'z', '0' .. '9']) then
+        begin
           SQLMenuItems.Edit;
           SQLMenuItems.FieldByName('shortcut').AsString := lShCut;
           SQLMenuItems.CheckBrowseMode;
           SQLMenuItems.ApplyUpdates;
           break;
-        End;
-      End;
-    End;
+        end;
+      end;
+    end;
     SQLMenuItems.Next;
-  End;
-End;
+  end;
+end;
 
-procedure TMainForm.SetSearchCount(const aValue: LongInt);
-Begin
-  If FSearchCount = aValue Then Exit;
+procedure TMainForm.SetSearchCount(const aValue: longint);
+begin
+  if FSearchCount = aValue then
+    Exit;
   FSearchCount := aValue;
-End;
+end;
 
 procedure TMainForm.SetSeparatorRow(const State: TGridDrawState;
-  const Column: TColumn; const DataCol: Integer; const Rect: TRect;
+  const Column: TColumn; const DataCol: integer; const Rect: TRect;
   const aGrid: TDBGrid);
-Begin
-  If SQLMenuItems.Active And (SQLMenuItems.RecordCount > 0) Then
-  Begin
-    If strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator Then
-    Begin
-      aGrid.Canvas.Font.Bold := true;
+begin
+  if SQLMenuItems.Active and (SQLMenuItems.RecordCount > 0) then
+  begin
+    if strToMit(SQLMenuItems.FieldByName('itemType').AsString) = MITseparator then
+    begin
+      aGrid.Canvas.Font.Bold := True;
       aGrid.Canvas.Brush.Color := clSilver;
 
       aGrid.Canvas.FillRect(Rect);
       aGrid.DefaultDrawColumnCell(Rect, DataCol, Column, State);
-    End;
-  End;
-End;
+    end;
+  end;
+end;
 
 procedure TMainForm.acRunExecute(Sender: TObject);
-Var
+var
   lItemType: TMenuItemType;
-  lSubMenuId, lMenuItemId, lLoad, lReload, lTime, lInterval: LongInt;
-  lResult: Boolean;
+  lSubMenuId, lMenuItemId, lLoad, lReload, lTime, lInterval: longint;
+  lResult: boolean;
   slCmd: TStringList;
-  lCmd: String;
+  lCmd: string;
 begin
   lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
 
@@ -708,16 +745,16 @@ begin
     RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
     if not FKeepOpen then
       MainForm.Close;
-  End
+  end
   else if lItemType in [MITrunonce] then
   begin
     {$IFDEF Windows}
     {TODO -oLebeda -cfeat: for runonce check running program on current desktop by exe}
-    slCmd := tStringList.Create;
+    slCmd := TStringList.Create;
     try
-        slCmd.Delimiter := ' ';
-        slCmd.DelimitedText := SQLMenuItems.FieldByName('cmd').AsString;
-        lCmd := slCmd[0];
+      slCmd.Delimiter := ' ';
+      slCmd.DelimitedText := SQLMenuItems.FieldByName('cmd').AsString;
+      lCmd := slCmd[0];
     finally
       FreeAndNil(slCmd);
     end;
@@ -728,18 +765,19 @@ begin
       if not FKeepOpen then
         MainForm.Close;
     end;
-  End
-  {$IFDEF Windows}
-  else if lItemType =  MITwindow then
-  begin
-    ActivateWindow(SQLMenuItems.FieldByName('cmd').AsString)
   end
-  else if lItemType =  MITmenuwindow then
+  {$IFDEF Windows}
+  else if lItemType = MITwindow then
   begin
-    WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger, SQLMenuItems.FieldByName('id').AsInteger);
+    ActivateWindow(SQLMenuItems.FieldByName('cmd').AsString);
+  end
+  else if lItemType = MITmenuwindow then
+  begin
+    WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
+      SQLMenuItems.FieldByName('id').AsInteger);
   end
   {$ENDIF}
-  else if lItemType =  MITmenuprogreload then
+  else if lItemType = MITmenuprogreload then
   begin
     lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
     lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
@@ -748,16 +786,14 @@ begin
     if lSubMenuId = 0 then
     begin
       // create menu
-      lSubMenuId := AddMenu(
-          SQLMenuItems.FieldByName('name').AsString,
-          SQLMenu.FieldByName('id').AsInteger,
-          SQLMenuItems.FieldByName('subMenuCmd').AsString,
-          '',
-          SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger
-      );
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
+        SQLMenu.FieldByName('id').AsInteger,
+        SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
+        SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
+        IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
       LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
-    End
+    end
     else
     begin
       setActiveMenu(lSubMenuId);
@@ -768,26 +804,27 @@ begin
       lInterval := lTime - lLoad;
       if lInterval > lReload then
       begin
-        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(lSubMenuId));
+        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+          IntToStr(lSubMenuId));
         LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
-      End;
+      end;
 
-    End;
+    end;
     setActiveMenu(lSubMenuId); // reload after build
-  End
-  else if lItemType =  MITmenu then
+  end
+  else if lItemType = MITmenu then
   begin
-    lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger); // reload after navigate
+    lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
+    // reload after navigate
     //if lResult then
     //   showMenu;
-  End;
+  end;
 
   closeFindPanel;
 end;
 
-procedure TMainForm.edFindKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-Begin
+procedure TMainForm.edFindKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
   if (Key = VK_DOWN) then
   begin
     if SQLMenuItems.EOF then
@@ -798,7 +835,7 @@ Begin
     //SQLMenuItems.First;
     //MainGrid.SetFocus;
     key := 0;
-  End
+  end
   else if (Key = VK_UP) then
   begin
     if SQLMenuItems.BOF then
@@ -809,20 +846,20 @@ Begin
     //SQLMenuItems.Last;
     //MainGrid.SetFocus;
     key := 0;
-  End
+  end
   else if (Key = VK_Return) then
   begin
     //MainGrid.SetFocus;
     Key := 0;
     FKeyStop := True;
     acRun.Execute;
-  End;
+  end;
 end;
 
-procedure TMainForm.edFindKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TMainForm.edFindKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
 var
-  lUpMenuId: Integer;
-Begin
+  lUpMenuId: integer;
+begin
   if (Key = VK_ESCAPE) then
   begin
     lUpMenuId := SQLMenu.FieldByName('upMenuId').AsInteger;
@@ -830,31 +867,32 @@ Begin
       MainForm.Close
     else
     begin
-      closeFindPanel(true);
+      closeFindPanel(True);
       NavigateUp;
     end;
-  End
-  else if not((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) and (FLastFind <> edFind.Text) then
+  end
+  else if not ((Key = VK_DOWN) or (Key = VK_UP) or (Key = VK_Return)) and
+    (FLastFind <> edFind.Text) then
   begin
     if isExternalSearch then
     begin
       // restart timer
-      ThrTimer.Enabled := false;
+      ThrTimer.Enabled := False;
       ThrTimer.Enabled := True;
-    End
+    end
     else
     begin
       showMenu;
       FLastFind := edFind.Text;
-    End;
-  End;
+    end;
+  end;
 end;
 
 procedure TMainForm.FormActivate(Sender: TObject);
-Begin
+begin
   if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
   begin
-   MainForm.Close;
+    MainForm.Close;
   end;
 
   if pnlFind.Visible then
@@ -869,12 +907,12 @@ end;
 procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
 begin
   { TODO -crefactor : smazat zakomentovaný kód a prázdné metody }
- //if not SQLMenu.Modified then
- //   showMenu;
+  //if not SQLMenu.Modified then
+  //   showMenu;
 end;
 
 procedure TMainForm.ThrTimerTimer(Sender: TObject);
-Begin
+begin
   showMenu;
   FLastFind := edFind.Text;
   ThrTimer.Enabled := False;
@@ -882,7 +920,7 @@ end;
 
 procedure TMainForm.LoadMenuFromLines(const aLines: TStringList);
 var
-  lLine: String;
+  lLine: string;
   i: integer;
   lMenuItemParser: TMenuItemParser;
 begin
@@ -891,14 +929,15 @@ begin
   begin
     lLine := Trim(aLines[i]);
     lLine := DelSpace1(lLine);
-    if (lLine <> '') and (not AnsiStartsStr('#', lLine) or AnsiStartsStr('#!', lLine)) then
+    if (lLine <> '') and (not AnsiStartsStr('#', lLine) or
+      AnsiStartsStr('#!', lLine)) then
     begin
       if AnsiStartsStr('#!', lLine) then
         Delete(lLine, 1, 2);
 
       lMenuItemParser := TMenuItemParser.Create(lLine);
       try
-        if not(lMenuItemParser.itemType in [MITEndMenu, MITNone]) then
+        if not (lMenuItemParser.itemType in [MITEndMenu, MITNone]) then
           AddMenuItem(lMenuItemParser);
       finally
         FreeAndNil(lMenuItemParser);
@@ -907,17 +946,17 @@ begin
   end;
 end;
 
-procedure TMainForm.LoadMenuFromProcess(const aCmd: String);
-Var
+procedure TMainForm.LoadMenuFromProcess(const aCmd: string);
+var
   lSl: TStringListUTF8;
-  j: Integer;
+  j: integer;
   //F:TextFile;
-  F:TextFile;
+  F: TextFile;
   lLine: WideString;
-  lVal, lEncCon, lEncDef: String;
-  lExt, lCan: Boolean;
-  c: WideChar;
-Begin
+  lVal, lEncCon, lEncDef: string;
+  lExt, lCan: boolean;
+  c: widechar;
+begin
   lExt := isExternalSearch;
   lCan := canExternalSearch;
   if not lExt or lCan then
@@ -929,14 +968,14 @@ Begin
     ProcessUTF81.Execute;
 
     lSl := TStringListUTF8.Create;
-    Try
+    try
       //Process1.WaitOnExit;
       //lSl.LoadFromStream(ProcessUTF81.Output);
       //lsl.SaveToFile('c:\tmp\menuDebug.txt');
 
       AssignStream(F, ProcessUTF81.Output);
       Reset(F);
-      while not Eof(F) do
+      while not EOF(F) do
       begin
         Readln(F, lLine);
 
@@ -944,15 +983,15 @@ Begin
 
         lSl.Append(lVal);
         //ShowMessage(lSl[0]);
-      End;
+      end;
       CloseFile(F);
 
       LoadMenuFromLines(lSl);
       //lsl.SaveToFile('c:\tmp\menuDebug.txt');
 
-    Finally
+    finally
       FreeAndNil(lSl);
-    End;
+    end;
 
   end;
 
@@ -960,22 +999,22 @@ Begin
   SQLMenu.FieldByName('Load').AsInteger := DateTimeToTimeStamp(time).Time div 1000;
   SQLMenu.Post;
   SQLMenu.ApplyUpdates;
-End;
+end;
 
-procedure TMainForm.showMenu(const aOrderBy: String; const aName: String);
-Var
-  lSql: String;
-  lId, lCmd: String;
-  lSearchText, i: String;
-  lGlobalSearch: Boolean;
-  lRecNo: LongInt;
-Begin
+procedure TMainForm.showMenu(const aOrderBy: string; const aName: string);
+var
+  lSql: string;
+  lId, lCmd: string;
+  lSearchText, i: string;
+  lGlobalSearch: boolean;
+  lRecNo: longint;
+begin
   MainGrid.BeginUpdate;
   MainGridShortCut.BeginUpdate;
   MainGridSubmenu.BeginUpdate;
   try
     // initialize local variables
-    lGlobalSearch := false;
+    lGlobalSearch := False;
     lSearchText := '';
 
     // check global search
@@ -983,18 +1022,18 @@ Begin
     begin
       if edFind.Text[1] = '*' then
       begin
-        lGlobalSearch := true;
-        lSearchText :=  copy(edFind.Text, 2, Integer.MaxValue);
+        lGlobalSearch := True;
+        lSearchText := copy(edFind.Text, 2, integer.MaxValue);
       end
       else
       begin
-        lGlobalSearch := false;
+        lGlobalSearch := False;
         lSearchText := edFind.Text;
-      end
+      end;
     end;
 
     // prepare search
-    If (lSearchText <> '') then
+    if (lSearchText <> '') then
     begin
       {$IFDEF Windows}
       lSearchText := lSearchText.Replace('%CurDestop%', GetCurrentDesktopName());
@@ -1005,31 +1044,33 @@ Begin
     // regenerate if reloadInterval < 0 and lSearchText and command contains %s
     if isExternalSearch and (lSearchText <> FLastFind) then
     begin
-      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + SQLMenu.FieldByName('id').AsString);
-      lCmd := ReplaceText(SQLMenu.FieldByName('cmd').AsString, '%s', '"' + lSearchText + '"');
+      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+        SQLMenu.FieldByName('id').AsString);
+      lCmd := ReplaceText(SQLMenu.FieldByName('cmd').AsString, '%s',
+        '"' + lSearchText + '"');
       LoadMenuFromProcess(lCmd);
 
       SQLMenu.Edit;
       SQLMenu.FieldByName('Load').AsInteger := -1;
       SQLMenu.CheckBrowseMode;
       SQLMenu.ApplyUpdates;
-    End;
+    end;
 
     // open Main menu
     MenuItemDS.DataSet := nil;
     SQLMenuItems.Close;
     lId := SQLMenu.FieldByName('id').AsString;
-    lSql := 'select id, menuId, itemType, '
-            + ' name '
-            + ' , search, shortcut, '
-            + ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-            + ' from menuItem where itemType <> ''MITwinkey''  ';
+    lSql := 'select id, menuId, itemType, ' + ' name ' +
+      ' , search, shortcut, ' +
+      ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
+      +
+      ' from menuItem where itemType <> ''MITwinkey''  ';
 
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '
     else if not lGlobalSearch then
     begin
-      lSql := lSql + ' and menuId = ''' + lId + ''' '
+      lSql := lSql + ' and menuId = ''' + lId + ''' ';
     end
     else
     begin
@@ -1038,9 +1079,11 @@ Begin
     end;
 
 
-    If (lSearchText <> '') and not isExternalSearch and (aName = '') Then
+    if (lSearchText <> '') and not isExternalSearch and (aName = '') then
     begin
-      lSql := lSql + ' and ((search like ''%' + lSearchText + '%'') or (name like ''%' + lSearchText + '%''))'; {TODO -oLebeda -cfeat: split lSearchText by space and simulate fuzzy search}
+      lSql := lSql + ' and ((search like ''%' + lSearchText +
+        '%'') or (name like ''%' + lSearchText + '%''))';
+      {TODO -oLebeda -cfeat: split lSearchText by space and simulate fuzzy search}
       lSql := lSql + ' and itemType <> ''MITseparator'' ';
     end;
 
@@ -1079,30 +1122,31 @@ Begin
       setMenuShortcut(lId);
       setMenuShortcut(lId, C_SHORTCUT_MENU_CHARS);
       SQLMenuItems.First;
-    End;
+    end;
 
     MenuItemDS.DataSet := SQLMenuItems;
   finally
-    MainGrid.EndUpdate(true);
-    MainGridShortCut.EndUpdate(true);
-    MainGridSubmenu.EndUpdate(true);
+    MainGrid.EndUpdate(True);
+    MainGridShortCut.EndUpdate(True);
+    MainGridSubmenu.EndUpdate(True);
   end;
 
-  if (((FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount)) or isExternalSearch) and (Not pnlFind.Visible) then
+  if (((FSearchCount > 0) and (FSearchCount <= SQLMenuItems.RecordCount)) or
+    isExternalSearch) and (not pnlFind.Visible) then
   begin
     // find panel visibility
     pnlFind.Visible := True;
     ActiveControl := edFind;
     if MainForm.CanFocus then
       edFind.SetFocus;
-  End
+  end
   else
-    if pnlFind.Visible then
-      ActiveControl := edFind;
+  if pnlFind.Visible then
+    ActiveControl := edFind;
 
   // form size
   SetFormSize;
-End;
+end;
 
 procedure TMainForm.SetFormSize;
 var
@@ -1113,7 +1157,8 @@ begin
   MainForm.Caption := SQLMenu.FieldByName('name').AsString;
 
   // height
-  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount + (2* MainForm.BorderWidth) + lHeighReserve;
+  lHeight := MainGrid.DefaultRowHeight * SQLMenuItems.RecordCount +
+    (2 * MainForm.BorderWidth) + lHeighReserve;
 
   if pnlFind.Visible then
     lHeight := lHeight + pnlFind.Height;
@@ -1129,42 +1174,45 @@ begin
   MainForm.Height := lHeight;
 
   // width
-  lWidth := GetMaxWidth + MainGridSubmenu.Width + MainGridShortCut.Width + (2* MainForm.BorderWidth);
-   MainForm.Width := lWidth;
+  lWidth := GetMaxWidth + MainGridSubmenu.Width + MainGridShortCut.Width +
+    (2 * MainForm.BorderWidth);
+  MainForm.Width := lWidth;
 
   // centralization
   if FFormMode = FMCentral then
   begin
     Top := (Screen.Height div 2) - (MainForm.Height div 2);
-    Left := (Screen.Width div 2) - (MainForm.Width div 2);;
-  End;
+    Left := (Screen.Width div 2) - (MainForm.Width div 2);
+    ;
+  end;
 
   // mouse to menu if isn't
   if Mouse.CursorPos.Y < top then
-    Mouse.CursorPos := Point(Mouse.CursorPos.X ,top +10);
+    Mouse.CursorPos := Point(Mouse.CursorPos.X, top + 10);
 
   if Mouse.CursorPos.Y > (top + MainForm.Height) then
-    Mouse.CursorPos := Point(Mouse.CursorPos.X , (top + MainForm.Height) - 10);
+    Mouse.CursorPos := Point(Mouse.CursorPos.X, (top + MainForm.Height) - 10);
 end;
 
 procedure TMainForm.NavigateUp;
-Var
-  lMenuId: LongInt;
-Begin
+var
+  lMenuId: longint;
+begin
   closeFindPanel;
   lMenuId := SQLMenu.FieldByName('id').AsInteger;
   setActiveMenu(SQLMenu.FieldByName('upMenuId').AsInteger);
   SQLMenuItems.Locate('subMenuId', lMenuId, []);
-End;
+end;
 
-procedure TMainForm.WindowMenu(const aSubMenuId, aMenuItemId: Integer; const aRoot: Boolean = False);
+procedure TMainForm.WindowMenu(const aSubMenuId, aMenuItemId: integer;
+  const aRoot: boolean = False);
 var
-  lResult: Boolean;
-  lInterval: LongInt;
-  lTime: LongInt;
-  lReload: LongInt;
-  lLoad: LongInt;
-  lSubMenuId, lMenuItemId: Integer;
+  lResult: boolean;
+  lInterval: longint;
+  lTime: longint;
+  lReload: longint;
+  lLoad: longint;
+  lSubMenuId, lMenuItemId: integer;
 begin
   { TODO -cWM : zlikvidovat duplicitní konstrukce}
   lSubMenuId := aSubMenuId;
@@ -1177,13 +1225,10 @@ begin
     if lSubMenuId = 0 then // if 0 create new menuitem
     begin
       // create menu
-      lSubMenuId := AddMenu(
-          SQLMenuItems.FieldByName('name').AsString,
-          SQLMenu.FieldByName('id').AsInteger,
-          SQLMenuItems.FieldByName('subMenuCmd').AsString,
-          '',
-          SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger
-      );
+      lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
+        SQLMenu.FieldByName('id').AsInteger,
+        SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
+        SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
       MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
         lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
       LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
@@ -1198,8 +1243,8 @@ begin
       lInterval := lTime - lLoad;
       if lInterval > lReload then
       begin
-        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(
-          lSubMenuId));
+        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+          IntToStr(lSubMenuId));
         LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
       end;
 
@@ -1214,9 +1259,9 @@ begin
     end;
 
   finally
-    MainGrid.EndUpdate(true);
-    MainGridShortCut.EndUpdate(true);
-    MainGridSubmenu.EndUpdate(true);
+    MainGrid.EndUpdate(True);
+    MainGridShortCut.EndUpdate(True);
+    MainGridSubmenu.EndUpdate(True);
   end;
 end;
 
@@ -1237,15 +1282,16 @@ begin
   Result := SQLMenu.FieldByName('id').AsInteger;
 end;
 
-function TMainForm.setActiveMenu(const aIdMenu: longint; const aOrderBy: String = 'id'): Boolean;
-Begin
+function TMainForm.setActiveMenu(const aIdMenu: longint;
+  const aOrderBy: string = 'id'): boolean;
+begin
   // sure the changes are saved
   SQLMenu.CheckBrowseMode;
   SQLMenu.ApplyUpdates;
 
   Result := SQLMenu.Locate('id', aIdMenu, []);
   showMenu(aOrderBy);
-End;
+end;
 
 procedure TMainForm.AddMenuItem(var lMenuItemParser: TMenuItemParser);
 begin
@@ -1253,13 +1299,15 @@ begin
   //id, menuId, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
-  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name; { TODO -cfeat : nahradit _ mezerami ve jméně }
+  SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name;
+  { TODO -cfeat : nahradit _ mezerami ve jméně }
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;
   SQLMenuItems.FieldByName('subMenuPath').AsString := lMenuItemParser.subMenuPath;
   SQLMenuItems.FieldByName('subMenuCmd').AsString := lMenuItemParser.subMenuCmd;
-  SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger := lMenuItemParser.subMenuReloadInterval;
+  SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger :=
+    lMenuItemParser.subMenuReloadInterval;
   SQLMenuItems.FieldByName('subMenuId').AsInteger := lMenuItemParser.subMenuId;
   SQLMenuItems.FieldByName('subMenuChar').AsString := lMenuItemParser.subMenuChar;
   SQLMenuItems.FieldByName('width').AsInteger := GetTextWidth(lMenuItemParser.Name);

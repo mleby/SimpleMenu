@@ -57,6 +57,9 @@ TODO
   user explicitly not write it. For off automatic insert shortcut, can be use
   as shortcut space (ie: `"name_ "`). 
   
+  In name of separator and prog can use `%clipbrd%` as placeholder for text
+  from system clipboard.
+  
 - `COMMANDLINE` - external program, which write menu structure to its standard output.
   
 ## Dynamic submenu

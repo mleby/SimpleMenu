@@ -96,7 +96,7 @@ begin
       //List.Add(IntToStr(lDesktop + 1) + ' | ' + lTitle + ' | ' + GetCurrentActiveProcessPath(hWindow) + ' | ' + lClass + ' | '+ IntToHex(hWindow,4));
       lFullExe := GetCurrentActiveProcessPath(hWindow);
       lExeFile := ExtractFileName(lFullExe);
-      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + lTitle + ' (' + lExeFile +')';
+      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] (' + lExeFile +') ' + lTitle;
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('name').AsString := lExeFile;

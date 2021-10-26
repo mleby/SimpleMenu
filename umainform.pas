@@ -601,6 +601,7 @@ var
 const
   BEGIN_SL = 0;
 begin
+  Screen.Cursor := crHourGlass;
   sl := TStringList.Create;
   try
     lPreCmd := ReplaceText(aCmd, '%s', extraParam);
@@ -664,6 +665,7 @@ begin
   finally
     FreeAndNil(slCmd);
     sl.Free;
+    Screen.Cursor := crDefault;
   end;
 end;
 
@@ -738,86 +740,91 @@ var
   slCmd: TStringList;
   lCmd: string;
 begin
-  lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
+  Screen.Cursor := crHourGlass;
+  try
+    lItemType := strToMit(SQLMenuItems.FieldByName('itemType').AsString);
 
-  if lItemType in [MITprog] then
-  begin
-    RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
-    if not FKeepOpen then
-      MainForm.Close;
-  end
-  else if lItemType in [MITrunonce] then
-  begin
-    {$IFDEF Windows}
-    {TODO -oLebeda -cfeat: for runonce check running program on current desktop by exe}
-    slCmd := TStringList.Create;
-    try
-      slCmd.Delimiter := ' ';
-      slCmd.DelimitedText := SQLMenuItems.FieldByName('cmd').AsString;
-      lCmd := slCmd[0];
-    finally
-      FreeAndNil(slCmd);
-    end;
-    if not ActivateProcess(lCmd) then
-    {$ENDIF}
+    if lItemType in [MITprog] then
     begin
       RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
       if not FKeepOpen then
         MainForm.Close;
-    end;
-  end
-  {$IFDEF Windows}
-  else if lItemType = MITwindow then
-  begin
-    ActivateWindow(SQLMenuItems.FieldByName('cmd').AsString);
-  end
-  else if lItemType = MITmenuwindow then
-  begin
-    WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
-      SQLMenuItems.FieldByName('id').AsInteger);
-  end
-  {$ENDIF}
-  else if lItemType = MITmenuprogreload then
-  begin
-    lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
-    lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
-
-    { TODO -crefactor : sjednotit s předchozí větví a obalit beginUpdate/EndUpdate }
-    if lSubMenuId = 0 then
-    begin
-      // create menu
-      lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
-        SQLMenu.FieldByName('id').AsInteger,
-        SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
-        SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
-        IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
-      LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
     end
-    else
+    else if lItemType in [MITrunonce] then
     begin
-      setActiveMenu(lSubMenuId);
-
-      lLoad := SQLMenu.FieldByName('Load').AsInteger;
-      lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
-      lTime := DateTimeToTimeStamp(time).Time div 1000;
-      lInterval := lTime - lLoad;
-      if lInterval > lReload then
-      begin
-        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
-          IntToStr(lSubMenuId));
-        LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
+      {$IFDEF Windows}
+      {TODO -oLebeda -cfeat: for runonce check running program on current desktop by exe}
+      slCmd := TStringList.Create;
+      try
+        slCmd.Delimiter := ' ';
+        slCmd.DelimitedText := SQLMenuItems.FieldByName('cmd').AsString;
+        lCmd := slCmd[0];
+      finally
+        FreeAndNil(slCmd);
       end;
+      if not ActivateProcess(lCmd) then
+      {$ENDIF}
+      begin
+        RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
+        if not FKeepOpen then
+          MainForm.Close;
+      end;
+    end
+    {$IFDEF Windows}
+    else if lItemType = MITwindow then
+    begin
+      ActivateWindow(SQLMenuItems.FieldByName('cmd').AsString);
+    end
+    else if lItemType = MITmenuwindow then
+    begin
+      WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
+        SQLMenuItems.FieldByName('id').AsInteger);
+    end
+    {$ENDIF}
+    else if lItemType = MITmenuprogreload then
+    begin
+      lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
+      lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
 
+      { TODO -crefactor : sjednotit s předchozí větví a obalit beginUpdate/EndUpdate }
+      if lSubMenuId = 0 then
+      begin
+        // create menu
+        lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
+          SQLMenu.FieldByName('id').AsInteger,
+          SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
+          SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
+        MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
+          IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+        LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
+      end
+      else
+      begin
+        setActiveMenu(lSubMenuId);
+
+        lLoad := SQLMenu.FieldByName('Load').AsInteger;
+        lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
+        lTime := DateTimeToTimeStamp(time).Time div 1000;
+        lInterval := lTime - lLoad;
+        if lInterval > lReload then
+        begin
+          MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+            IntToStr(lSubMenuId));
+          LoadMenuFromProcess(SQLMenu.FieldByName('cmd').AsString);
+        end;
+
+      end;
+      setActiveMenu(lSubMenuId); // reload after build
+    end
+    else if lItemType = MITmenu then
+    begin
+      lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
+      // reload after navigate
+      //if lResult then
+      //   showMenu;
     end;
-    setActiveMenu(lSubMenuId); // reload after build
-  end
-  else if lItemType = MITmenu then
-  begin
-    lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
-    // reload after navigate
-    //if lResult then
-    //   showMenu;
+  finally
+    Screen.Cursor := crDefault;
   end;
 
   closeFindPanel;

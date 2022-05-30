@@ -53,7 +53,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
-  LCLVersion = '2.0.12.0'
+  LCLVersion = '2.2.2.0'
   object MainGrid: TDBGrid
     Left = 26
     Height = 765
@@ -250,6 +250,7 @@ object MainForm: TMainForm
       'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval from menu'
     )
     Params = <>
+    Macros = <>
     Left = 32
     Top = 259
   end
@@ -345,6 +346,7 @@ object MainForm: TMainForm
         Name = 'id'
         ParamType = ptInput
       end>
+    Macros = <>
     DataSource = MenuDS
     Left = 32
     Top = 315
@@ -504,6 +506,7 @@ object MainForm: TMainForm
         Name = 'shortcut'
         ParamType = ptInput
       end>
+    Macros = <>
     Left = 56
     Top = 384
   end
@@ -546,6 +549,7 @@ object MainForm: TMainForm
         Name = 'id'
         ParamType = ptInput
       end>
+    Macros = <>
     Left = 56
     Top = 448
   end
@@ -663,6 +667,7 @@ object MainForm: TMainForm
         Name = 'cmd'
         ParamType = ptInput
       end>
+    Macros = <>
     Left = 80
     Top = 520
   end

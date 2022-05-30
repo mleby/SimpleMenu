@@ -15,16 +15,16 @@ uses
 procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 function ActivateWindow(const aWindowHandle: String): Boolean;
 function ActivateProcess(const aExe: String): Boolean;
-function GetCurrentDesktopName(): string;
+//function GetCurrentDesktopName(): string;
 
 implementation
 
 uses uMainForm;
 
-// https://github.com/Ciantic/VirtualDesktopAccessor
-function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
-function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
-function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+//// https://github.com/Ciantic/VirtualDesktopAccessor
+//function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+//function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+//function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 
 function GetCurrentActiveProcessPath(hWindow: Hwnd): String;
 var
@@ -71,8 +71,9 @@ var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut: String;
-  lDesktop, lIsPined: Integer;
+  //lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
+  IsAppWindow: Boolean;
 begin
   // load list windows
   hDesktop := GetDeskTopWindow;
@@ -81,10 +82,12 @@ begin
     GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
-    lDesktop := GetWindowDesktopNumber(hWindow);
-    lIsPined := IsPinnedWindow(hWindow);
+    //lDesktop := GetWindowDesktopNumber(hWindow);
+    //lIsPined := IsPinnedWindow(hWindow);
 
-    if (Buffer <> '') and IsWindowVisible(hWindow) and ((lDesktop >= 0) or (lIsPined = 1)) then
+    IsAppWindow := GetWindowLongPtr(hWindow, GWL_STYLE) and WS_EX_APPWINDOW<>0;
+
+    if (Buffer <> '') and IsWindowVisible(hWindow) and IsAppWindow then
     begin
       lTitle := Buffer;
       //lTitle:= AnsiToUtf8(lTitle);
@@ -94,9 +97,14 @@ begin
       lClass := buffer;
 
       //List.Add(IntToStr(lDesktop + 1) + ' | ' + lTitle + ' | ' + GetCurrentActiveProcessPath(hWindow) + ' | ' + lClass + ' | '+ IntToHex(hWindow,4));
-      lFullExe := GetCurrentActiveProcessPath(hWindow);
+      { #todo : Ošetøit vlastnicví okna }
+      try // https://stackoverflow.com/questions/5951631/how-to-get-captions-of-actual-windows-currently-running
+        lFullExe := GetCurrentActiveProcessPath(hWindow);
+      Except
+        lFullExe := 'ADMIN'
+      end;
       lExeFile := ExtractFileName(lFullExe);
-      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] (' + lExeFile +') ' + lTitle;
+      lMenuTitle := (* '[' + IntToStr(lDesktop + 1) + '] ' *) '(' + lExeFile +') ' + lTitle;
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('name').AsString := lExeFile;
@@ -129,7 +137,7 @@ var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe: String;
-  lDesktop, lIsPined: Integer;
+  //lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
 begin
   Result := False;
@@ -141,10 +149,10 @@ begin
     //GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
-    lDesktop := GetWindowDesktopNumber(hWindow);
-    lIsPined := IsPinnedWindow(hWindow);
+    //lDesktop := GetWindowDesktopNumber(hWindow);
+    //lIsPined := IsPinnedWindow(hWindow);
 
-    if IsWindowVisible(hWindow) and ((lDesktop = GetCurrentDesktopNumber()) or (lIsPined = 1)) then
+    if IsWindowVisible(hWindow) (* and ((lDesktop = GetCurrentDesktopNumber()) or (lIsPined = 1)) *) then
     begin
       lFullExe := GetCurrentActiveProcessPath(hWindow);
 
@@ -157,10 +165,10 @@ begin
   end;
 end;
 
-function GetCurrentDesktopName(): string;
-begin
-  Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
-end;
+//function GetCurrentDesktopName(): string;
+//begin
+  //Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
+//end;
 
 function ActivateWindow(const aWindowHandle: String): Boolean;
 var hWindow: Hwnd;

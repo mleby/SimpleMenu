@@ -223,8 +223,7 @@ begin
     if Application.GetOptionValue('w', 'windowmenu') <> '' then
     begin
       SQLMenu.Edit;
-      SQLMenu.FieldByName('path').AsString :=
-        Application.GetOptionValue('w', 'windowmenu');
+      SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('w', 'windowmenu');
       SQLMenu.CheckBrowseMode;
       LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
     end;
@@ -1040,12 +1039,12 @@ begin
     end;
 
     // prepare search
-    if (lSearchText <> '') then
-    begin
-      {$IFDEF Windows}
-      lSearchText := lSearchText.Replace('%CurDestop%', GetCurrentDesktopName());
-      {$ENDIF}
-    end;
+    //if (lSearchText <> '') then
+    //begin
+    //  {$IFDEF Windows}
+    //  lSearchText := lSearchText.Replace('%CurDestop%', GetCurrentDesktopName());
+    //  {$ENDIF}
+    //end;
 
 
     // regenerate if reloadInterval < 0 and lSearchText and command contains %s

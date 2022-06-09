@@ -24,7 +24,7 @@
       <AutoIncrementBuild Value="True"/>
       <MinorVersionNr Value="9"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="86"/>
+      <BuildNr Value="94"/>
     </VersionInfo>
     <BuildModes Count="3">
       <Item1 Name="Default" Default="True"/>
@@ -106,13 +106,13 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="-w -c -s 50"/>
+        <CommandLineParams Value="-w -f c:/Programs/menuWinKeys.txt -c"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="-w -c -s 50"/>
+            <CommandLineParams Value="-w -f c:/Programs/menuWinKeys.txt -c"/>
           </local>
         </Mode0>
       </Modes>

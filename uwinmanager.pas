@@ -73,21 +73,24 @@ var
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut: String;
   //lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
-  IsAppWindow: Boolean;
+  lIsAppWindow, lIsWindowVisible: Boolean;
 begin
   // load list windows
   hDesktop := GetDeskTopWindow;
   hWindow := GetWindow(hDesktop, GW_CHILD);
   while hWindow <> 0 do begin
+    lShortCut := ''; // initialize value
+
     GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
     //lDesktop := GetWindowDesktopNumber(hWindow);
     //lIsPined := IsPinnedWindow(hWindow);
 
-    IsAppWindow := GetWindowLongPtr(hWindow, GWL_STYLE) and WS_EX_APPWINDOW<>0;
+    lIsAppWindow := GetWindowLongPtr(hWindow, GWL_STYLE) and WS_EX_APPWINDOW<>0;
+    lIsWindowVisible := IsWindowVisible(hWindow);
 
-    if (Buffer <> '') and IsWindowVisible(hWindow) and IsAppWindow then
+    if (Buffer <> '') and lIsWindowVisible and lIsAppWindow then
     begin
       lTitle := Buffer;
       //lTitle:= AnsiToUtf8(lTitle);

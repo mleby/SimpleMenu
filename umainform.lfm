@@ -8,7 +8,7 @@ object MainForm: TMainForm
   Caption = 'Menu'
   ClientHeight = 801
   ClientWidth = 300
-  Color = 16053492
+  Color = clMenu
   FormStyle = fsSystemStayOnTop
   Icon.Data = {
     7E04000000000100010010100000010020006804000016000000280000001000
@@ -94,7 +94,7 @@ object MainForm: TMainForm
     Width = 39
     Align = alRight
     BorderStyle = bsNone
-    Color = 16185078
+    Color = clMenu
     Columns = <    
       item
         Alignment = taCenter

@@ -78,3 +78,16 @@ menuprogreload NAME INTERVAL COMMANDLINE
     search pattern.
     
 - `COMMANDLINE` - external program, which write menu structure to its standard output.
+
+
+# Example usage:
+
+On MS Windows:
+```
+# window menu
+simpleMenu.exe -w -c
+
+# run program or activate window or show filtered menu
+simpleMenu.exe -w -c -s 50 -q "(idea64.exe)" -1 "prog _Nova_instance idea64.exe"
+
+```

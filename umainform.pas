@@ -309,7 +309,10 @@ end;
 procedure TMainForm.AppDeactivate(Sender: TObject);
 begin
   if not FKeepOpen then
-    MainForm.Close;
+  begin
+    if FExecIfOne then
+        MainForm.Close;
+  end;
 end;
 
 procedure TMainForm.closeFindPanel(const aForce: boolean);
@@ -462,8 +465,7 @@ var
   lRecCount: longint;
 begin
   SQLMenuItemsShortcut.Close;
-  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger :=
-    SQLMenu.FieldByName('id').AsInteger;
+  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
   SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
   SQLMenuItemsShortcut.Open;
 
@@ -508,7 +510,7 @@ begin
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and
     (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload,
-    MITmenuwindow])) then
+    MITmenuwindow])) then { #todo : MITpath - doplnit }
   begin
     if not FKeyStop then
     begin
@@ -773,6 +775,8 @@ begin
     else if lItemType = MITwindow then
     begin
       ActivateWindow(SQLMenuItems.FieldByName('cmd').AsString);
+      if not FKeepOpen then
+        MainForm.Close;
     end
     else if lItemType = MITmenuwindow then
     begin
@@ -780,7 +784,7 @@ begin
         SQLMenuItems.FieldByName('id').AsInteger);
     end
     {$ENDIF}
-    else if lItemType = MITmenuprogreload then
+    else if lItemType = MITmenuprogreload then { #todo : MITpath - doplnit analogicky}
     begin
       lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
       lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
@@ -1070,7 +1074,7 @@ begin
       ' , search, shortcut, ' +
       ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
       +
-      ' from menuItem where itemType <> ''MITwinkey''  ';
+      ' from menuItem where itemType <> ''MITwinkey''  '; { #todo : MITwinignore - doplnit }
 
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '

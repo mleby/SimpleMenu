@@ -13,9 +13,10 @@ type
   TMenuItemType = (MITprog, MITmenu,
                   MITrunonce,   { TODO -cfeat : implementovat pro windows }
                   {$IFDEF Windows}
-                  MITmenuwindow, MITwindow, MITwinkey,
+                  MITmenuwindow, MITwindow, MITwinkey, { #todo : MITwinignore - doplnit }
                   {$ENDIF}
-                  MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone);
+                  MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone,
+                  MITpath);
 
   { TODO -cfeat : ??? add MITpath - internal support for generate menu for items in specific directory }
   { TODO -cfeat : ??? add MITlist/MITalist - internal support for list of files with relative/absolute paths}
@@ -299,7 +300,7 @@ end;
 
 function TMenuItemParser.GetSubMenuChar: string;
 begin
-  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow] then
+  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow] then { #todo : MITpath - doplnit }
     Result := '>'
   else
     Result := '';
@@ -360,6 +361,7 @@ begin
   { TODO -cfeat : lazyinclude/lazyincludeprog - include in separate thread }
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
+  { #todo : MITpath - doplnit }
   //else if AnsiStartsText('menusearch ', aLine) then
   //  prepareSearch(aLine) {TODO -oLebeda -cNone: menusearch}
   // menufile

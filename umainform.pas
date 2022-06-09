@@ -646,8 +646,10 @@ begin
     for s in slCmd do
     begin
       lParam := s.Replace('%clipbrd%', Clipboard.AsText);
+      { #todo : %date% %time% %isodate% }
 
-      { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY }
+      { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY #noft}
+      // #noft jen odstranit + přidat not like do FT dotazů
       if lParam = '#max' then
         AsyncProcess1.ShowWindow := swoMaximize
       else if lParam = '#min' then
@@ -902,7 +904,10 @@ procedure TMainForm.FormActivate(Sender: TObject);
 begin
   if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
   begin
-    MainForm.Close;
+    // on windows - if form cant get focus, run app without focus too...
+    MainForm.AlphaBlend := true;
+    MainForm.AlphaBlendValue := 10;
+    //MainForm.Close;
   end;
 
   if pnlFind.Visible then

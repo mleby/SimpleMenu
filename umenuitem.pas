@@ -11,7 +11,7 @@ type
 
   { TMenuItemParser }
   TMenuItemType = (MITprog, MITmenu,
-                  MITrunonce,   { TODO -cfeat : implementovat pro windows }
+                  MITrunonce,
                   {$IFDEF Windows}
                   MITmenuwindow, MITwindow, MITwinkey, { #todo : MITwinignore - doplnit }
                   {$ENDIF}

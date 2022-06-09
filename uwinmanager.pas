@@ -100,7 +100,6 @@ begin
       lClass := buffer;
 
       //List.Add(IntToStr(lDesktop + 1) + ' | ' + lTitle + ' | ' + GetCurrentActiveProcessPath(hWindow) + ' | ' + lClass + ' | '+ IntToHex(hWindow,4));
-      { #todo : Ošetøit vlastnicví okna }
       try // https://stackoverflow.com/questions/5951631/how-to-get-captions-of-actual-windows-currently-running
         lFullExe := GetCurrentActiveProcessPath(hWindow);
       Except
@@ -119,7 +118,7 @@ begin
       end;
       MainForm.SQLMenuItemsShortcutByCmd.close;
 
-      { TODO -cWM : seøadit dle desktopu a názvu}
+      { TODO -cWM : seøadit dle názvu}
       //showmessage(lExeFile + ' <> ' + ExtractFileName(aSelfExe));
       if lExeFile <> ExtractFileName(aSelfExe) then // not menu itself
       begin

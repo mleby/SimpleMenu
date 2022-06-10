@@ -79,6 +79,8 @@ type
     FSearchCount: longint;
     FLastResNo: integer; // for navigation over separators
     FLastFind: string;
+    procedure AplyGeneratedMenu(const aRoot: boolean;
+      const aMenuItemId: integer; const aSubMenuId: integer);
     procedure AppDeactivate(Sender: TObject);
     procedure closeFindPanel(const aForce: boolean = False);
     procedure FindSwitch;
@@ -96,14 +98,13 @@ type
     procedure showMenu(const aOrderBy: string = 'id'; const aName: string = '');
     procedure SetFormSize;
     procedure NavigateUp;
-    procedure WindowMenu(const aSubMenuId, aMenuItemId: integer;
-      const aRoot: boolean = False);
+    procedure WindowMenu(const aSubMenuId, aMenuItemId: integer; const aRoot: boolean = False);
+    procedure PathMenu(const aSubMenuId, aMenuItemId: integer; const aPath, aCmd:String; const aRoot: boolean = False);
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = '';
       aPath: string = ''; aReloadInterval: integer = 0): integer;
-    function setActiveMenu(const aIdMenu: longint;
-      const aOrderBy: string = 'id'): boolean;
+    function setActiveMenu(const aIdMenu: longint; const aOrderBy: string = 'id'): boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
     procedure AppendMenuItem(const aItem: string);
@@ -119,7 +120,7 @@ var
 implementation
 
 uses strutils, debugForm, uHacks, StreamIO, LCLType, Dialogs, lconvencoding,
-  LazUTF8Classes;
+  LazUTF8Classes, FileUtil;
 
 const
   C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -312,6 +313,68 @@ begin
   begin
     if FExecIfOne then
         MainForm.Close;
+  end;
+end;
+
+procedure TMainForm.AplyGeneratedMenu(const aRoot: boolean;
+  const aMenuItemId: integer; const aSubMenuId: integer);
+var
+  lMenuItemId: integer;
+  lSubMenuId: integer;
+  lLoad: longint;
+  lReload: longint;
+  lTime: longint;
+  lInterval: longint;
+  lResult: boolean;
+begin
+  lSubMenuId := aSubMenuId;
+  lMenuItemId := aMenuItemId;
+
+  MainGrid.BeginUpdate;
+  MainGridShortCut.BeginUpdate;
+  MainGridSubmenu.BeginUpdate;
+  try
+    if lSubMenuId = 0 then // if 0 create new menuitem
+    begin
+      // create menu
+      lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
+        SQLMenu.FieldByName('id').AsInteger,
+        SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
+        SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
+        lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
+    end
+    else
+    begin
+      setActiveMenu(lSubMenuId);
+
+      lLoad := SQLMenu.FieldByName('Load').AsInteger;
+      lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
+      lTime := DateTimeToTimeStamp(time).Time div 1000;
+      lInterval := lTime - lLoad;
+      if lInterval > lReload then
+      begin
+        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+          IntToStr(lSubMenuId));
+        LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName
+          );
+      end;
+
+    end;
+    lResult := setActiveMenu(lSubMenuId, 'name'); // reload after build
+
+    if aRoot then
+    begin
+      SQLMenu.Edit;
+      SQLMenu.FieldByName('upMenuId').AsInteger := 0;
+      SQLMenu.CheckBrowseMode;
+    end;
+
+  finally
+    MainGrid.EndUpdate(True);
+    MainGridShortCut.EndUpdate(True);
+    MainGridSubmenu.EndUpdate(True);
   end;
 end;
 
@@ -509,8 +572,7 @@ begin
   end;
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and
-    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload,
-    MITmenuwindow])) then { #todo : MITpath - doplnit }
+    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload, MITmenuwindow, MITmenupath])) then
   begin
     if not FKeyStop then
     begin
@@ -649,7 +711,9 @@ begin
       { #todo : %date% %time% %isodate% }
 
       { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY #noft}
-      // #noft jen odstranit + přidat not like do FT dotazů
+      { #todo : #byrecent - big change - need store items with identification and counter of run (only for run/runonce items)}
+      { #todo : #noft jen odstranit + přidat not like do FT dotazů }
+
       if lParam = '#max' then
         AsyncProcess1.ShowWindow := swoMaximize
       else if lParam = '#min' then
@@ -782,12 +846,24 @@ begin
     end
     else if lItemType = MITmenuwindow then
     begin
+      closeFindPanel(True); // reset after change menu
       WindowMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
         SQLMenuItems.FieldByName('id').AsInteger);
     end
     {$ENDIF}
-    else if lItemType = MITmenuprogreload then { #todo : MITpath - doplnit analogicky}
+    else if lItemType = MITmenupath then
     begin
+      closeFindPanel(True); // reset after change menu
+      PathMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
+        SQLMenuItems.FieldByName('id').AsInteger,
+        SQLMenuItems.FieldByName('subMenuPath').AsString,
+        SQLMenuItems.FieldByName('subMenuCmd').AsString
+        );
+    end
+    else if lItemType = MITmenuprogreload then { #todo : MITmenupath - doplnit analogicky}
+    begin
+      { #todo : is this ok for reset search? }
+      closeFindPanel(True); // reset after change menu
       lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
       lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
 
@@ -823,10 +899,8 @@ begin
     end
     else if lItemType = MITmenu then
     begin
+      closeFindPanel(True); // reset after change menu
       lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
-      // reload after navigate
-      //if lResult then
-      //   showMenu;
     end;
   finally
     Screen.Cursor := crDefault;
@@ -1221,15 +1295,100 @@ end;
 
 procedure TMainForm.WindowMenu(const aSubMenuId, aMenuItemId: integer;
   const aRoot: boolean = False);
-var
-  lResult: boolean;
-  lInterval: longint;
-  lTime: longint;
-  lReload: longint;
-  lLoad: longint;
-  lSubMenuId, lMenuItemId: integer;
 begin
   { TODO -cWM : zlikvidovat duplicitní konstrukce}
+  AplyGeneratedMenu(aRoot, aMenuItemId, aSubMenuId);
+end;
+
+procedure TMainForm.PathMenu(const aSubMenuId, aMenuItemId: integer;
+  const aPath, aCmd: String; const aRoot: boolean);
+var
+  lResult: boolean;
+  Attributes: Integer;
+  lSubMenuId, lMenuItemId: integer;
+
+  procedure generatePathMenu;
+  var
+    lMenuItemParser: TMenuItemParser;
+    lDirName: String;
+    lBaseName: String;
+    lFullName: String;
+    i: Integer;
+    MenuList: TStringList;
+    ListOfFolders: TStringList;
+    ListOfFiles: TStringList;
+  begin
+    { #todo : #filemask:* }
+    { #todo : #recursive }
+    { #todo : #bydatetime - sort by datetime of file }
+    { #todo : #nodir #nofile }
+    { #todo : more paths at once }
+    { #todo : #localmenufile:menu.txt #menufile:globalmenu.txt }
+    { #todo : filenamereplace .git include gitmenu.txt }
+    { #todo : filenamecontains .idea prog .... }
+
+    MenuList := TStringList.Create;
+    try
+      MenuList.Add('separator "Path: ' + aPath + '"');
+
+      { #todo : add as submenu to all directories by #menufile or #localmenufile}
+      Menulist.Add('prog "Double Commander" doublecmd.exe "' + aPath + '"');
+      Menulist.Add('prog "Explorer" explorer.exe "' + aPath + '" #max');
+      Menulist.Add('prog "PowerShell" wt.exe -d "' + aPath + '"');
+
+      // directories
+      Menulist.Add('separator Directories');
+      ListOfFolders := TStringList.Create;
+      try
+        FileUtil.FindAllDirectories(ListOfFolders, aPath, False);
+        ListOfFolders.Sort;
+        for i := 0 to (ListOfFolders.Count - 1) do
+        begin
+          lFullName := ListOfFolders[i];
+          lBaseName := ExtractFileName(lFullName);
+          MenuList.Add('menupath "' + StringReplace(lBaseName,'_','__',[rfIgnoreCase]) + '" "' + lFullName + '" "' + aCmd + '"');
+        end;
+      finally
+        ListOfFolders.Free;
+      end;
+
+      // files
+      Menulist.Add('separator Files');
+      ListOfFiles := TStringList.Create;
+      try
+        FileUtil.FindAllFiles(ListOfFiles, aPath, '*', False);
+        ListOfFiles.Sort;
+        for i := 0 to (ListOfFiles.Count - 1) do
+        begin
+          lFullName := ListOfFiles[i];
+          lBaseName := ExtractFileName(lFullName);
+          lDirName  := ExtractFileDir(lFullName);
+          MenuList.Add('prog "' + StringReplace(lBaseName,'_','__',[rfIgnoreCase]) + '" "'+aCmd+'" "' + lFullName + '" "#dir:' + lDirName + '"'); { #todo : special items }
+        end;
+
+      finally
+        ListOfFiles.Free;
+      end;
+
+      // menu
+      //ShowMessage(MenuList.Text);
+      for i := 0 to (MenuList.Count - 1) do
+      begin
+        lMenuItemParser := TMenuItemParser.Create(MenuList[i]);
+        try
+          MainForm.AddMenuItem(lMenuItemParser);
+        finally
+          FreeAndNil(lMenuItemParser);
+        end;
+      end;
+
+    finally
+      MenuList.Free;
+    end;
+  end;
+
+begin
+  // faHidden ??? what with this?
   lSubMenuId := aSubMenuId;
   lMenuItemId := aMenuItemId;
 
@@ -1244,34 +1403,19 @@ begin
         SQLMenu.FieldByName('id').AsInteger,
         SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
-        lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
-      LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      generatePathMenu;
     end
     else
     begin
-      setActiveMenu(lSubMenuId);
+      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(lMenuItemId));
+      lResult := setActiveMenu(lMenuItemId);
 
-      lLoad := SQLMenu.FieldByName('Load').AsInteger;
-      lReload := SQLMenu.FieldByName('reloadInterval').AsInteger;
-      lTime := DateTimeToTimeStamp(time).Time div 1000;
-      lInterval := lTime - lLoad;
-      if lInterval > lReload then
-      begin
-        MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
-          IntToStr(lSubMenuId));
-        LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
-      end;
+      generatePathMenu;
 
     end;
-    lResult := setActiveMenu(lSubMenuId, 'name'); // reload after build
 
-    if aRoot then
-    begin
-      SQLMenu.Edit;
-      SQLMenu.FieldByName('upMenuId').AsInteger := 0;
-      SQLMenu.CheckBrowseMode;
-    end;
+    lResult := setActiveMenu(lMenuItemId); // reload after build
 
   finally
     MainGrid.EndUpdate(True);

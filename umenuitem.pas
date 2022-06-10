@@ -16,9 +16,8 @@ type
                   MITmenuwindow, MITwindow, MITwinkey, { #todo : MITwinignore - doplnit }
                   {$ENDIF}
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone,
-                  MITpath);
+                  MITmenupath);
 
-  { TODO -cfeat : ??? add MITpath - internal support for generate menu for items in specific directory }
   { TODO -cfeat : ??? add MITlist/MITalist - internal support for list of files with relative/absolute paths}
   { TODO -cfeat : ??? add MITgit - internal support for load list of files from git }
 
@@ -51,6 +50,7 @@ type
     procedure prepareRunOnce(const aLine: string);
     procedure prepareProgreload(const aLine: string);
     procedure prepareWindowmenu(const aLine: string);
+    procedure preparePathmenu(const aLine: string);
     procedure prepareWinKey(const aLine: string);
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
@@ -188,6 +188,30 @@ begin
   end;
 end;
 
+procedure TMenuItemParser.preparePathmenu(const aLine: string);
+var
+  lSl: TStringList;
+  i: integer;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITmenupath;
+
+    setNameAndShotrCutKey(lSl[1]);
+    FSubMenuReloadInterval := -1; // const 0s
+
+    // for i := 2 to lsl.Count - 1 do
+    { #todo : check size of lsl }
+    FSubMenuPath := Trim(ReplaceStr(lSl[2],'"','')); { #todo : replace only on start and end }
+
+    for i := 3 to lsl.Count - 1 do
+      FSubMenuCmd := FSubMenuCmd + ' ' + lsl[i];
+    FSubMenuCmd := Trim(ReplaceStr(FSubMenuCmd,'"','')); { #todo : replace only on start and end }
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
 procedure TMenuItemParser.prepareWinKey(const aLine: string);
 var
   lSl: TStringList;
@@ -300,7 +324,7 @@ end;
 
 function TMenuItemParser.GetSubMenuChar: string;
 begin
-  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow] then { #todo : MITpath - doplnit }
+  if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow, MITmenupath] then
     Result := '>'
   else
     Result := '';
@@ -349,6 +373,8 @@ begin
     prepareSeparator(aLine)
   else if AnsiStartsText('menuwindow ', aLine) then
     prepareWindowmenu(aLine)
+  else if AnsiStartsText('menupath ', aLine) then
+    preparePathmenu(aLine)
   else if AnsiStartsText('winkey ', aLine) then
     prepareWinKey(aLine)
   else if AnsiStartsText('menu ', aLine) then
@@ -361,7 +387,6 @@ begin
   { TODO -cfeat : lazyinclude/lazyincludeprog - include in separate thread }
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
-  { #todo : MITpath - doplnit }
   //else if AnsiStartsText('menusearch ', aLine) then
   //  prepareSearch(aLine) {TODO -oLebeda -cNone: menusearch}
   // menufile

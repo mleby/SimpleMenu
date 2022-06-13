@@ -79,8 +79,8 @@ type
     FSearchCount: longint;
     FLastResNo: integer; // for navigation over separators
     FLastFind: string;
-    procedure AplyGeneratedMenu(const aRoot: boolean;
-      const aMenuItemId: integer; const aSubMenuId: integer);
+    procedure AplyGeneratedMenu(const aRoot: boolean; const aMenuItemId: integer;
+      const aSubMenuId: integer);
     procedure AppDeactivate(Sender: TObject);
     procedure closeFindPanel(const aForce: boolean = False);
     procedure FindSwitch;
@@ -98,13 +98,16 @@ type
     procedure showMenu(const aOrderBy: string = 'id'; const aName: string = '');
     procedure SetFormSize;
     procedure NavigateUp;
-    procedure WindowMenu(const aSubMenuId, aMenuItemId: integer; const aRoot: boolean = False);
-    procedure PathMenu(const aSubMenuId, aMenuItemId: integer; const aPath, aCmd:String; const aRoot: boolean = False);
+    procedure WindowMenu(const aSubMenuId, aMenuItemId: integer;
+      const aRoot: boolean = False);
+    procedure PathMenu(const aSubMenuId, aMenuItemId: integer;
+      const aPath, aCmd: string; const aRoot: boolean = False);
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = '';
       aPath: string = ''; aReloadInterval: integer = 0): integer;
-    function setActiveMenu(const aIdMenu: longint; const aOrderBy: string = 'id'): boolean;
+    function setActiveMenu(const aIdMenu: longint;
+      const aOrderBy: string = 'id'): boolean;
     procedure AddMenuItem(var lMenuItemParser: TMenuItemParser);
     procedure LoadMenuFromFile(const aFile: string);
     procedure AppendMenuItem(const aItem: string);
@@ -119,7 +122,8 @@ var
 
 implementation
 
-uses strutils, debugForm, uHacks, StreamIO, LCLType, Dialogs, lconvencoding,
+uses LazStringUtils, strutils, debugForm, uHacks, StreamIO, LCLType,
+  Dialogs, lconvencoding,
   LazUTF8Classes, FileUtil;
 
 const
@@ -137,16 +141,17 @@ begin
   if Application.HasOption('h', 'help') then
   begin
     ShowMessage(
-      'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' + #10#13 +
-      '         one of -f/-p/-m must be specified as  point for menu' +
+      'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' +
+      #10#13 + '         one of -f/-p/-m must be specified as  point for menu' +
       #10#13 + '    -h --help             show this help' + #10#13 +
       '    -k --keep             keep menu open after choise' + #10#13 +
       '    -f X --file=X         path to menu file used as start point for menu' +
-      #10#13 + '    -m X --menuitem=X     text content of menu' + #10#13 +
-      '    -p X --process=X      command for generate menu' + #10#13 +
-      '    -s X --search=X       count of menu items for automatic enable find' +
-      #10#13 + '    -q X --query=X        automatic enable find entry and fill start query'
-      + #10#13 + '    -r X --reload=X       dynamic menu with minimal chars for search' +
+      #10#13 + '    -m X --menuitem=X     text content of menu' +
+      #10#13 + '    -p X --process=X      command for generate menu' +
+      #10#13 + '    -s X --search=X       count of menu items for automatic enable find'
+      + #10#13 +
+      '    -q X --query=X        automatic enable find entry and fill start query' +
+      #10#13 + '    -r X --reload=X       dynamic menu with minimal chars for search' +
       #10#13 + '    -x X --showfile=X     extra options for menu cmd' +
       #10#13 + '    -w --windowmenu       window menu' + #10#13 +
       '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
@@ -224,7 +229,8 @@ begin
     if Application.GetOptionValue('w', 'windowmenu') <> '' then
     begin
       SQLMenu.Edit;
-      SQLMenu.FieldByName('path').AsString := Application.GetOptionValue('w', 'windowmenu');
+      SQLMenu.FieldByName('path').AsString :=
+        Application.GetOptionValue('w', 'windowmenu');
       SQLMenu.CheckBrowseMode;
       LoadMenuFromFile(SQLMenu.FieldByName('path').AsString);
     end;
@@ -312,7 +318,7 @@ begin
   if not FKeepOpen then
   begin
     if FExecIfOne then
-        MainForm.Close;
+      MainForm.Close;
   end;
 end;
 
@@ -528,7 +534,8 @@ var
   lRecCount: longint;
 begin
   SQLMenuItemsShortcut.Close;
-  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
+  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger :=
+    SQLMenu.FieldByName('id').AsInteger;
   SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
   SQLMenuItemsShortcut.Open;
 
@@ -572,7 +579,8 @@ begin
   end;
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and
-    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload, MITmenuwindow, MITmenupath])) then
+    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload,
+    MITmenuwindow, MITmenupath])) then
   begin
     if not FKeyStop then
     begin
@@ -660,7 +668,7 @@ procedure TMainForm.RunAsync(const aCmd: string);
 var
   sl, slCmd: TStringList;
   lParam, lCmd, lPath, l, s, lPreCmd: string;
-  lExe: RawByteString;
+  lExe: rawbytestring;
 const
   BEGIN_SL = 0;
 begin
@@ -857,10 +865,10 @@ begin
       PathMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger,
         SQLMenuItems.FieldByName('id').AsInteger,
         SQLMenuItems.FieldByName('subMenuPath').AsString,
-        SQLMenuItems.FieldByName('subMenuCmd').AsString
-        );
+        SQLMenuItems.FieldByName('subMenuCmd').AsString);
     end
-    else if lItemType = MITmenuprogreload then { #todo : MITmenupath - doplnit analogicky}
+    else if lItemType = MITmenuprogreload then
+      { #todo : MITmenupath - doplnit analogicky}
     begin
       { #todo : is this ok for reset search? }
       closeFindPanel(True); // reset after change menu
@@ -979,7 +987,7 @@ begin
   if FExecIfOne and (SQLMenuItems.RecordCount = 1) then
   begin
     // on windows - if form cant get focus, run app without focus too...
-    MainForm.AlphaBlend := true;
+    MainForm.AlphaBlend := True;
     MainForm.AlphaBlendValue := 10;
     //MainForm.Close;
   end;
@@ -1152,8 +1160,8 @@ begin
     lSql := 'select id, menuId, itemType, ' + ' name ' +
       ' , search, shortcut, ' +
       ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-      +
-      ' from menuItem where itemType <> ''MITwinkey''  '; { #todo : MITwinignore - doplnit }
+      + ' from menuItem where itemType <> ''MITwinkey''  ';
+    { #todo : MITwinignore - doplnit }
 
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '
@@ -1301,27 +1309,59 @@ begin
 end;
 
 procedure TMainForm.PathMenu(const aSubMenuId, aMenuItemId: integer;
-  const aPath, aCmd: String; const aRoot: boolean);
+  const aPath, aCmd: string; const aRoot: boolean);
 var
   lResult: boolean;
-  Attributes: Integer;
+  Attributes: integer;
   lSubMenuId, lMenuItemId: integer;
+  lSort: String;
 
   procedure generatePathMenu;
+  const
+    FM_FLAG = '#filemask:';
   var
     lMenuItemParser: TMenuItemParser;
-    lDirName: String;
-    lBaseName: String;
-    lFullName: String;
-    i: Integer;
+    lDirName: string;
+    lBaseName: string;
+    lFullName: string;
+    lCmd, lFileMask, lFlagName, lWord, lModifiedStr: string;
+    i, CounterVar: integer;
     MenuList: TStringList;
     ListOfFolders: TStringList;
     ListOfFiles: TStringList;
+    lRecursive, lFindDir, lFindFile, lByDateTime: boolean;
+    lFlagPos, lFlagValPos, lFlagEnd: SizeInt;
+    lModified: longint;
+    lModifiedDateTime: TDateTime;
   begin
-    { #todo : #filemask:* }
-    { #todo : #recursive }
-    { #todo : #bydatetime - sort by datetime of file }
-    { #todo : #nodir #nofile }
+    lCmd := aCmd;
+    lSort := 'name'; // default value
+
+    if ContainsText(lCmd, FM_FLAG) then
+    begin
+      { #todo : separate method extractFlagVal }
+      lFlagName := FM_FLAG;
+      lFlagPos := Pos(lFlagName, lCmd);
+      lFlagValPos := lFlagPos + Length(lFlagName);
+      lFlagEnd := Pos(' ', lCmd, lFlagValPos);
+      lFileMask := ExtractSubstr(lCmd, lFlagValPos, [' ']);
+      lCmd := ReplaceStr(lCmd, lFlagName + lFileMask, '');
+    end
+    else
+      lFileMask := '*';
+
+    // get flag
+    lRecursive := ContainsText(lCmd, '#recursive');
+    lFindDir := not ContainsText(lCmd, '#nodir');
+    lFindFile := not ContainsText(lCmd, '#nofile');
+    lByDateTime := ContainsText(lCmd, '#bydatetime');
+
+    // remove flag from command
+    lCmd := ReplaceStr(lCmd, '#recursive', '');
+    lCmd := ReplaceStr(lCmd, '#nodir', '');
+    lCmd := ReplaceStr(lCmd, '#nofile', '');
+    lCmd := ReplaceStr(lCmd, '#bydatetime', '');
+
     { #todo : more paths at once }
     { #todo : #localmenufile:menu.txt #menufile:globalmenu.txt }
     { #todo : filenamereplace .git include gitmenu.txt }
@@ -1336,38 +1376,57 @@ var
       Menulist.Add('prog "Explorer" explorer.exe "' + aPath + '" #max');
       Menulist.Add('prog "PowerShell" wt.exe -d "' + aPath + '"');
 
+      { #todo : separate method }
       // directories
-      Menulist.Add('separator Directories');
-      ListOfFolders := TStringList.Create;
-      try
-        FileUtil.FindAllDirectories(ListOfFolders, aPath, False);
-        ListOfFolders.Sort;
-        for i := 0 to (ListOfFolders.Count - 1) do
-        begin
-          lFullName := ListOfFolders[i];
-          lBaseName := ExtractFileName(lFullName);
-          MenuList.Add('menupath "' + StringReplace(lBaseName,'_','__',[rfIgnoreCase]) + '" "' + lFullName + '" "' + aCmd + '"');
+      if lFindDir then
+      begin
+        Menulist.Add('separator Directories');
+        ListOfFolders := TStringList.Create;
+        try
+          FileUtil.FindAllDirectories(ListOfFolders, aPath, lRecursive);
+          ListOfFolders.Sort;
+          for i := 0 to (ListOfFolders.Count - 1) do
+          begin
+            lFullName := ListOfFolders[i];
+            lBaseName := ExtractFileName(lFullName);
+            MenuList.Add('menupath "' + StringReplace(lBaseName, '_',
+              '__', [rfIgnoreCase]) + '" "' + lFullName + '" "' + lCmd + '"');
+          end;
+        finally
+          ListOfFolders.Free;
         end;
-      finally
-        ListOfFolders.Free;
+
       end;
 
+      { #todo : separate method }
       // files
-      Menulist.Add('separator Files');
-      ListOfFiles := TStringList.Create;
-      try
-        FileUtil.FindAllFiles(ListOfFiles, aPath, '*', False);
-        ListOfFiles.Sort;
-        for i := 0 to (ListOfFiles.Count - 1) do
-        begin
-          lFullName := ListOfFiles[i];
-          lBaseName := ExtractFileName(lFullName);
-          lDirName  := ExtractFileDir(lFullName);
-          MenuList.Add('prog "' + StringReplace(lBaseName,'_','__',[rfIgnoreCase]) + '" "'+aCmd+'" "' + lFullName + '" "#dir:' + lDirName + '"'); { #todo : special items }
-        end;
+      if lFindFile then
+      begin
+        Menulist.Add('separator Files');
+        ListOfFiles := TStringList.Create;
+        try
+          FileUtil.FindAllFiles(ListOfFiles, aPath, lFileMask, lRecursive);
+          ListOfFiles.Sort;
+          for i := 0 to (ListOfFiles.Count - 1) do
+          begin
+            lFullName := ListOfFiles[i];
+            lBaseName := ExtractFileName(lFullName);
+            if lByDateTime then
+            begin
+              lModified := FileAge(lFullName);
+              lModifiedDateTime := FileDateTodateTime(lModified);
+              DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
+              lBaseName := '[' + lModifiedStr + '] ' + lBaseName;
+            end;
+            lDirName := ExtractFileDir(lFullName);
+            MenuList.Add('prog "' + StringReplace(lBaseName, '_', '__', [rfIgnoreCase]) +
+              '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
+            { #todo : special items }
+          end;
 
-      finally
-        ListOfFiles.Free;
+        finally
+          ListOfFiles.Free;
+        end;
       end;
 
       // menu
@@ -1385,6 +1444,9 @@ var
     finally
       MenuList.Free;
     end;
+
+    if lByDateTime then
+      lSort := 'name desc';
   end;
 
 begin
@@ -1403,19 +1465,21 @@ begin
         SQLMenu.FieldByName('id').AsInteger,
         SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
+        IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
       generatePathMenu;
     end
     else
     begin
-      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(lMenuItemId));
+      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
+        IntToStr(lMenuItemId));
       lResult := setActiveMenu(lMenuItemId);
 
       generatePathMenu;
 
     end;
 
-    lResult := setActiveMenu(lMenuItemId); // reload after build
+    lResult := setActiveMenu(lMenuItemId, lSort); // reload after build
 
   finally
     MainGrid.EndUpdate(True);

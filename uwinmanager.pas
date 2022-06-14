@@ -118,9 +118,7 @@ begin
       end;
       MainForm.SQLMenuItemsShortcutByCmd.close;
 
-      { TODO -cWM : seøadit dle názvu}
-      //showmessage(lExeFile + ' <> ' + ExtractFileName(aSelfExe));
-      if lExeFile <> ExtractFileName(aSelfExe) then // not menu itself
+      if lExeFile <> ExtractFileName(aSelfExe) then // not add to menu self
       begin
         lMenuItemParser := TMenuItemParser.Create(lMenuTitle, IntToHex(hWindow,4), lShortCut);
         try
@@ -158,9 +156,10 @@ begin
     begin
       lFullExe := GetCurrentActiveProcessPath(hWindow);
 
-      if aExe = lFullExe then // not menu itself
+      if lFullExe.Contains(aExe) then // not menu itself
       begin
         Result := ActivateWindow(IntToHex(hWindow,4));
+        exit;
       end;
     end;
     hWindow := GetWindow(hWindow, GW_HWNDNEXT);

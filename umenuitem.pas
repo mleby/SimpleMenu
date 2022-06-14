@@ -18,9 +18,6 @@ type
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone,
                   MITmenupath);
 
-  { TODO -cfeat : ??? add MITlist/MITalist - internal support for list of files with relative/absolute paths}
-  { TODO -cfeat : ??? add MITgit - internal support for load list of files from git }
-
   TMenuItemParser = class(TObject)
   private
     FCmd: string;

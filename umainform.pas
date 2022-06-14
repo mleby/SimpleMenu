@@ -304,8 +304,6 @@ begin
       SQLMenu.CheckBrowseMode;
     end;
 
-    { TODO -cfix : Nefunguje filtr z cmd po zobrazení submenu }
-
     //MenuDB.ExecuteDirect('update menuItem set menuId = 1 where id = 2');
     //setActiveMenu(1);
   end
@@ -709,8 +707,6 @@ begin
       lExe := lCmd; // on windows this work ok ie. for pwsh.exe
 
     AsyncProcess1.Executable := lExe;
-    { TODO -cfeat : add execute in specific directory }
-    // AsyncProcess1.CurrentDirectory := ;
     AsyncProcess1.Parameters.Clear;
 
     for s in slCmd do
@@ -828,7 +824,6 @@ begin
     else if lItemType in [MITrunonce] then
     begin
       {$IFDEF Windows}
-      {TODO -oLebeda -cfeat: for runonce check running program on current desktop by exe}
       slCmd := TStringList.Create;
       try
         slCmd.Delimiter := ' ';
@@ -839,11 +834,9 @@ begin
       end;
       if not ActivateProcess(lCmd) then
       {$ENDIF}
-      begin
         RunAsync(SQLMenuItems.FieldByName('cmd').AsString);
-        if not FKeepOpen then
-          MainForm.Close;
-      end;
+      if not FKeepOpen then
+        MainForm.Close;
     end
     {$IFDEF Windows}
     else if lItemType = MITwindow then
@@ -868,14 +861,11 @@ begin
         SQLMenuItems.FieldByName('subMenuCmd').AsString);
     end
     else if lItemType = MITmenuprogreload then
-      { #todo : MITmenupath - doplnit analogicky}
     begin
-      { #todo : is this ok for reset search? }
       closeFindPanel(True); // reset after change menu
       lSubMenuId := SQLMenuItems.FieldByName('subMenuId').AsInteger;
       lMenuItemId := SQLMenuItems.FieldByName('id').AsInteger;
 
-      { TODO -crefactor : sjednotit s předchozí větví a obalit beginUpdate/EndUpdate }
       if lSubMenuId = 0 then
       begin
         // create menu

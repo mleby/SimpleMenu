@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, DB, sqlite3conn, sqldb, Forms, Controls, Graphics,
   DBGrids, ActnList, ExtCtrls, StdCtrls, Grids,
-  AsyncProcess, Clipbrd, LazUTF8, UTF8Process, uMenuItem,
+  AsyncProcess, Clipbrd, LazUTF8, UTF8Process, LazFileUtils, uMenuItem,
   {$IFDEF Windows}
   uwinmanager,
   {$ENDIF}
@@ -1314,7 +1314,6 @@ var
   lResult: boolean;
   Attributes: integer;
   lSubMenuId, lMenuItemId: integer;
-  lSort: String;
 
   procedure generatePathMenu;
   const
@@ -1324,18 +1323,19 @@ var
     lDirName: string;
     lBaseName: string;
     lFullName: string;
-    lCmd, lFileMask, lFlagName, lWord, lModifiedStr: string;
+    lCmd, lFileMask, lFlagName, lWord, lModifiedStr, lLocalDirName: string;
     i, CounterVar: integer;
     MenuList: TStringList;
-    ListOfFolders: TStringList;
-    ListOfFiles: TStringList;
-    lRecursive, lFindDir, lFindFile, lByDateTime: boolean;
+    lListOfFolders: TStringList;
+    lListOfFiles: TStringList;
+    lRecursive, lFindDir, lFindFile, lByDateTime, lReverse: boolean;
     lFlagPos, lFlagValPos, lFlagEnd: SizeInt;
     lModified: longint;
     lModifiedDateTime: TDateTime;
+    lNameFields: SysUtils.TStringArray;
+    lSortedListOfFiles: TStrings;
   begin
     lCmd := aCmd;
-    lSort := 'name'; // default value
 
     if ContainsText(lCmd, FM_FLAG) then
     begin
@@ -1354,13 +1354,15 @@ var
     lRecursive := ContainsText(lCmd, '#recursive');
     lFindDir := not ContainsText(lCmd, '#nodir');
     lFindFile := not ContainsText(lCmd, '#nofile');
-    lByDateTime := ContainsText(lCmd, '#bydatetime');
+    lByDateTime := ContainsText(lCmd, '#datetime');
+    lReverse := ContainsText(lCmd, '#reverse');
 
     // remove flag from command
     lCmd := ReplaceStr(lCmd, '#recursive', '');
     lCmd := ReplaceStr(lCmd, '#nodir', '');
     lCmd := ReplaceStr(lCmd, '#nofile', '');
-    lCmd := ReplaceStr(lCmd, '#bydatetime', '');
+    lCmd := ReplaceStr(lCmd, '#datetime', '');
+    lcmd := ReplaceStr(lCmd, '#reverse', '');
 
     { #todo : more paths at once }
     { #todo : #localmenufile:menu.txt #menufile:globalmenu.txt }
@@ -1381,19 +1383,19 @@ var
       if lFindDir then
       begin
         Menulist.Add('separator Directories');
-        ListOfFolders := TStringList.Create;
+        lListOfFolders := TStringList.Create;
         try
-          FileUtil.FindAllDirectories(ListOfFolders, aPath, lRecursive);
-          ListOfFolders.Sort;
-          for i := 0 to (ListOfFolders.Count - 1) do
+          FileUtil.FindAllDirectories(lListOfFolders, aPath, lRecursive);
+          lListOfFolders.Sort;
+          for i := 0 to (lListOfFolders.Count - 1) do
           begin
-            lFullName := ListOfFolders[i];
+            lFullName := lListOfFolders[i];
             lBaseName := ExtractFileName(lFullName);
             MenuList.Add('menupath "' + StringReplace(lBaseName, '_',
               '__', [rfIgnoreCase]) + '" "' + lFullName + '" "' + lCmd + '"');
           end;
         finally
-          ListOfFolders.Free;
+          lListOfFolders.Free;
         end;
 
       end;
@@ -1403,29 +1405,64 @@ var
       if lFindFile then
       begin
         Menulist.Add('separator Files');
-        ListOfFiles := TStringList.Create;
+        lListOfFiles := TStringList.Create;
         try
-          FileUtil.FindAllFiles(ListOfFiles, aPath, lFileMask, lRecursive);
-          ListOfFiles.Sort;
-          for i := 0 to (ListOfFiles.Count - 1) do
+          FileUtil.FindAllFiles(lListOfFiles, aPath, lFileMask, lRecursive);
+
+          // add extra attributes
+          if lByDateTime then
           begin
-            lFullName := ListOfFiles[i];
-            lBaseName := ExtractFileName(lFullName);
-            if lByDateTime then
+            for i := 0 to (lListOfFiles.Count - 1) do
             begin
+              lFullName := lListOfFiles[i];
               lModified := FileAge(lFullName);
               lModifiedDateTime := FileDateTodateTime(lModified);
               DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
-              lBaseName := '[' + lModifiedStr + '] ' + lBaseName;
+              lListOfFiles[i] := '[' + lModifiedStr + ']*' + lFullName;
             end;
-            lDirName := ExtractFileDir(lFullName);
-            MenuList.Add('prog "' + StringReplace(lBaseName, '_', '__', [rfIgnoreCase]) +
-              '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
-            { #todo : special items }
+          end;
+
+          // sort
+          lListOfFiles.Sort;
+          if lReverse then
+            lSortedListOfFiles := lListOfFiles.Reverse
+          else
+            lSortedListOfFiles := lListOfFiles;
+
+          try
+            // build menu items
+            for i := 0 to (lSortedListOfFiles.Count - 1) do
+            begin
+              if lSortedListOfFiles[i].Contains('*') then
+              begin
+                lNameFields := lSortedListOfFiles[i].Split('*');
+                lModifiedStr := lNameFields[0];
+                lFullName := lNameFields[1];
+              end
+              else
+                lFullName := lSortedListOfFiles[i];
+
+              lDirName := ExtractFileDir(lFullName);
+              lLocalDirName := lDirName.Replace(AppendPathDelim(aPath), '');
+
+              lBaseName := ExtractFileName(lFullName);
+              if lRecursive then
+                lBaseName := lLocalDirName + PathDelim + lBaseName;
+              if lByDateTime then
+                lBaseName := lModifiedStr + ' ' + lBaseName;
+
+
+
+              MenuList.Add('prog "' + StringReplace(lBaseName, '_', '__', [rfIgnoreCase]) +
+                '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
+              { #todo : special items }
+            end;
+          finally
+            lSortedListOfFiles.Free;
           end;
 
         finally
-          ListOfFiles.Free;
+          lListOfFiles.Free;
         end;
       end;
 
@@ -1444,13 +1481,9 @@ var
     finally
       MenuList.Free;
     end;
-
-    if lByDateTime then
-      lSort := 'name desc';
   end;
 
 begin
-  // faHidden ??? what with this?
   lSubMenuId := aSubMenuId;
   lMenuItemId := aMenuItemId;
 
@@ -1479,7 +1512,7 @@ begin
 
     end;
 
-    lResult := setActiveMenu(lMenuItemId, lSort); // reload after build
+    lResult := setActiveMenu(lMenuItemId); // reload after build
 
   finally
     MainGrid.EndUpdate(True);

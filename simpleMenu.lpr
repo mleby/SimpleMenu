@@ -7,7 +7,7 @@ Uses
   cthreads,
   {$ENDIF}{$ENDIF}
   sysutils, Forms, Dialogs, Interfaces, uMainForm, uMenuItem, debugForm, uTools,
-  uwinmanager, uHacks
+  uwinmanager, uHacks, uInputForm
   { you can add units after this };
 
 {$R *.res}
@@ -28,7 +28,6 @@ Begin
   Application.MainFormOnTaskBar := False;
   Application.TaskBarBehavior := tbSingleButton;
   {$ENDIF}
-
   Application.Run;
 End.
 

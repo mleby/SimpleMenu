@@ -123,7 +123,7 @@ var
 implementation
 
 uses LazStringUtils, strutils, debugForm, uHacks, StreamIO, LCLType,
-  Dialogs, lconvencoding,
+  Dialogs, lconvencoding, uInputForm,
   LazUTF8Classes, FileUtil;
 
 const
@@ -186,6 +186,8 @@ begin
   //MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
 
+  { TODO -cfeat : doplnit do struktury menu příznak origin_soubor a řádek a na klávesovou zkratku F4 odskočit - pokud bude vyplněn }
+
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect(
@@ -209,7 +211,10 @@ begin
     MainForm.Height := 563;
     MainForm.Position := poScreenCenter;
     MainForm.FormMode := FMCentral;
+    { #todo : place on active monitor }
+    //ShowMessage(IntToStr(Screen.MonitorFromWindow(GetCurrentWindow).MonitorNum));
   end;
+
 
   if Application.HasOption('s', 'search') then
     MainForm.SearchCount := StrToInt(Application.GetOptionValue('s', 'search'))
@@ -667,6 +672,7 @@ var
   sl, slCmd: TStringList;
   lParam, lCmd, lPath, l, s, lPreCmd: string;
   lExe: rawbytestring;
+  lInputForm: TInputForm;
 const
   BEGIN_SL = 0;
 begin
@@ -713,6 +719,18 @@ begin
     begin
       lParam := s.Replace('%clipbrd%', Clipboard.AsText);
       { #todo : %date% %time% %isodate% }
+
+      if lParam.Contains('%input%') then
+      begin
+        lInputForm := TInputForm.Create(self);
+        try
+          lInputForm.Caption := 'User input: ' + aCmd;
+          lInputForm.ShowModal;
+          lParam := s.Replace('%input%', lInputForm.InputEdit.Text);
+        finally
+          lInputForm.Free;
+        end;
+      end;
 
       { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY #noft}
       { #todo : #byrecent - big change - need store items with identification and counter of run (only for run/runonce items)}
@@ -1150,9 +1168,9 @@ begin
     lSql := 'select id, menuId, itemType, ' + ' name ' +
       ' , search, shortcut, ' +
       ' cmd, subMenuPath, subMenuCmd, subMenuReloadInterval, subMenuId, subMenuChar, width '
-      + ' from menuItem where itemType <> ''MITwinkey''  ';
-    { #todo : MITwinignore - doplnit }
+      + ' from menuItem where itemType not in (''MITwinkey'',''MITwinignore'') ';
 
+    // basic filter
     if aName <> '' then
       lSql := lSql + ' and name = ''' + Trim(aName) + ''' '
     else if not lGlobalSearch then
@@ -1165,7 +1183,10 @@ begin
       lSql := lSql + ' and itemType <> ''MITmenu'' ';
     end;
 
+    // winignore
+    lSql := lSql + ' and (itemType <> ''MITwindow'' or not exists ( select 1 from menuItem im where im.itemType = ''MITwinignore'' and instr(menuItem.name, im.name))) ';
 
+    // search
     if (lSearchText <> '') and not isExternalSearch and (aName = '') then
     begin
       lSql := lSql + ' and ((search like ''%' + lSearchText +

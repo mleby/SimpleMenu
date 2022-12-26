@@ -106,13 +106,13 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <CommandLineParams Value="-f x:/Projects/SimpleMenu/menu.txt  -c -s 50"/>
+        <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -c -s 50"/>
       </local>
       <FormatVersion Value="2"/>
       <Modes Count="1">
         <Mode0 Name="default">
           <local>
-            <CommandLineParams Value="-f x:/Projects/SimpleMenu/menu.txt  -c -s 50"/>
+            <CommandLineParams Value="-f C:/SyncRepo/programs/menu.txt -c -s 50"/>
           </local>
         </Mode0>
       </Modes>
@@ -131,7 +131,7 @@
         <PackageName Value="LCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="simpleMenu.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -171,6 +171,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="uHacks"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="uinputform.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="InputForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uInputForm"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -190,4 +198,11 @@
       </Options>
     </Linking>
   </CompilerOptions>
+  <Debugging>
+    <Exceptions Count="1">
+      <Item1>
+        <Name Value="EProcess"/>
+      </Item1>
+    </Exceptions>
+  </Debugging>
 </CONFIG>

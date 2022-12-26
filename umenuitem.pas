@@ -13,10 +13,13 @@ type
   TMenuItemType = (MITprog, MITmenu,
                   MITrunonce,
                   {$IFDEF Windows}
-                  MITmenuwindow, MITwindow, MITwinkey, { #todo : MITwinignore - doplnit }
+                  MITmenuwindow, MITwindow, MITwinkey, MITwinignore,
                   {$ENDIF}
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone,
                   MITmenupath);
+
+
+    { TODO -cfeat : doplnìní MITMenudefault - zobrazí pøíznak | místo > pøi entru spustí první položku submenu, pøi šipce rozbalí, pøi navigaci jen naviguje bez spuštìní }
 
   TMenuItemParser = class(TObject)
   private
@@ -49,6 +52,7 @@ type
     procedure prepareWindowmenu(const aLine: string);
     procedure preparePathmenu(const aLine: string);
     procedure prepareWinKey(const aLine: string);
+    procedure prepareWinIgnore(const aLine: string);
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
   public
@@ -230,6 +234,24 @@ begin
   end;
 end;
 
+procedure TMenuItemParser.prepareWinIgnore(const aLine: string);
+var
+  lSl: TStringList;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITwinignore;
+
+    FName := lSl[1];
+    QuoteTrim(FName);
+    FName := Trim(FName);
+
+    FCmd := FName;
+  finally
+    FreeAndNil(lSl);
+  end;
+end;
+
 procedure TMenuItemParser.prepareSeparator(const aLine: string);
 var
   lSl: TStringList;
@@ -374,6 +396,8 @@ begin
     preparePathmenu(aLine)
   else if AnsiStartsText('winkey ', aLine) then
     prepareWinKey(aLine)
+  else if AnsiStartsText('winignore ', aLine) then
+    prepareWinIgnore(aLine)
   else if AnsiStartsText('menu ', aLine) then
     startNewMenu(aLine)
   else if AnsiStartsText('}', aLine) then

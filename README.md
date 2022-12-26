@@ -56,12 +56,12 @@ TODO
   will show `name` ans `m` as shortcut. Shortcut will be automatic append if
   user explicitly not write it. For off automatic insert shortcut, can be use
   as shortcut space (ie: `"name_ "`). 
-  
+
   In name of separator and prog can use `%clipbrd%` as placeholder for text
   from system clipboard.
-  
+
 - `COMMANDLINE` - external program, which write menu structure to its standard output.
-  
+
 ## Dynamic submenu
 
 ```
@@ -76,8 +76,18 @@ menuprogreload NAME INTERVAL COMMANDLINE
     minimal count characters for execute build (usable for search in realy big
     count of items). Placeholder `%s` in commandline will be substitute by
     search pattern.
-    
+
 - `COMMANDLINE` - external program, which write menu structure to its standard output.
+
+## winignore
+
+Ignore some windows in winmenu.
+
+`winignore NAME`
+
+- `NAME` - substring content of ignore
+
+Example: `winignore (ApplicationFrameHost.exe)` - ignore items containing `(ApplicationFrameHost.exe)`
 
 
 # Example usage:

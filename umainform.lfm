@@ -104,7 +104,7 @@ object MainForm: TMainForm
         MinSize = 12
         MaxSize = 250
         Title.Caption = 'M'
-        Width = 35
+        Width = 28
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -116,7 +116,7 @@ object MainForm: TMainForm
     ReadOnly = True
     Scrollbars = ssAutoVertical
     TabOrder = 1
-    OnCellClick = MainGridCellClick
+    OnCellClick = MainGridCellClickExpand
     OnDrawColumnCell = MainGridSubmenuDrawColumnCell
     OnKeyPress = MainGridKeyPress
     OnKeyUp = MainGridKeyUp
@@ -170,7 +170,7 @@ object MainForm: TMainForm
         MinSize = 12
         MaxSize = 250
         Title.Caption = 'S'
-        Width = 29
+        Width = 23
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS

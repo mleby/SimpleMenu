@@ -10,16 +10,13 @@ uses
 type
 
   { TMenuItemParser }
-  TMenuItemType = (MITprog, MITmenu,
+  TMenuItemType = (MITprog, MITmenu, MITmenudefault,
                   MITrunonce,
                   {$IFDEF Windows}
                   MITmenuwindow, MITwindow, MITwinkey, MITwinignore,
                   {$ENDIF}
                   MITmenufile, MITmenuprog, MITmenuprogreload, MITseparator, MITEndMenu, MITNone,
                   MITmenupath);
-
-
-    { TODO -cfeat : doplnìní MITMenudefault - zobrazí pøíznak | místo > pøi entru spustí první položku submenu, pøi šipce rozbalí, pøi navigaci jen naviguje bez spuštìní }
 
   TMenuItemParser = class(TObject)
   private
@@ -43,6 +40,7 @@ type
     function SplitMenuLine(const aLine: string): TStringList;
 
     procedure startNewMenu(const aLine: string);
+    procedure startNewMenuDefault(const aLine: string);
     procedure endMenu;
 
     procedure prepareProg(const aLine: string);
@@ -134,8 +132,6 @@ begin
     {$ENDIF}
 
     setNameAndShotrCutKey(lSl[1]);
-
-    {TODO -oLebeda -cfeat: store somewhere runonce check param (3)}
 
     for i := 2 to lsl.Count - 1 do
       FCmd := FCmd + ' ' + lsl[i];
@@ -324,7 +320,22 @@ begin
   finally
     FreeAndNil(lSl);
   end;
+end;
 
+procedure TMenuItemParser.startNewMenuDefault(const aLine: string);
+var
+  lSl: TStringList;
+begin
+  lSl := SplitMenuLine(aLine);
+  try
+    FItemType := MITmenudefault;
+
+    setNameAndShotrCutKey(lSl[1]);
+
+    FSubMenuId := MainForm.AddMenu(FName, FMenuId);
+  finally
+    FreeAndNil(lSl);
+  end;
 end;
 
 procedure TMenuItemParser.endMenu;
@@ -345,6 +356,8 @@ function TMenuItemParser.GetSubMenuChar: string;
 begin
   if FItemType in [MITmenu, MITmenufile, MITmenuprog, MITmenuprogreload, MITmenuwindow, MITmenupath] then
     Result := '>'
+  else if FItemType = MITMenudefault then
+    Result := '|'
   else
     Result := '';
 end;
@@ -400,12 +413,12 @@ begin
     prepareWinIgnore(aLine)
   else if AnsiStartsText('menu ', aLine) then
     startNewMenu(aLine)
+  else if AnsiStartsText('menudefault ', aLine) then
+    startNewMenuDefault(aLine)
   else if AnsiStartsText('}', aLine) then
     endMenu
   else if AnsiStartsText('include ', aLine) then
     includeItems(aLine)
-  { TODO -cfeat : includeprog - include output from program (once) }
-  { TODO -cfeat : lazyinclude/lazyincludeprog - include in separate thread }
   else if AnsiStartsText('menuprogreload ', aLine) then
     prepareProgreload(aLine)
   //else if AnsiStartsText('menusearch ', aLine) then

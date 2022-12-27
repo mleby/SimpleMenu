@@ -55,6 +55,7 @@ type
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure MainGridCellClick(Column: TColumn);
+    procedure MainGridCellClickExpand(Column: TColumn);
     procedure MainGridDrawColumnCell(Sender: TObject; const Rect: TRect;
       DataCol: integer; Column: TColumn; State: TGridDrawState);
     procedure MainGridEnter(Sender: TObject);
@@ -76,6 +77,7 @@ type
     FExecIfOne: boolean;
     FDefaultItem: string;
     FKeyStop: boolean;
+    FKeyRunDefault: boolean;
     FSearchCount: longint;
     FLastResNo: integer; // for navigation over separators
     FLastFind: string;
@@ -156,7 +158,6 @@ begin
       #10#13 + '    -w --windowmenu       window menu' + #10#13 +
       '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
     Halt;
-    { TODO -cfeat : nahrazení %s pomocí uživatelského stringu : jako oddělovač - při spuštění při neakvním vyhledávání se zeptat }
     { TODO -crefactor : Vyčlenit práci s DB do samostatného DM }
 
   end;
@@ -486,7 +487,16 @@ end;
 
 procedure TMainForm.MainGridCellClick(Column: TColumn);
 begin
+  FKeyRunDefault := True;
   acRun.Execute;
+  FKeyRunDefault := False;
+end;
+
+procedure TMainForm.MainGridCellClickExpand(Column: TColumn);
+begin
+  FKeyRunDefault := False;
+  acRun.Execute;
+  FKeyRunDefault := False;
 end;
 
 procedure TMainForm.MainGridDrawColumnCell(Sender: TObject; const Rect: TRect;
@@ -537,9 +547,8 @@ var
   lRecCount: longint;
 begin
   SQLMenuItemsShortcut.Close;
-  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger :=
-    SQLMenu.FieldByName('id').AsInteger;
-  SQLMenuItemsShortcut.ParamByName('shortcut').AsString := key;
+  SQLMenuItemsShortcut.ParamByName('idMenu').AsInteger := SQLMenu.FieldByName('id').AsInteger;
+  SQLMenuItemsShortcut.ParamByName('shortcut').AsString := LowerCase(key);
   SQLMenuItemsShortcut.Open;
 
   lRecCount := SQLMenuItemsShortcut.RecordCount;
@@ -547,7 +556,9 @@ begin
   if (lRecCount = 1) and SQLMenuItems.Locate('id',
     SQLMenuItemsShortcut.FieldByName('id').AsInteger, []) then
   begin
+    FKeyRunDefault := (Key = LowerCase(Key));
     acRun.Execute;
+    FKeyRunDefault := false;
     key := #0;
   end
   else if (lRecCount > 1) then
@@ -582,12 +593,14 @@ begin
   end;
 
   if (Key = VK_Return) or ((Key = VK_RIGHT) and
-    (lItemType in [MITmenu, MITmenuprog, MITmenufile, MITmenuprogreload,
+    (lItemType in [MITmenu, MITmenudefault, MITmenuprog, MITmenufile, MITmenuprogreload,
     MITmenuwindow, MITmenupath])) then
   begin
     if not FKeyStop then
     begin
+      FKeyRunDefault := (Key = VK_Return);
       acRun.Execute;
+      FKeyRunDefault := False;
     end
     else
     begin
@@ -718,7 +731,18 @@ begin
     for s in slCmd do
     begin
       lParam := s.Replace('%clipbrd%', Clipboard.AsText);
-      { #todo : %date% %time% %isodate% }
+
+      // https://www.freepascal.org/docs-html/rtl/sysutils/formatchars.html
+      lParam := lParam.Replace('%isodate%', FormatDateTime('yyyy-mm-dd', Now));
+      lParam := lParam.Replace('%year%', FormatDateTime('yyyy', Now));
+      lParam := lParam.Replace('%month%', FormatDateTime('mm', Now));
+      lParam := lParam.Replace('%day%', FormatDateTime('dd', Now));
+      lParam := lParam.Replace('%weekday%', FormatDateTime('ddd', Now));
+
+      lParam := lParam.Replace('%isotime%', FormatDateTime('hh:nn:ss', Now));
+      lParam := lParam.Replace('%hour%', FormatDateTime('hh', Now));
+      lParam := lParam.Replace('%minute%', FormatDateTime('nn', Now));
+      lParam := lParam.Replace('%second%', FormatDateTime('ss', Now));
 
       if lParam.Contains('%input%') then
       begin
@@ -732,9 +756,7 @@ begin
         end;
       end;
 
-      { TODO : zpracovat parametry příkazu #max #min #x:N #y:N #width:N #height:N #dir:XY #noft}
-      { #todo : #byrecent - big change - need store items with identification and counter of run (only for run/runonce items)}
-      { #todo : #noft jen odstranit + přidat not like do FT dotazů }
+      { TODO : zpracovat parametry příkazu #left:N #top:N #width:N #height:N #dir:XY}
 
       if lParam = '#max' then
         AsyncProcess1.ShowWindow := swoMaximize
@@ -917,6 +939,11 @@ begin
     begin
       closeFindPanel(True); // reset after change menu
       lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
+    end
+    else if lItemType = MITmenudefault then
+    begin
+      closeFindPanel(True); // reset after change menu
+      lResult := setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
     end;
   finally
     Screen.Cursor := crDefault;
@@ -1011,9 +1038,7 @@ end;
 
 procedure TMainForm.SQLMenuAfterScroll(DataSet: TDataSet);
 begin
-  { TODO -crefactor : smazat zakomentovaný kód a prázdné metody }
-  //if not SQLMenu.Modified then
-  //   showMenu;
+
 end;
 
 procedure TMainForm.ThrTimerTimer(Sender: TObject);
@@ -1200,6 +1225,13 @@ begin
     SQLMenuItems.SQL.Text := lSql;
     SQLMenuItems.Open;
 
+    // execute dafault item
+    if FKeyRunDefault and (SQLMenuItems.RecordCount > 0) then
+    begin
+      acRun.Execute;
+      AppDeactivate(self);
+    end;
+
     // direct execute if FExecIfOne and only one item found
     if FExecIfOne then
     begin
@@ -1315,7 +1347,6 @@ end;
 procedure TMainForm.WindowMenu(const aSubMenuId, aMenuItemId: integer;
   const aRoot: boolean = False);
 begin
-  { TODO -cWM : zlikvidovat duplicitní konstrukce}
   AplyGeneratedMenu(aRoot, aMenuItemId, aSubMenuId);
 end;
 
@@ -1350,7 +1381,6 @@ var
 
     if ContainsText(lCmd, FM_FLAG) then
     begin
-      { #todo : separate method extractFlagVal }
       lFlagName := FM_FLAG;
       lFlagPos := Pos(lFlagName, lCmd);
       lFlagValPos := lFlagPos + Length(lFlagName);
@@ -1389,7 +1419,6 @@ var
       Menulist.Add('prog "Explorer" explorer.exe "' + aPath + '" #max');
       Menulist.Add('prog "PowerShell" wt.exe -d "' + aPath + '"');
 
-      { #todo : separate method }
       // directories
       if lFindDir then
       begin
@@ -1411,7 +1440,6 @@ var
 
       end;
 
-      { #todo : separate method }
       // files
       if lFindFile then
       begin
@@ -1567,7 +1595,6 @@ begin
   SQLMenuItems.FieldByName('menuId').AsInteger := lMenuItemParser.menuId;
   SQLMenuItems.FieldByName('itemType').AsString := MitToStr(lMenuItemParser.itemType);
   SQLMenuItems.FieldByName('name').AsWideString := lMenuItemParser.Name;
-  { TODO -cfeat : nahradit _ mezerami ve jméně }
   SQLMenuItems.FieldByName('search').AsString := lMenuItemParser.search;
   SQLMenuItems.FieldByName('shortcut').AsString := lMenuItemParser.shortcut;
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;

@@ -143,7 +143,6 @@ var
 begin
   Result := False;
 
-
   // load list windows
   hDesktop := GetDeskTopWindow;
   hWindow := GetWindow(hDesktop, GW_CHILD);

@@ -64,6 +64,7 @@ type
     procedure MainGridKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure MainGridSubmenuDrawColumnCell(Sender: TObject;
       const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
+    procedure MenuDSDataChange(Sender: TObject; Field: TField);
     procedure pnlFindEnter(Sender: TObject);
     procedure pnlFindExit(Sender: TObject);
     procedure SQLMenuAfterInsert(DataSet: TDataSet);
@@ -106,7 +107,7 @@ type
       const aPath, aCmd: string; const aRoot: boolean = False);
     { private declarations }
   public
-    function AddMenu(aName: string; aUpMenuId: longint; aCmd: string = '';
+    function AddMenu(aName: string; aUpMenuId: longint; aMenuType: TMenuItemType; aCmd: string = '';
       aPath: string = ''; aReloadInterval: integer = 0): integer;
     function setActiveMenu(const aIdMenu: longint;
       const aOrderBy: string = 'id'): boolean;
@@ -192,7 +193,7 @@ begin
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect(
-    'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER)');
+    'CREATE TABLE IF NOT EXISTS menu (id INTEGER PRIMARY KEY , upMenuId INTEGER, name NOT NULL, cmd, path, load INTEGER, reloadInterval INTEGER, menuItemType)');
   MenuDB.ExecuteDirect(
     'CREATE TABLE IF NOT EXISTS menuItem (id INTEGER PRIMARY KEY , menuId INTEGER NOT NULL, itemType, name, search, shortcut, cmd, subMenuPath, subMenuCmd, subMenuReloadInterval INTEGER, subMenuId INTEGER, subMenuChar, width INTEGER DEFAULT 100, FOREIGN KEY(menuId) REFERENCES menu(id))');
   MenuDB.Transaction.Commit;
@@ -201,7 +202,7 @@ begin
   SQLMenuItems.Active := True;
 
   // fill root menu
-  AddMenu('ROOT', 0);
+  AddMenu('ROOT', 0, MITmenu);
   SQLMenu.First;
 
   { TODO -crefactor : command line params do lpr }
@@ -349,6 +350,7 @@ begin
       // create menu
       lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
         SQLMenu.FieldByName('id').AsInteger,
+        strToMit(SQLMenuItems.FieldByName('itemType').AsString),
         SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
       MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
@@ -518,6 +520,11 @@ procedure TMainForm.MainGridSubmenuDrawColumnCell(Sender: TObject;
   const Rect: TRect; DataCol: integer; Column: TColumn; State: TGridDrawState);
 begin
   SetSeparatorRow(State, Column, DataCol, Rect, MainGridSubmenu);
+end;
+
+procedure TMainForm.MenuDSDataChange(Sender: TObject; Field: TField);
+begin
+
 end;
 
 procedure TMainForm.pnlFindEnter(Sender: TObject);
@@ -911,6 +918,7 @@ begin
         // create menu
         lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
           SQLMenu.FieldByName('id').AsInteger,
+          strToMit(SQLMenuItems.FieldByName('itemType').AsString),
           SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
           SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
         MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
@@ -1226,7 +1234,7 @@ begin
     SQLMenuItems.Open;
 
     // execute dafault item
-    if FKeyRunDefault and (SQLMenuItems.RecordCount > 0) then
+    if FKeyRunDefault and (strToMit(SQLMenu.FieldByName('menuItemType').AsString) = MITmenudefault) and (SQLMenuItems.RecordCount > 0) then
     begin
       acRun.Execute;
       AppDeactivate(self);
@@ -1535,6 +1543,7 @@ begin
       // create menu
       lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
         SQLMenu.FieldByName('id').AsInteger,
+        strToMit(SQLMenuItems.FieldByName('itemType').AsString),
         SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
       MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
@@ -1560,8 +1569,9 @@ begin
   end;
 end;
 
-function TMainForm.AddMenu(aName: string; aUpMenuId: longint; aCmd: string;
-  aPath: string; aReloadInterval: integer): integer;
+function TMainForm.AddMenu(aName: string; aUpMenuId: longint;
+  aMenuType: TMenuItemType; aCmd: string; aPath: string;
+  aReloadInterval: integer): integer;
 begin
   SQLMenu.Insert;
 
@@ -1570,6 +1580,8 @@ begin
   SQLMenu.FieldByName('cmd').AsString := aCmd;
   SQLMenu.FieldByName('path').AsString := aPath;
   SQLMenu.FieldByName('reloadInterval').AsInteger := aReloadInterval;
+  SQLMenu.FieldByName('menuItemType').AsString := MitToStr(aMenuType);
+
 
   SQLMenu.Post;
   SQLMenu.ApplyUpdates;

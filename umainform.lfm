@@ -190,6 +190,7 @@ object MainForm: TMainForm
   object MenuDS: TDataSource
     AutoEdit = False
     DataSet = SQLMenu
+    OnDataChange = MenuDSDataChange
     Left = 40
     Top = 20
   end
@@ -248,13 +249,19 @@ object MainForm: TMainForm
         DataType = ftString
         Precision = -1
         Size = 255
+      end    
+      item
+        Name = 'menuItemType'
+        DataType = ftString
+        Precision = -1
+        Size = 20
       end>
     AfterInsert = SQLMenuAfterInsert
     AfterScroll = SQLMenuAfterScroll
     Database = MenuDB
     Transaction = SQLTransaction
     SQL.Strings = (
-      'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval from menu'
+      'select Id, UpMenuId, Name, Cmd, Path, Load, ReloadInterval, menuItemType from menu'
     )
     Params = <>
     Macros = <>

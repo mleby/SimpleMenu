@@ -316,7 +316,7 @@ begin
 
     setNameAndShotrCutKey(lSl[1]);
 
-    FSubMenuId := MainForm.AddMenu(FName, FMenuId);
+    FSubMenuId := MainForm.AddMenu(FName, FMenuId, MITmenu);
   finally
     FreeAndNil(lSl);
   end;
@@ -332,7 +332,7 @@ begin
 
     setNameAndShotrCutKey(lSl[1]);
 
-    FSubMenuId := MainForm.AddMenu(FName, FMenuId);
+    FSubMenuId := MainForm.AddMenu(FName, FMenuId, MITmenudefault);
   finally
     FreeAndNil(lSl);
   end;

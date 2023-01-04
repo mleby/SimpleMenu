@@ -188,8 +188,6 @@ begin
   //MenuDB.DatabaseName := 'C:\tmp\debugMenu2.db'; // uncoment only for developnet (real DB for object inspector and design in lazarus)
   MenuDB.DatabaseName := ':memory:';
 
-  { TODO -cfeat : doplnit do struktury menu příznak origin_soubor a řádek a na klávesovou zkratku F4 odskočit - pokud bude vyplněn }
-
   MenuDB.Open;
   MenuDB.ExecuteDirect('PRAGMA encoding="UTF-8"');
   MenuDB.ExecuteDirect(
@@ -1364,6 +1362,7 @@ var
   lResult: boolean;
   Attributes: integer;
   lSubMenuId, lMenuItemId: integer;
+  lUpdateSQl: String;
 
   procedure generatePathMenu;
   const
@@ -1462,9 +1461,14 @@ var
             for i := 0 to (lListOfFiles.Count - 1) do
             begin
               lFullName := lListOfFiles[i];
-              lModified := FileAge(lFullName);
-              lModifiedDateTime := FileDateTodateTime(lModified);
-              DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
+              try
+                lModified := FileAge(lFullName);
+                lModifiedDateTime := FileDateTodateTime(lModified);
+                DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
+              except
+                on E : Exception do
+                  lModifiedStr := 'ERROR';
+              end;
               lListOfFiles[i] := '[' + lModifiedStr + ']*' + lFullName;
             end;
           end;
@@ -1546,8 +1550,8 @@ begin
         strToMit(SQLMenuItems.FieldByName('itemType').AsString),
         SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' +
-        IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      lUpdateSQl := 'update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId);
+      MenuDB.ExecuteDirect(lUpdateSQl);
       generatePathMenu;
     end
     else

@@ -1480,7 +1480,7 @@ var
           else
             lSortedListOfFiles := lListOfFiles;
 
-          try
+          //try
             // build menu items
             for i := 0 to (lSortedListOfFiles.Count - 1) do
             begin
@@ -1508,12 +1508,13 @@ var
                 '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
               { #todo : special items }
             end;
-          finally
-            lSortedListOfFiles.Free;
-          end;
+          //finally
+          //  FreeAndNil(lSortedListOfFiles);
+          //end;
 
         finally
-          lListOfFiles.Free;
+          if Assigned(lListOfFiles) then
+            FreeAndNil(lListOfFiles);
         end;
       end;
 

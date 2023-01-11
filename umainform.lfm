@@ -64,8 +64,6 @@ object MainForm: TMainForm
     BorderStyle = bsNone
     Columns = <    
       item
-        MinSize = 10
-        MaxSize = 200
         SizePriority = 1000
         Title.Caption = 'name'
         Width = 230
@@ -100,10 +98,8 @@ object MainForm: TMainForm
     Columns = <    
       item
         Alignment = taCenter
-        MinSize = 10
-        MaxSize = 200
         Title.Caption = 'M'
-        Width = 21
+        Width = 26
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -166,10 +162,8 @@ object MainForm: TMainForm
         Font.Pitch = fpVariable
         Font.Quality = fqDraft
         Font.Style = [fsBold]
-        MinSize = 10
-        MaxSize = 200
         Title.Caption = 'S'
-        Width = 17
+        Width = 21
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS

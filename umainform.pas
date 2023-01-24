@@ -103,6 +103,7 @@ type
     procedure NavigateUp;
     procedure WindowMenu(const aSubMenuId, aMenuItemId: integer;
       const aRoot: boolean = False);
+    procedure generatePathMenu(const aPath, aCmd: string);
     procedure PathMenu(const aSubMenuId, aMenuItemId: integer;
       const aPath, aCmd: string; const aRoot: boolean = False);
     { private declarations }
@@ -904,6 +905,7 @@ begin
         SQLMenuItems.FieldByName('id').AsInteger,
         SQLMenuItems.FieldByName('subMenuPath').AsString,
         SQLMenuItems.FieldByName('subMenuCmd').AsString);
+      //setActiveMenu(SQLMenuItems.FieldByName('subMenuId').AsInteger);
     end
     else if lItemType = MITmenuprogreload then
     begin
@@ -1356,6 +1358,177 @@ begin
   AplyGeneratedMenu(aRoot, aMenuItemId, aSubMenuId);
 end;
 
+procedure TMainForm.generatePathMenu(const aPath, aCmd: string);
+const
+  FM_FLAG = '#filemask:';
+var
+  lMenuItemParser: TMenuItemParser;
+  lDirName: string;
+  lBaseName: string;
+  lFullName: string;
+  lCmd, lFileMask, lFlagName, lWord, lModifiedStr, lLocalDirName: string;
+  i, CounterVar: integer;
+  MenuList: TStringList;
+  lListOfFolders: TStringList;
+  lListOfFiles: TStringList;
+  lRecursive, lFindDir, lFindFile, lByDateTime, lReverse: boolean;
+  lFlagPos, lFlagValPos, lFlagEnd: SizeInt;
+  lModified: longint;
+  lModifiedDateTime: TDateTime;
+  lNameFields: SysUtils.TStringArray;
+  lSortedListOfFiles: TStrings;
+begin
+  lCmd := aCmd;
+
+  if ContainsText(lCmd, FM_FLAG) then
+  begin
+    lFlagName := FM_FLAG;
+    lFlagPos := Pos(lFlagName, lCmd);
+    lFlagValPos := lFlagPos + Length(lFlagName);
+    lFlagEnd := Pos(' ', lCmd, lFlagValPos);
+    lFileMask := ExtractSubstr(lCmd, lFlagValPos, [' ']);
+    lCmd := ReplaceStr(lCmd, lFlagName + lFileMask, '');
+  end
+  else
+    lFileMask := '*';
+
+  // get flag
+  lRecursive := ContainsText(lCmd, '#recursive');
+  lFindDir := not ContainsText(lCmd, '#nodir');
+  lFindFile := not ContainsText(lCmd, '#nofile');
+  lByDateTime := ContainsText(lCmd, '#datetime');
+  lReverse := ContainsText(lCmd, '#reverse');
+
+  // remove flag from command
+  lCmd := ReplaceStr(lCmd, '#recursive', '');
+  lCmd := ReplaceStr(lCmd, '#nodir', '');
+  lCmd := ReplaceStr(lCmd, '#nofile', '');
+  lCmd := ReplaceStr(lCmd, '#datetime', '');
+  lcmd := ReplaceStr(lCmd, '#reverse', '');
+
+  { #todo : more paths at once }
+  { #todo : #localmenufile:menu.txt #menufile:globalmenu.txt }
+  { #todo : filenamereplace .git include gitmenu.txt }
+  { #todo : filenamecontains .idea prog .... }
+
+  MenuList := TStringList.Create;
+  try
+    MenuList.Add('separator "Path: ' + aPath + '"');
+
+    { #todo : add as submenu to all directories by #menufile or #localmenufile}
+    Menulist.Add('prog "Double Commander" doublecmd.exe "' + aPath + '"');
+    Menulist.Add('prog "Explorer" explorer.exe "' + aPath + '" #max');
+    Menulist.Add('prog "PowerShell" wt.exe -d "' + aPath + '"');
+
+    // directories
+    if lFindDir then
+    begin
+      Menulist.Add('separator Directories');
+      lListOfFolders := TStringList.Create;
+      try
+        FileUtil.FindAllDirectories(lListOfFolders, aPath, lRecursive);
+        lListOfFolders.Sort;
+        for i := 0 to (lListOfFolders.Count - 1) do
+        begin
+          lFullName := lListOfFolders[i];
+          lBaseName := ExtractFileName(lFullName);
+          MenuList.Add('menupath "' + StringReplace(lBaseName, '_',
+            '__', [rfIgnoreCase]) + '" "' + lFullName + '" "' + lCmd + '"');
+        end;
+      finally
+        lListOfFolders.Free;
+      end;
+
+    end;
+
+    // files
+    if lFindFile then
+    begin
+      Menulist.Add('separator Files');
+      lListOfFiles := TStringList.Create;
+      try
+        FileUtil.FindAllFiles(lListOfFiles, aPath, lFileMask, lRecursive);
+
+        // add extra attributes
+        if lByDateTime then
+        begin
+          for i := 0 to (lListOfFiles.Count - 1) do
+          begin
+            lFullName := lListOfFiles[i];
+            try
+              lModified := FileAge(lFullName);
+              lModifiedDateTime := FileDateTodateTime(lModified);
+              DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
+            except
+              on E : Exception do
+                lModifiedStr := 'ERROR';
+            end;
+            lListOfFiles[i] := '[' + lModifiedStr + ']*' + lFullName;
+          end;
+        end;
+
+        // sort
+        lListOfFiles.Sort;
+        if lReverse then
+          lSortedListOfFiles := lListOfFiles.Reverse
+        else
+          lSortedListOfFiles := lListOfFiles;
+
+        //try
+          // build menu items
+          for i := 0 to (lSortedListOfFiles.Count - 1) do
+          begin
+            if lSortedListOfFiles[i].Contains('*') then
+            begin
+              lNameFields := lSortedListOfFiles[i].Split('*');
+              lModifiedStr := lNameFields[0];
+              lFullName := lNameFields[1];
+            end
+            else
+              lFullName := lSortedListOfFiles[i];
+
+            lDirName := ExtractFileDir(lFullName);
+            lLocalDirName := lDirName.Replace(AppendPathDelim(aPath), '');
+
+            lBaseName := ExtractFileName(lFullName);
+            if lRecursive then
+              lBaseName := lLocalDirName + PathDelim + lBaseName;
+            if lByDateTime then
+              lBaseName := lModifiedStr + ' ' + lBaseName;
+
+
+
+            MenuList.Add('prog "' + StringReplace(lBaseName, '_', '__', [rfIgnoreCase]) +
+              '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
+            { #todo : special items }
+          end;
+        //finally
+        //  FreeAndNil(lSortedListOfFiles);
+        //end;
+
+      finally
+        if Assigned(lListOfFiles) then
+          FreeAndNil(lListOfFiles);
+      end;
+    end;
+
+    // menu
+    //ShowMessage(MenuList.Text);
+    for i := 0 to (MenuList.Count - 1) do
+    begin
+      lMenuItemParser := TMenuItemParser.Create(MenuList[i]);
+      try
+        MainForm.AddMenuItem(lMenuItemParser);
+      finally
+        FreeAndNil(lMenuItemParser);
+      end;
+    end;
+
+  finally
+    MenuList.Free;
+  end;
+end;
+
 procedure TMainForm.PathMenu(const aSubMenuId, aMenuItemId: integer;
   const aPath, aCmd: string; const aRoot: boolean);
 var
@@ -1363,178 +1536,6 @@ var
   Attributes: integer;
   lSubMenuId, lMenuItemId: integer;
   lUpdateSQl: String;
-
-  procedure generatePathMenu;
-  const
-    FM_FLAG = '#filemask:';
-  var
-    lMenuItemParser: TMenuItemParser;
-    lDirName: string;
-    lBaseName: string;
-    lFullName: string;
-    lCmd, lFileMask, lFlagName, lWord, lModifiedStr, lLocalDirName: string;
-    i, CounterVar: integer;
-    MenuList: TStringList;
-    lListOfFolders: TStringList;
-    lListOfFiles: TStringList;
-    lRecursive, lFindDir, lFindFile, lByDateTime, lReverse: boolean;
-    lFlagPos, lFlagValPos, lFlagEnd: SizeInt;
-    lModified: longint;
-    lModifiedDateTime: TDateTime;
-    lNameFields: SysUtils.TStringArray;
-    lSortedListOfFiles: TStrings;
-  begin
-    lCmd := aCmd;
-
-    if ContainsText(lCmd, FM_FLAG) then
-    begin
-      lFlagName := FM_FLAG;
-      lFlagPos := Pos(lFlagName, lCmd);
-      lFlagValPos := lFlagPos + Length(lFlagName);
-      lFlagEnd := Pos(' ', lCmd, lFlagValPos);
-      lFileMask := ExtractSubstr(lCmd, lFlagValPos, [' ']);
-      lCmd := ReplaceStr(lCmd, lFlagName + lFileMask, '');
-    end
-    else
-      lFileMask := '*';
-
-    // get flag
-    lRecursive := ContainsText(lCmd, '#recursive');
-    lFindDir := not ContainsText(lCmd, '#nodir');
-    lFindFile := not ContainsText(lCmd, '#nofile');
-    lByDateTime := ContainsText(lCmd, '#datetime');
-    lReverse := ContainsText(lCmd, '#reverse');
-
-    // remove flag from command
-    lCmd := ReplaceStr(lCmd, '#recursive', '');
-    lCmd := ReplaceStr(lCmd, '#nodir', '');
-    lCmd := ReplaceStr(lCmd, '#nofile', '');
-    lCmd := ReplaceStr(lCmd, '#datetime', '');
-    lcmd := ReplaceStr(lCmd, '#reverse', '');
-
-    { #todo : more paths at once }
-    { #todo : #localmenufile:menu.txt #menufile:globalmenu.txt }
-    { #todo : filenamereplace .git include gitmenu.txt }
-    { #todo : filenamecontains .idea prog .... }
-
-    MenuList := TStringList.Create;
-    try
-      MenuList.Add('separator "Path: ' + aPath + '"');
-
-      { #todo : add as submenu to all directories by #menufile or #localmenufile}
-      Menulist.Add('prog "Double Commander" doublecmd.exe "' + aPath + '"');
-      Menulist.Add('prog "Explorer" explorer.exe "' + aPath + '" #max');
-      Menulist.Add('prog "PowerShell" wt.exe -d "' + aPath + '"');
-
-      // directories
-      if lFindDir then
-      begin
-        Menulist.Add('separator Directories');
-        lListOfFolders := TStringList.Create;
-        try
-          FileUtil.FindAllDirectories(lListOfFolders, aPath, lRecursive);
-          lListOfFolders.Sort;
-          for i := 0 to (lListOfFolders.Count - 1) do
-          begin
-            lFullName := lListOfFolders[i];
-            lBaseName := ExtractFileName(lFullName);
-            MenuList.Add('menupath "' + StringReplace(lBaseName, '_',
-              '__', [rfIgnoreCase]) + '" "' + lFullName + '" "' + lCmd + '"');
-          end;
-        finally
-          lListOfFolders.Free;
-        end;
-
-      end;
-
-      // files
-      if lFindFile then
-      begin
-        Menulist.Add('separator Files');
-        lListOfFiles := TStringList.Create;
-        try
-          FileUtil.FindAllFiles(lListOfFiles, aPath, lFileMask, lRecursive);
-
-          // add extra attributes
-          if lByDateTime then
-          begin
-            for i := 0 to (lListOfFiles.Count - 1) do
-            begin
-              lFullName := lListOfFiles[i];
-              try
-                lModified := FileAge(lFullName);
-                lModifiedDateTime := FileDateTodateTime(lModified);
-                DateTimeToString(lModifiedStr, 'yyyy-mm-dd hh:nn', lModifiedDateTime);
-              except
-                on E : Exception do
-                  lModifiedStr := 'ERROR';
-              end;
-              lListOfFiles[i] := '[' + lModifiedStr + ']*' + lFullName;
-            end;
-          end;
-
-          // sort
-          lListOfFiles.Sort;
-          if lReverse then
-            lSortedListOfFiles := lListOfFiles.Reverse
-          else
-            lSortedListOfFiles := lListOfFiles;
-
-          //try
-            // build menu items
-            for i := 0 to (lSortedListOfFiles.Count - 1) do
-            begin
-              if lSortedListOfFiles[i].Contains('*') then
-              begin
-                lNameFields := lSortedListOfFiles[i].Split('*');
-                lModifiedStr := lNameFields[0];
-                lFullName := lNameFields[1];
-              end
-              else
-                lFullName := lSortedListOfFiles[i];
-
-              lDirName := ExtractFileDir(lFullName);
-              lLocalDirName := lDirName.Replace(AppendPathDelim(aPath), '');
-
-              lBaseName := ExtractFileName(lFullName);
-              if lRecursive then
-                lBaseName := lLocalDirName + PathDelim + lBaseName;
-              if lByDateTime then
-                lBaseName := lModifiedStr + ' ' + lBaseName;
-
-
-
-              MenuList.Add('prog "' + StringReplace(lBaseName, '_', '__', [rfIgnoreCase]) +
-                '" "' + lCmd + '" "' + lFullName + '" "#dir:' + lDirName + '"');
-              { #todo : special items }
-            end;
-          //finally
-          //  FreeAndNil(lSortedListOfFiles);
-          //end;
-
-        finally
-          if Assigned(lListOfFiles) then
-            FreeAndNil(lListOfFiles);
-        end;
-      end;
-
-      // menu
-      //ShowMessage(MenuList.Text);
-      for i := 0 to (MenuList.Count - 1) do
-      begin
-        lMenuItemParser := TMenuItemParser.Create(MenuList[i]);
-        try
-          MainForm.AddMenuItem(lMenuItemParser);
-        finally
-          FreeAndNil(lMenuItemParser);
-        end;
-      end;
-
-    finally
-      MenuList.Free;
-    end;
-  end;
-
 begin
   lSubMenuId := aSubMenuId;
   lMenuItemId := aMenuItemId;
@@ -1553,20 +1554,15 @@ begin
         SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
       lUpdateSQl := 'update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId);
       MenuDB.ExecuteDirect(lUpdateSQl);
-      generatePathMenu;
+      generatePathMenu(aPath, aCmd);
     end
     else
     begin
-      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' +
-        IntToStr(lMenuItemId));
-      lResult := setActiveMenu(lMenuItemId);
-
-      generatePathMenu;
-
+      MenuDB.ExecuteDirect('delete from menuItem where menuId = ' + IntToStr(lSubMenuId));
+      lResult := setActiveMenu(lSubMenuId);
+      generatePathMenu(aPath, aCmd);
     end;
-
-    lResult := setActiveMenu(lMenuItemId); // reload after build
-
+    lResult := setActiveMenu(lSubMenuId); // reload after build
   finally
     MainGrid.EndUpdate(True);
     MainGridShortCut.EndUpdate(True);

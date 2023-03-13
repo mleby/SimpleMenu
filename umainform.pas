@@ -777,7 +777,11 @@ begin
         AsyncProcess1.Parameters.Add(lParam);
     end;
 
-    AsyncProcess1.Execute;
+    try
+      AsyncProcess1.Execute;
+    except
+      showMessage('Chyba při spuštění: ' + lCmd);
+    end;
 
   finally
     FreeAndNil(slCmd);

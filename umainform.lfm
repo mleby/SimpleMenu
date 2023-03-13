@@ -53,7 +53,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
-  LCLVersion = '2.2.4.0'
+  LCLVersion = '2.2.6.0'
   object MainGrid: TDBGrid
     Left = 26
     Height = 765

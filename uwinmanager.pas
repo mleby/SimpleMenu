@@ -16,16 +16,16 @@ procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 function ActivateWindow(const aWindowHandle: String): Boolean;
 function ActivateProcess(const aExe: String): Boolean;
 function GetCurrentWindow: Hwnd;
-//function GetCurrentDesktopName(): string;
+function GetCurrentDesktopName(): string;
 
 implementation
 
 uses uMainForm;
 
-//// https://github.com/Ciantic/VirtualDesktopAccessor
-//function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
-//function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
-//function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+// https://github.com/Ciantic/VirtualDesktopAccessor
+function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
+function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 
 function GetCurrentActiveProcessPath(hWindow: Hwnd): String;
 var
@@ -72,7 +72,7 @@ var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut: String;
-  //lDesktop, lIsPined: Integer;
+  lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
   lIsAppWindow, lIsWindowVisible: Boolean;
 begin
@@ -85,8 +85,8 @@ begin
     GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
-    //lDesktop := GetWindowDesktopNumber(hWindow);
-    //lIsPined := IsPinnedWindow(hWindow);
+    lDesktop := GetWindowDesktopNumber(hWindow);
+    lIsPined := IsPinnedWindow(hWindow);
 
     lIsAppWindow := GetWindowLongPtr(hWindow, GWL_STYLE) and WS_EX_APPWINDOW<>0;
     lIsWindowVisible := IsWindowVisible(hWindow);
@@ -107,7 +107,7 @@ begin
         lFullExe := 'ADMIN'
       end;
       lExeFile := ExtractFileName(lFullExe);
-      lMenuTitle := (* '[' + IntToStr(lDesktop + 1) + '] ' *) '(' + lExeFile +') ' + lTitle;
+      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + '(' + lExeFile +') ' + lTitle;
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('name').AsString := lExeFile;
@@ -138,7 +138,7 @@ var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
   lTitle, lClass, lMenuTitle, lExeFile, lFullExe: String;
-  //lDesktop, lIsPined: Integer;
+  lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
 begin
   Result := False;
@@ -150,10 +150,10 @@ begin
     //GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
 
-    //lDesktop := GetWindowDesktopNumber(hWindow);
-    //lIsPined := IsPinnedWindow(hWindow);
+    lDesktop := GetWindowDesktopNumber(hWindow);
+    lIsPined := IsPinnedWindow(hWindow);
 
-    if IsWindowVisible(hWindow) (* and ((lDesktop = GetCurrentDesktopNumber()) or (lIsPined = 1)) *) then
+    if IsWindowVisible(hWindow) and ((lDesktop = GetCurrentDesktopNumber()) or (lIsPined = 1)) then
     begin
       lFullExe := GetCurrentActiveProcessPath(hWindow);
 
@@ -172,10 +172,10 @@ begin
   result := GetActiveWindow;
 end;
 
-//function GetCurrentDesktopName(): string;
-//begin
-  //Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
-//end;
+function GetCurrentDesktopName(): string;
+begin
+  Result := IntToStr(GetCurrentDesktopNumber() + 1); // numbering from 0, bad name from 1
+end;
 
 function ActivateWindow(const aWindowHandle: String): Boolean;
 var hWindow: Hwnd;

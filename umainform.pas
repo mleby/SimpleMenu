@@ -148,26 +148,30 @@ begin
     ShowMessage(
       'Usage: simpleMenu -(f|p|m|w) "menu file or cmd" [options...]' +
       #10#13 + '         one of -f/-p/-m must be specified as  point for menu' +
-      #10#13 + '    -h --help             show this help' + #10#13 +
-      '    -k --keep             keep menu open after choise' + #10#13 +
-      '    -f X --file=X         path to menu file used as start point for menu' +
+      #10#13 + '    -h --help             show this help' +
+      #10#13 + '    -o --ondir            run in directory, default is $HOME' +
+      #10#13 + '    -k --keep             keep menu open after choise' +
+      #10#13 + '    -f X --file=X         path to menu file used as start point for menu' +
       #10#13 + '    -m X --menuitem=X     text content of menu' +
       #10#13 + '    -p X --process=X      command for generate menu' +
-      #10#13 + '    -s X --search=X       count of menu items for automatic enable find'
-      + #10#13 +
-      '    -q X --query=X        automatic enable find entry and fill start query' +
+      #10#13 + '    -s X --search=X       count of menu items for automatic enable find' +
+      #10#13 + '    -q X --query=X        automatic enable find entry and fill start query' +
       #10#13 + '    -r X --reload=X       dynamic menu with minimal chars for search' +
       #10#13 + '    -x X --showfile=X     extra options for menu cmd' +
-      #10#13 + '    -w --windowmenu       window menu' + #10#13 +
-      '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
+      #10#13 + '    -w --windowmenu       window menu' +
+      #10#13 + '    -1 X -execone=X       automatic execute if matched only one item, execute X if 0 items found or append X to menu');
     Halt;
     { TODO -crefactor : Vyčlenit práci s DB do samostatného DM }
 
   end;
 
+  if Application.HasOption('o', 'ondir') then
+     ChDir(Application.GetOptionValue('o', 'ondir'))
+  else
+     Chdir(GetUserDir);
+
   if not (Application.HasOption('f', 'file') or
-    Application.HasOption('p', 'process') or Application.HasOption('m', 'menu') or
-    Application.HasOption('w', 'windowmenu')) then
+    Application.HasOption('p', 'process') or Application.HasOption('m', 'menu') or Application.HasOption('w', 'windowmenu')) then
   begin
     ShowMessage('One menu source must be specified (file or process or menuitem).');
     Halt;

@@ -87,7 +87,10 @@ end;
 
 function strToMit(const aMenuTypeStr: string): TMenuItemType;
 begin
-  ReadStr(aMenuTypeStr, Result);
+  if aMenuTypeStr = '' then
+    Result := MITNone
+  else
+    ReadStr(aMenuTypeStr, Result);
 end;
 
 { TMenuItemParser }

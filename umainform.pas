@@ -291,7 +291,7 @@ begin
   if Application.HasOption('q', 'query') then
   begin
     pnlFind.Visible := True;
-    edFind.Text := Application.GetOptionValue('q', 'query');
+    edFind.Text := ExpandSearchText(Application.GetOptionValue('q', 'query'));
   end;
 
   if Application.HasOption('w', 'windowmenu') then
@@ -337,6 +337,8 @@ var
   lTime: longint;
   lInterval: longint;
   lResult: boolean;
+  lId, lSubMenuReloadInterval: Integer;
+  lName, lItemTypeStr: String;
 begin
   lSubMenuId := aSubMenuId;
   lMenuItemId := aMenuItemId;
@@ -348,11 +350,18 @@ begin
     if lSubMenuId = 0 then // if 0 create new menuitem
     begin
       // create menu
-      lSubMenuId := AddMenu(SQLMenuItems.FieldByName('name').AsString,
-        SQLMenu.FieldByName('id').AsInteger,
-        strToMit(SQLMenuItems.FieldByName('itemType').AsString),
-        SQLMenuItems.FieldByName('subMenuCmd').AsString, '',
-        SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger);
+      lName := SQLMenuItems.FieldByName('name').AsString;
+      lId := SQLMenu.FieldByName('id').AsInteger;
+      lItemTypeStr := SQLMenuItems.FieldByName('itemType').AsString;
+      lSubMenuReloadInterval := SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger;
+      lSubMenuId := AddMenu(
+        lName,
+        lId,
+        strToMit(lItemTypeStr),
+        SQLMenuItems.FieldByName('subMenuCmd').AsString,
+        '',
+        lSubMenuReloadInterval
+      );
       MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
         lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
       LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);

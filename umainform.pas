@@ -106,6 +106,7 @@ type
     procedure generatePathMenu(const aPath, aCmd: string);
     procedure PathMenu(const aSubMenuId, aMenuItemId: integer;
       const aPath, aCmd: string; const aRoot: boolean = False);
+    function ExpandSearchText(aSearchText: String): String;
     { private declarations }
   public
     function AddMenu(aName: string; aUpMenuId: longint; aMenuType: TMenuItemType; aCmd: string = '';
@@ -1174,14 +1175,9 @@ begin
       end;
     end;
 
-    // prepare search
-    //if (lSearchText <> '') then
-    //begin
-    //  {$IFDEF Windows}
-    //  lSearchText := lSearchText.Replace('%CurDestop%', GetCurrentDesktopName());
-    //  {$ENDIF}
-    //end;
-
+    // prepare search - expand variables
+    if (lSearchText <> '') then
+      lSearchText := ExpandSearchText(lSearchText);
 
     // regenerate if reloadInterval < 0 and lSearchText and command contains %s
     if isExternalSearch and (lSearchText <> FLastFind) then
@@ -1572,6 +1568,27 @@ begin
     MainGridShortCut.EndUpdate(True);
     MainGridSubmenu.EndUpdate(True);
   end;
+end;
+
+function TMainForm.ExpandSearchText(aSearchText: String): String;
+begin
+  Result := aSearchText;
+  {$IFDEF Windows}
+  Result := Result.Replace('%CurDestop%', GetCurrentDesktopName());
+  {$ENDIF}
+  Result := Result.Replace('%clipbrd%', Clipboard.AsText);
+
+  // https://www.freepascal.org/docs-html/rtl/sysutils/formatchars.html
+  Result := Result.Replace('%isodate%', FormatDateTime('yyyy-mm-dd', Now));
+  Result := Result.Replace('%year%', FormatDateTime('yyyy', Now));
+  Result := Result.Replace('%month%', FormatDateTime('mm', Now));
+  Result := Result.Replace('%day%', FormatDateTime('dd', Now));
+  Result := Result.Replace('%weekday%', FormatDateTime('ddd', Now));
+
+  Result := Result.Replace('%isotime%', FormatDateTime('hh:nn:ss', Now));
+  Result := Result.Replace('%hour%', FormatDateTime('hh', Now));
+  Result := Result.Replace('%minute%', FormatDateTime('nn', Now));
+  Result := Result.Replace('%second%', FormatDateTime('ss', Now));
 end;
 
 function TMainForm.AddMenu(aName: string; aUpMenuId: longint;

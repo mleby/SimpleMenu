@@ -1050,7 +1050,7 @@ begin
     // on windows - if form cant get focus, run app without focus too...
     MainForm.AlphaBlend := True;
     MainForm.AlphaBlendValue := 10;
-    //MainForm.Close;
+    MainForm.Close;
   end;
 
   if pnlFind.Visible then

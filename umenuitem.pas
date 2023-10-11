@@ -78,7 +78,11 @@ function strToMit(const aMenuTypeStr: string): TMenuItemType;
 
 implementation
 
-uses Dialogs, uMainForm, strutils, clipbrd;
+uses Dialogs, uMainForm, strutils, clipbrd
+  {$IFDEF Windows}
+  , uwinmanager
+  {$ENDIF}
+  ;
 
 function MitToStr(const aMenuType: TMenuItemType): string;
 begin
@@ -306,6 +310,9 @@ begin
   Result := TStringList.Create;
   Result.Delimiter := ' ';
   lLine := StringReplace(aLine, '"', '"""', [rfReplaceAll]);
+  {$IFDEF Windows}
+  lLine := lLine.Replace('%CurDestop%', GetCurrentDesktopName());
+  {$ENDIF}
   Result.DelimitedText := lLine;
 end;
 

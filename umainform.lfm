@@ -53,7 +53,7 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PopupMode = pmExplicit
   ShowInTaskBar = stNever
-  LCLVersion = '2.2.6.0'
+  LCLVersion = '3.0.0.3'
   object MainGrid: TDBGrid
     Left = 26
     Height = 765
@@ -99,7 +99,7 @@ object MainForm: TMainForm
       item
         Alignment = taCenter
         Title.Caption = 'M'
-        Width = 26
+        Width = 21
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -126,6 +126,7 @@ object MainForm: TMainForm
     Caption = 'pnlFind'
     ClientHeight = 26
     ClientWidth = 290
+    ParentBackground = False
     ParentFont = False
     TabOrder = 2
     Visible = False
@@ -138,10 +139,10 @@ object MainForm: TMainForm
       Width = 290
       Align = alBottom
       AutoSelect = False
-      OnKeyDown = edFindKeyDown
-      OnKeyUp = edFindKeyUp
       ParentFont = False
       TabOrder = 0
+      OnKeyDown = edFindKeyDown
+      OnKeyUp = edFindKeyUp
     end
   end
   object MainGridShortCut: TDBGrid
@@ -163,7 +164,7 @@ object MainForm: TMainForm
         Font.Quality = fqDraft
         Font.Style = [fsBold]
         Title.Caption = 'S'
-        Width = 21
+        Width = 17
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS

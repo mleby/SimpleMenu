@@ -82,8 +82,7 @@ type
     FSearchCount: longint;
     FLastResNo: integer; // for navigation over separators
     FLastFind: string;
-    procedure AplyGeneratedMenu(const aRoot: boolean; const aMenuItemId: integer;
-      const aSubMenuId: integer);
+    procedure AplyGeneratedMenu(const aRoot: boolean; const aMenuItemId: integer; const aSubMenuId: integer);
     procedure AppDeactivate(Sender: TObject);
     procedure closeFindPanel(const aForce: boolean = False);
     procedure FindSwitch;
@@ -128,8 +127,7 @@ var
 implementation
 
 uses LazStringUtils, strutils, debugForm, uHacks, StreamIO, LCLType,
-  Dialogs, lconvencoding, uInputForm,
-  LazUTF8Classes, FileUtil;
+  Dialogs, lconvencoding, uInputForm, FileUtil;
 
 const
   C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -251,8 +249,7 @@ begin
   begin
     SQLMenu.Edit;
     SQLMenu.FieldByName('Load').AsInteger := -1;
-    SQLMenu.FieldByName('reloadInterval').AsInteger :=
-      -1 * StrToInt(Application.GetOptionValue('r', 'reload'));
+    SQLMenu.FieldByName('reloadInterval').AsInteger := -1 * StrToInt(Application.GetOptionValue('r', 'reload'));
     SQLMenu.CheckBrowseMode;
   end;
 
@@ -366,8 +363,7 @@ begin
         '',
         lSubMenuReloadInterval
       );
-      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(
-        lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
+      MenuDB.ExecuteDirect('update menuItem set subMenuId = ' + IntToStr(lSubMenuId) + ' where id = ' + IntToStr(lMenuItemId));
       LoadMenuWindows(SQLMenu.FieldByName('cmd').AsString, Application.ExeName);
     end
     else
@@ -1104,7 +1100,7 @@ end;
 
 procedure TMainForm.LoadMenuFromProcess(const aCmd: string);
 var
-  lSl: TStringListUTF8;
+  lSl: TStringList;
   j: integer;
   //F:TextFile;
   F: TextFile;
@@ -1123,7 +1119,7 @@ begin
     ProcessUTF81.CommandLine := aCmd;
     ProcessUTF81.Execute;
 
-    lSl := TStringListUTF8.Create;
+    lSl := TStringList.Create;
     try
       //Process1.WaitOnExit;
       //lSl.LoadFromStream(ProcessUTF81.Output);
@@ -1588,7 +1584,10 @@ begin
   Result := aSearchText;
   {$IFDEF Windows}
   Result := Result.Replace('%CurDestop%', GetCurrentDesktopName());
+  Result := Result.Replace('%computername%', GetEnvironmentVariable('COMPUTERNAME'));
   {$ENDIF}
+  { #todo -cfeat : implementovat obecnou env variable %hostname% }
+
   Result := Result.Replace('%clipbrd%', Clipboard.AsText);
 
   // https://www.freepascal.org/docs-html/rtl/sysutils/formatchars.html
@@ -1647,8 +1646,7 @@ begin
   SQLMenuItems.FieldByName('cmd').AsString := lMenuItemParser.cmd;
   SQLMenuItems.FieldByName('subMenuPath').AsString := lMenuItemParser.subMenuPath;
   SQLMenuItems.FieldByName('subMenuCmd').AsString := lMenuItemParser.subMenuCmd;
-  SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger :=
-    lMenuItemParser.subMenuReloadInterval;
+  SQLMenuItems.FieldByName('subMenuReloadInterval').AsInteger := lMenuItemParser.subMenuReloadInterval;
   SQLMenuItems.FieldByName('subMenuId').AsInteger := lMenuItemParser.subMenuId;
   SQLMenuItems.FieldByName('subMenuChar').AsString := lMenuItemParser.subMenuChar;
   SQLMenuItems.FieldByName('width').AsInteger := GetTextWidth(lMenuItemParser.Name);

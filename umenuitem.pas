@@ -310,9 +310,13 @@ begin
   Result := TStringList.Create;
   Result.Delimiter := ' ';
   lLine := StringReplace(aLine, '"', '"""', [rfReplaceAll]);
+
+  // replace in name of menu before split
   {$IFDEF Windows}
   lLine := lLine.Replace('%CurDestop%', GetCurrentDesktopName());
+  lLine := lLine.Replace('%computername%', GetEnvironmentVariable('COMPUTERNAME'));
   {$ENDIF}
+
   Result.DelimitedText := lLine;
 end;
 
@@ -406,6 +410,10 @@ constructor TMenuItemParser.Create(const aLine: string);
 begin
   FInputLine := aLine;
   FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
+
+  { #todo -cfeat : condition for menuItem }
+  // #if_host:%hostname%
+  // tady implementovat
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)

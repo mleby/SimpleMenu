@@ -1535,11 +1535,13 @@ begin
               lFullName := lSortedListOfFiles[i];
 
             lDirName := ExtractFileDir(lFullName);
-            lLocalDirName := lDirName.Replace(AppendPathDelim(aPath), '');
+            lLocalDirName := ChompPathDelim(lDirName).Replace(ChompPathDelim(aPath), '');
+            if StartsStr(PathDelim, lLocalDirName) then
+               lLocalDirName := StringReplace(lLocalDirName, PathDelim, '', []);
 
             lBaseName := ExtractFileName(lFullName);
-            if lRecursive then
-              lBaseName := lLocalDirName + PathDelim + lBaseName;
+            if lRecursive and (lLocalDirName <> '') then
+              lBaseName := AppendPathDelim(lLocalDirName) + lBaseName;
             if lByDateTime then
               lBaseName := lModifiedStr + ' ' + lBaseName;
 

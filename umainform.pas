@@ -87,6 +87,7 @@ type
     procedure closeFindPanel(const aForce: boolean = False);
     procedure FindSwitch;
     function GetMaxWidth: integer;
+    function CheckMenuItemValid(const aMenuItemParser: TMenuItemParser): Boolean;
     function GetTextWidth(const aText: string): integer;
     function isExternalSearch: boolean;
     function canExternalSearch: boolean;
@@ -452,6 +453,19 @@ begin
     Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + 10
   else
     Result := 500;
+end;
+
+function TMainForm.CheckMenuItemValid(const aMenuItemParser: TMenuItemParser): Boolean;
+var
+  lPathExists: Boolean;
+begin
+  if aMenuItemParser.itemType = MITmenupath then
+    lPathExists := DirectoryExists(aMenuItemParser.subMenuPath)
+  else
+    lPathExists := True;
+
+  Result := not(aMenuItemParser.itemType in [MITEndMenu, MITNone]) and lPathExists;
+
 end;
 
 function TMainForm.GetTextWidth(const aText: string): integer;
@@ -1075,6 +1089,8 @@ var
   lLine: string;
   i: integer;
   lMenuItemParser: TMenuItemParser;
+  lDoMenuOk: Boolean;
+  lFileName: String;
 begin
   // insert into menu
   for i := 0 to aLines.Count - 1 do
@@ -1084,16 +1100,38 @@ begin
     if (lLine <> '') and (not AnsiStartsStr('#', lLine) or
       AnsiStartsStr('#!', lLine)) then
     begin
+      lDoMenuOk := True; // initialize for generic menu item
+
       if AnsiStartsStr('#!', lLine) then
         Delete(lLine, 1, 2);
 
-      lMenuItemParser := TMenuItemParser.Create(lLine);
-      try
-        if not (lMenuItemParser.itemType in [MITEndMenu, MITNone]) then
-          AddMenuItem(lMenuItemParser);
-      finally
-        FreeAndNil(lMenuItemParser);
+        { #todo -cfeat : condition for menuItem }
+  // #if_var:variable:value
+
+      // check #if_exists:path
+    if ContainsText(lLine, ' #if_exists:') then
+      begin
+        // separate path
+        { #todo : dokončit separaci cesty }
+
+        // check path exists
+        if FileExists(lFileName) or DirectoryExists(lFileName) then
+          lDoMenuOk := True
+        else
+          lDoMenuOk := False;
       end;
+
+      if lDoMenuOk then
+      begin
+        lMenuItemParser := TMenuItemParser.Create(lLine);
+        try
+          if CheckMenuItemValid(lMenuItemParser)
+          then
+            AddMenuItem(lMenuItemParser);
+        finally
+          FreeAndNil(lMenuItemParser);
+        end;
+      end
     end;
   end;
 end;
@@ -1586,7 +1624,7 @@ begin
   Result := Result.Replace('%CurDestop%', GetCurrentDesktopName());
   Result := Result.Replace('%computername%', GetEnvironmentVariable('COMPUTERNAME'));
   {$ENDIF}
-  { #todo -cfeat : implementovat obecnou env variable %hostname% }
+  { #todo -cfeat : implementovat obecnou %env:variable% }
 
   Result := Result.Replace('%clipbrd%', Clipboard.AsText);
 

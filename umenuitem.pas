@@ -315,6 +315,7 @@ begin
   {$IFDEF Windows}
   lLine := lLine.Replace('%CurDestop%', GetCurrentDesktopName());
   lLine := lLine.Replace('%computername%', GetEnvironmentVariable('COMPUTERNAME'));
+  { #todo -cfeat : implementovat obecnou %env:variable% }
   {$ENDIF}
 
   Result.DelimitedText := lLine;
@@ -410,10 +411,6 @@ constructor TMenuItemParser.Create(const aLine: string);
 begin
   FInputLine := aLine;
   FMenuId := MainForm.SQLMenu.FieldByName('id').AsInteger;
-
-  { #todo -cfeat : condition for menuItem }
-  // #if_host:%hostname%
-  // tady implementovat
 
   if AnsiStartsText('prog ', aLine) then
     prepareProg(aLine)

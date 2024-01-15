@@ -99,7 +99,7 @@ object MainForm: TMainForm
       item
         Alignment = taCenter
         Title.Caption = 'M'
-        Width = 21
+        Width = 26
         FieldName = 'subMenuChar'
       end>
     DataSource = MenuItemDS
@@ -164,7 +164,7 @@ object MainForm: TMainForm
         Font.Quality = fqDraft
         Font.Style = [fsBold]
         Title.Caption = 'S'
-        Width = 17
+        Width = 21
         FieldName = 'shortcut'
       end>
     DataSource = MenuItemDS

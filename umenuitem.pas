@@ -37,8 +37,6 @@ type
     Procedure QuoteTrim(Var lName: String); // remove leading and ending quotes
     Procedure setNameAndShotrCutKey(Const aName: String);
 
-    function SplitMenuLine(const aLine: string): TStringList;
-
     procedure startNewMenu(const aLine: string);
     procedure startNewMenuDefault(const aLine: string);
     procedure endMenu;
@@ -54,6 +52,7 @@ type
     procedure prepareSeparator(const aLine: string);
     procedure includeItems(const aLine: string);
   public
+    class function SplitMenuLine(const aLine: string): TStringList;
 
     constructor Create(const aLine: string);
     constructor Create(const aName, hWindow, aShortcut: String); // window item
@@ -108,10 +107,22 @@ begin
   try
     FItemType := MITprog;
 
+    if ContainsText(aLine, '#if_prog_exists') then
+    begin
+      if not FileExists(lSl[2]) then
+      begin
+        FCmd := '';
+        Exit;
+      end;
+    end;
+
     setNameAndShotrCutKey(lSl[1]);
 
     for i := 2 to lsl.Count - 1 do
-      FCmd := FCmd + ' ' + lsl[i];
+    begin
+      if LowerCase(lSl[i]) <> '#if_prog_exists' then
+        FCmd := FCmd + ' ' + lsl[i];
+    end;
 
     fCmd := Trim(FCmd);
   finally
@@ -303,7 +314,7 @@ begin
   end;
 end;
 
-function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
+class function TMenuItemParser.SplitMenuLine(const aLine: string): TStringList;
 Var
   lLine: String;
 begin

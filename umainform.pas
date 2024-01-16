@@ -460,11 +460,12 @@ var
   lPathExists: Boolean;
 begin
   if aMenuItemParser.itemType = MITmenupath then
-    lPathExists := DirectoryExists(aMenuItemParser.subMenuPath)
+    Result := DirectoryExists(aMenuItemParser.subMenuPath)
+  else if aMenuItemParser.itemType in [MITprog, MITrunonce] then
+    Result := aMenuItemParser.cmd <> ''
   else
-    lPathExists := True;
-
-  Result := not(aMenuItemParser.itemType in [MITEndMenu, MITNone]) and lPathExists;
+    Result := true;
+    // not(aMenuItemParser.itemType in [MITEndMenu, MITNone]) and lPathExists;
 
 end;
 
@@ -1087,10 +1088,11 @@ end;
 procedure TMainForm.LoadMenuFromLines(const aLines: TStringList);
 var
   lLine: string;
-  i: integer;
+  i, j: integer;
   lMenuItemParser: TMenuItemParser;
   lDoMenuOk: Boolean;
   lFileName: String;
+  lSl: TStringList;
 begin
   // insert into menu
   for i := 0 to aLines.Count - 1 do
@@ -1105,20 +1107,27 @@ begin
       if AnsiStartsStr('#!', lLine) then
         Delete(lLine, 1, 2);
 
-        { #todo -cfeat : condition for menuItem }
-  // #if_var:variable:value
+      // #if_var:variable:value
 
       // check #if_exists:path
-    if ContainsText(lLine, ' #if_exists:') then
+      if ContainsText(lLine, ' #if_exists:') then
       begin
         // separate path
-        { #todo : dokončit separaci cesty }
+        lSl := TMenuItemParser.SplitMenuLine(lLine);
+        For j := 0 to lSl.Count - 1 do
+        begin
+          if StartsStr('#if_exists:', lSl[j]) then
+          begin
+            lFileName := ReplaceStr(lSl[j], '#if_exists:', '');
+            // check path exists
+            if FileExists(lFileName) or DirectoryExists(lFileName) then
+              lDoMenuOk := True
+            else
+              lDoMenuOk := False;
 
-        // check path exists
-        if FileExists(lFileName) or DirectoryExists(lFileName) then
-          lDoMenuOk := True
-        else
-          lDoMenuOk := False;
+            lLine := ReplaceStr(lLine, lSl[j], ''); // remove condition
+          end
+        end
       end;
 
       if lDoMenuOk then

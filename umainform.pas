@@ -456,17 +456,15 @@ begin
 end;
 
 function TMainForm.CheckMenuItemValid(const aMenuItemParser: TMenuItemParser): Boolean;
-var
-  lPathExists: Boolean;
 begin
   if aMenuItemParser.itemType = MITmenupath then
     Result := DirectoryExists(aMenuItemParser.subMenuPath)
   else if aMenuItemParser.itemType in [MITprog, MITrunonce] then
-    Result := aMenuItemParser.cmd <> ''
+    Result := (aMenuItemParser.cmd <> '') and (aMenuItemParser.Name <> '')
+  else if aMenuItemParser.itemType in [MITEndMenu, MITNone] then
+    Result := False
   else
-    Result := true;
-    // not(aMenuItemParser.itemType in [MITEndMenu, MITNone]) and lPathExists;
-
+    Result := True;
 end;
 
 function TMainForm.GetTextWidth(const aText: string): integer;
@@ -1107,7 +1105,11 @@ begin
       if AnsiStartsStr('#!', lLine) then
         Delete(lLine, 1, 2);
 
-      // #if_var:variable:value
+      // todo #if_var:variable:value
+      //if ContainsText(lLine, ' #if_var:') then
+      //begin
+        //lSl := TMenuItemParser.SplitMenuLine(lLine);
+      //end
 
       // check #if_exists:path
       if ContainsText(lLine, ' #if_exists:') then

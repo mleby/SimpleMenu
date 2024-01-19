@@ -132,6 +132,7 @@ uses LazStringUtils, strutils, debugForm, uHacks, StreamIO, LCLType,
 
 const
   C_SHORTCUT_MENU_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  C_WIDTH_EXTRASPACE = 15;
 
 {$R *.lfm}
 
@@ -450,7 +451,7 @@ function TMainForm.GetMaxWidth: integer;
 begin
   if SQLMenuItemsMaxWidth.Active and (SQLMenuItemsMaxWidth.RecordCount = 1) and
     not SQLMenuItemsMaxWidth.FieldByName('width').IsNull then
-    Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + 10
+    Result := SQLMenuItemsMaxWidth.FieldByName('width').AsInteger + C_WIDTH_EXTRASPACE
   else
     Result := 500;
 end;

@@ -278,6 +278,16 @@ begin
     begin
       FName := lSl[1];
       FName := FName.Replace('%clipbrd%', Clipboard.AsText);
+      FName := FName.Replace('%isodate%', FormatDateTime('yyyy-mm-dd', Now));
+      FName := FName.Replace('%year%', FormatDateTime('yyyy', Now));
+      FName := FName.Replace('%month%', FormatDateTime('mm', Now));
+      FName := FName.Replace('%day%', FormatDateTime('dd', Now));
+      FName := FName.Replace('%weekday%', FormatDateTime('ddd', Now));
+
+      FName := FName.Replace('%isotime%', FormatDateTime('hh:nn:ss', Now));
+      FName := FName.Replace('%hour%', FormatDateTime('hh', Now));
+      FName := FName.Replace('%minute%', FormatDateTime('nn', Now));
+      FName := FName.Replace('%second%', FormatDateTime('ss', Now));
     end;
 
     If (Length(FName) > 0) and (FName[1] = '#') Then

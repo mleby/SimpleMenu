@@ -410,15 +410,23 @@ procedure TMenuItemParser.setNameAndShotrCutKey(const aName: String);
 Var
   i: Integer;
   lName: String;
+  lPos: SizeInt;
 Begin
   // identify explicit shortcut
-  for i := 1 to Length(aName) do
+  if ContainsStr(aName, '#') then
   begin
-    if (aName[i] = '_') and (FShortCut = '') and (aName[i + 1] <> '_') then
-      FShortCut := LowerCase(aName[i + 1])
-    else
-      lName := lName + aName[i];
-  End;
+    lPos := Pos('#', aName, 1);
+    FShortCut := LowerCase(aName[lPos + 1]);
+    lName := aName.Replace('#'+aName[lPos + 1], '');
+  end
+  else
+    for i := 1 to Length(aName) do
+    begin
+      if (aName[i] = '_') and (FShortCut = '') and (aName[i + 1] <> '_') then
+        FShortCut := LowerCase(aName[i + 1])
+      else
+        lName := lName + aName[i];
+    End;
 
   QuoteTrim(lName);
 

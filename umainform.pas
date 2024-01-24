@@ -82,6 +82,7 @@ type
     FSearchCount: longint;
     FLastResNo: integer; // for navigation over separators
     FLastFind: string;
+    FMenuDisabledLevel: Integer; // level of diabled menu
     procedure AplyGeneratedMenu(const aRoot: boolean; const aMenuItemId: integer; const aSubMenuId: integer);
     procedure AppDeactivate(Sender: TObject);
     procedure closeFindPanel(const aForce: boolean = False);
@@ -177,6 +178,7 @@ begin
     Halt;
   end;
 
+  FMenuDisabledLevel := 0; // initial disabled menu level = 0 -> is not diabled
 
   ppiDesigned := self.DesignTimePPI;
   ppi := Screen.PixelsPerInch;
@@ -1092,6 +1094,7 @@ var
   lDoMenuOk: Boolean;
   lFileName: String;
   lSl: TStringList;
+  lConditionText: String;
 begin
   // insert into menu
   for i := 0 to aLines.Count - 1 do
@@ -1107,13 +1110,27 @@ begin
         Delete(lLine, 1, 2);
 
       // todo #if_var:variable:value
-      //if ContainsText(lLine, ' #if_var:') then
+      //if ContainsText(lLine, '#if_var:') then
       //begin
         //lSl := TMenuItemParser.SplitMenuLine(lLine);
       //end
 
+      // check computername
+      if ContainsText(lLine, '#if_computername:') then
+      begin
+        lConditionText := '#if_computername:'+GetEnvironmentVariable('COMPUTERNAME');
+        if ContainsText(lLine, lConditionText) then
+        begin
+          lDoMenuOk := True;
+          lLine := ReplaceStr(lLine, lConditionText, ''); // remove condition
+        end
+        else
+          lDoMenuOk := False;
+      end;
+
+
       // check #if_exists:path
-      if ContainsText(lLine, ' #if_exists:') then
+      if ContainsText(lLine, '#if_exists:') then
       begin
         // separate path
         lSl := TMenuItemParser.SplitMenuLine(lLine);
@@ -1133,7 +1150,7 @@ begin
         end
       end;
 
-      if lDoMenuOk then
+      if lDoMenuOk and (FMenuDisabledLevel = 0) then
       begin
         lMenuItemParser := TMenuItemParser.Create(lLine);
         try
@@ -1144,6 +1161,13 @@ begin
           FreeAndNil(lMenuItemParser);
         end;
       end
+      else
+      begin
+        if AnsiStartsText('menu ', lLine) or AnsiStartsText('menudefault ', lLine) then
+          Inc(FMenuDisabledLevel) // if is diabled and start new menu level
+        else if AnsiStartsText('}', lLine) then
+          Dec(FMenuDisabledLevel) // if is diabled and end menu level
+      end;
     end;
   end;
 end;

@@ -27,6 +27,18 @@ function GetWindowDesktopNumber(hWindow: HWND): Integer; stdcall; external 'Virt
 function IsPinnedWindow(hwnd: HWND): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 function GetCurrentDesktopNumber(): Integer; stdcall; external 'VirtualDesktopAccessor.dll';
 
+function IsFullscreen(handle:HWND ):boolean;
+var
+   a, b: RECT;
+begin
+    GetWindowRect(handle, a);
+    GetWindowRect(GetDesktopWindow(), b);
+    Result := (a.left = b.left)  and
+            (a.top     = b.top)   and
+            (a.right   = b.right) and
+            (a.bottom  = b.bottom);
+end;
+
 function GetCurrentActiveProcessPath(hWindow: Hwnd): String;
 var
   pid     : DWORD;
@@ -71,10 +83,10 @@ procedure LoadMenuWindows(const aFilter, aSelfExe: String);
 var
   hDesktop, hWindow: Hwnd;
   Buffer: array[0..255] of char;
-  lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut: String;
+  lTitle, lClass, lMenuTitle, lExeFile, lFullExe, i, lShortCut, lFSMark: String;
   lDesktop, lIsPined: Integer;
   lMenuItemParser: TMenuItemParser;
-  lIsAppWindow, lIsWindowVisible: Boolean;
+  lIsAppWindow, lIsWindowVisible, lIsMainWindow, lIsFullscreen: Boolean;
 begin
   // load list windows
   hDesktop := GetDeskTopWindow;
@@ -84,6 +96,16 @@ begin
 
     GetWindowText(hWindow, Buffer, 255);
     //ShowWindow(FindWindow('Shell_TrayWnd', nil), SW_HIDE);
+    { #todo : Jen pro ladění - begin }
+    try // https://stackoverflow.com/questions/5951631/how-to-get-captions-of-actual-windows-currently-running
+      lFullExe := GetCurrentActiveProcessPath(hWindow);
+    Except
+      lFullExe := 'ADMIN'
+    end;
+    lTitle:= CP1250ToUTF8(Buffer);
+    lIsFullscreen := IsFullscreen(hWindow);
+    lIsMainWindow := (GetWindow(hWindow, GW_OWNER) = 0) and IsWindowVisible(hWindow);
+    { #todo : Jen pro ladění - end }
 
     lDesktop := GetWindowDesktopNumber(hWindow);
     lIsPined := IsPinnedWindow(hWindow);
@@ -91,7 +113,7 @@ begin
     lIsAppWindow := GetWindowLongPtr(hWindow, GWL_STYLE) and WS_EX_APPWINDOW<>0;
     lIsWindowVisible := IsWindowVisible(hWindow);
 
-    if (Buffer <> '') and lIsWindowVisible and lIsAppWindow then
+    if (Buffer <> '') and ((lDesktop > -1) or (lIsPined > 0)) and (lIsWindowVisible or lIsFullscreen) and lIsMainWindow then { #todo : is main window }
     begin
       lTitle := Buffer;
       //lTitle:= AnsiToUtf8(lTitle);
@@ -106,8 +128,14 @@ begin
       Except
         lFullExe := 'ADMIN'
       end;
-      lExeFile := ExtractFileName(lFullExe);
-      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + '(' + lExeFile +') ' + lTitle;
+      lExeFile := ExtractFileName(lFullExe); // + 'd:' + IntToStr(lDesktop) + ' p:' + IntToStr(lIsPined) + ' ';
+
+      if lIsFullscreen then
+        lFSMark := ' [FS]'
+      else
+        lFSMark := '';
+
+      lMenuTitle := '[' + IntToStr(lDesktop + 1) + '] ' + '(' + lExeFile +')' + lFSMark + ' ' + lTitle;
 
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('cmd').AsString := '%'+lExeFile+'%';
       MainForm.SQLMenuItemsShortcutByCmd.ParamByName('name').AsString := lExeFile;

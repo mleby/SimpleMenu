@@ -776,13 +776,16 @@ begin
       lParam := lParam.Replace('%minute%', FormatDateTime('nn', Now));
       lParam := lParam.Replace('%second%', FormatDateTime('ss', Now));
 
-      if lParam.Contains('%input%') then
+      if lParam.Contains('%input%') or lParam.Contains('%inputClip%') then
       begin
         lInputForm := TInputForm.Create(self);
         try
           lInputForm.Caption := 'User input: ' + aCmd;
+          if lParam.Contains('%inputClip%') then
+            lInputForm.InputEdit.Text := Clipboard.AsText;
           lInputForm.ShowModal;
-          lParam := s.Replace('%input%', lInputForm.InputEdit.Text);
+          lParam := lParam.Replace('%input%', lInputForm.InputEdit.Text);
+          lParam := lParam.Replace('%inputClip%', lInputForm.InputEdit.Text);
         finally
           lInputForm.Free;
         end;
